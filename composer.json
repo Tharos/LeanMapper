@@ -1,0 +1,10 @@
+{
+	"require": {
+		"dibi/dibi": "v2.0.3"
+	},
+	"autoload": {
+		"psr-0": {
+			"Model": "/"
+		}
+	}
+}
