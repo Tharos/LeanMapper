@@ -13,50 +13,102 @@ class Collection implements \Iterator
 
 	private $data;
 
+	private $table;
+
 	private $keys;
 
 	private $connection;
 
 	private $related = array();
 
+	private $referencing = array();
 
-	public function __construct($data, DibiConnection $connection)
+
+	public function __construct($data, $table, DibiConnection $connection)
 	{
 		if ($data instanceof DibiRow) {
-			$this->data = array($data->id => $data->toArray());
+			$this->data = array(isset($data->id) ? $data->id : 0 => $data->toArray());
 		} else {
 			foreach ($data as $record) {
-				$this->data[$record->id] = $record->toArray();
+				if (isset($record->id)) {
+					$this->data[$record->id] = $record->toArray();
+				} else {
+					$this->data[] = $record->toArray();
+				}
 			}
 		}
+		$this->table = $table;
 		$this->connection = $connection;
 	}
 
 	public function getRow($id)
 	{
+		if (!array_key_exists($id, $this->data)) {
+			return null;
+		}
 		return new Row($this, $id);
 	}
 
 	public function getData($id, $key)
 	{
-		if (array_key_exists($key, $this->data[$id])) {
-			return $this->data[$id][$key];
-		} else {
-			if (!isset($this->related[$key])) {
-				$ids = array();
-				foreach ($this->data as $data) {
-					$ids[$data[$key . '_id']] = true;
-				}
-				$ids = array_keys($ids);
-				$this->related[$key] = $this->connection->select('*')
-						->from($key)
-						->where('[id] IN %in', $ids)
-						->fetchAssoc('id');
-			}
-			$collection = new static($this->related[$key], $this->connection);
-			return $collection->getRow($this->data[$id][$key . '_id']);
-		}
+		return $this->data[$id][$key];
+	}
 
+	public function getRelatedRow($id, $table, $viaColumn = null)
+	{
+		if ($viaColumn === null) {
+			$viaColumn = $table . '_id';
+		}
+		$key = "$table($viaColumn)";
+		if (!isset($this->related[$key])) {
+			$ids = array();
+			foreach ($this->data as $data) {
+				if ($data[$viaColumn] === null) continue;
+				$ids[$data[$viaColumn]] = true;
+			}
+			$ids = array_keys($ids);
+			$data = $this->connection->select('*')
+					->from($table)
+					->where('[id] IN %in', $ids)
+					->fetchAssoc('id');
+			$this->related[$key] = new self($data, $table, $this->connection);
+		}
+		return $this->related[$key]->getRow($this->data[$id][$viaColumn]);
+	}
+
+	public function getReferencingRows($id, $table, $viaColumn = null)
+	{
+		if ($viaColumn === null) {
+			$viaColumn = $this->table . '_id';
+		}
+		$collection = $this->getReferencingCollection($table, $viaColumn);
+		$rows = array();
+		foreach ($collection as $key => $row) {
+			if ($row[$viaColumn] === $id) {
+				$rows[] = new Row($collection, $key);
+			}
+		}
+		return $rows;
+	}
+
+	private function getReferencingCollection($table, $viaColumn)
+	{
+		$key = "$table($viaColumn)";
+		if (!isset($this->referencing[$key])) {
+			$ids = array();
+			foreach ($this->data as $data) {
+				if ($data['id'] === null) continue;
+				$ids[$data['id']] = true;
+			}
+			$ids = array_keys($ids);
+			$data = $this->connection->select('*')
+					->from($table)
+					->where('%n IN %in', $viaColumn, $ids)
+					->fetchAll();
+
+			$this->referencing[$key] = new self($data, $table, $this->connection);
+		}
+		return $this->referencing[$key];
 	}
 
 	//========== interface \Iterator ====================
