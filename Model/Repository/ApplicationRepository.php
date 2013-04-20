@@ -27,7 +27,9 @@ class ApplicationRepository
 				->from('application')
 				->where('id = %i', $id)->fetch();
 
-		return new Application($row, $this->connection);
+		$collection = new Collection($row, $this->connection);
+
+		return new Application($collection->getRow($id));
 	}
 
 	public function findAll()

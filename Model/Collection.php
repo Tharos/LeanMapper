@@ -34,29 +34,38 @@ class Collection implements \Iterator
 
 	public function getRow($id)
 	{
+		if (!array_key_exists($id, $this->data)) {
+			return null;
+		}
 		return new Row($this, $id);
 	}
 
 	public function getData($id, $key)
 	{
-		if (array_key_exists($key, $this->data[$id])) {
-			return $this->data[$id][$key];
-		} else {
-			if (!isset($this->related[$key])) {
-				$ids = array();
-				foreach ($this->data as $data) {
-					$ids[$data[$key . '_id']] = true;
-				}
-				$ids = array_keys($ids);
-				$this->related[$key] = $this->connection->select('*')
-						->from($key)
-						->where('[id] IN %in', $ids)
-						->fetchAssoc('id');
-			}
-			$collection = new static($this->related[$key], $this->connection);
-			return $collection->getRow($this->data[$id][$key . '_id']);
-		}
+		return $this->data[$id][$key];
+	}
 
+	public function getRelatedRow($id, $table, $viaColumn = null)
+	{
+		if ($viaColumn === null) {
+			$viaColumn = $table . '_id';
+		}
+		$key = "$table($viaColumn)";
+		if (!isset($this->related[$key])) {
+			$ids = array();
+			foreach ($this->data as $data) {
+				if ($data[$viaColumn] === null) continue;
+				$ids[$data[$viaColumn]] = true;
+			}
+			$ids = array_keys($ids);
+			$this->related[$key] = $this->connection->select('*')
+					->from($table)
+					->where('[id] IN %in', $ids)
+					->fetchAssoc('id');
+		}
+		$collection = new self($this->related[$key], $this->connection);
+
+		return $collection->getRow($this->data[$id][$viaColumn]);
 	}
 
 	//========== interface \Iterator ====================

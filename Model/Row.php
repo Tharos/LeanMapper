@@ -8,6 +8,7 @@ namespace Model;
 class Row
 {
 
+	/** @var Collection */
 	private $collection;
 
 	private $id;
@@ -22,6 +23,11 @@ class Row
 	function __get($name)
 	{
 		return $this->collection->getData($this->id, $name);
+	}
+
+	public function related($table, $viaColumn = null)
+	{
+		return $this->collection->getRelatedRow($this->id, $table, $viaColumn);
 	}
 
 }
