@@ -2,7 +2,7 @@
 
 namespace Model\Entity;
 
-use DibiConnection;
+use Model\Row;
 
 /**
  * @author Vojtěch Kohout
@@ -10,14 +10,11 @@ use DibiConnection;
 class Application
 {
 
-	private $connection;
-
 	private $row;
 
 
-	public function __construct($row, DibiConnection $connection)
+	public function __construct(Row $row)
 	{
-		$this->connection = $connection;
 		$this->row = $row;
 	}
 
@@ -33,8 +30,7 @@ class Application
 
 	public function getAuthor()
 	{
-		$row = $this->connection->select('*')->from('author')->where('id = %i', $this->row->author_id)->fetch();
-		return new Author($row, $this->connection);
+		return new Author($this->row->author);
 	}
 
 }

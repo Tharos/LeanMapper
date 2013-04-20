@@ -3,6 +3,7 @@
 namespace Model\Repository;
 
 use DibiConnection;
+use Model\Collection;
 use Model\Entity\Application;
 use ArrayObject;
 
@@ -22,18 +23,27 @@ class ApplicationRepository
 
 	public function find($id)
 	{
-		$row = $this->connection->select('*')->from('application')->where('id = %i', $id)->fetch();
+		$row = $this->connection->select('*')
+				->from('application')
+				->where('id = %i', $id)->fetch();
+
 		return new Application($row, $this->connection);
 	}
 
 	public function findAll()
 	{
-		$collection = new ArrayObject;
-		$rows = $this->connection->select('*')->from('application')->fetchAll();
+		$result = new ArrayObject;
+		$rows = $this->connection->select('*')
+				->from('application')
+				->fetchAll();
+
+		$collection = new Collection($rows, $this->connection);
+
 		foreach ($rows as $row) {
-			$collection[$row->id] = new Application($row, $this->connection);
+			$result[$row->id] = new Application($collection->getRow($row->id));
 		}
-		return $collection;
+
+		return $result;
 	}
 
 }

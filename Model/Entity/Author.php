@@ -2,7 +2,7 @@
 
 namespace Model\Entity;
 
-use DibiConnection;
+use Model\Row;
 
 /**
  * @author Vojtěch Kohout
@@ -10,14 +10,11 @@ use DibiConnection;
 class Author
 {
 
-	private $connection;
-
 	private $row;
 
 
-	public function __construct($row, DibiConnection $connection)
+	public function __construct(Row $row)
 	{
-		$this->connection = $connection;
 		$this->row = $row;
 	}
 
