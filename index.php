@@ -31,11 +31,14 @@ $applications = $repo->findAll();
 
 foreach ($applications as $application) {
 	dump($application->getTitle());
-	dump($application->getAuthor()->getName());
+	dump($application->getAuthor()->getName() . '(' . $application->getAuthor()->getAuthorshipCount() . ', ' . $application->getAuthor()->getMaintainershipCount() . ')');
 
 	$maintainer = $application->getMaintainer();
 	if ($maintainer !== null) {
 		dump($maintainer->getName());
+	}
+	foreach ($application->getTags() as $tag) {
+		dump('Tag: ' . $tag->getName() . '(' . $tag->getUsageCount() . ')');
 	}
 	echo '---------';
 }

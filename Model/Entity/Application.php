@@ -44,7 +44,12 @@ class Application
 
 	public function getTags()
 	{
-
+		$rows = $this->row->referencing('application_tag');
+		$tags = array();
+		foreach ($rows as $row) {
+			$tags[] = new Tag($row->related('tag'));
+		}
+		return $tags;
 	}
 
 }

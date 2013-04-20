@@ -23,4 +23,14 @@ class Author
 		return $this->row->name;
 	}
 
+	public function getAuthorshipCount()
+	{
+		return count($this->row->referencing('application', 'author_id'));
+	}
+
+	public function getMaintainershipCount()
+	{
+		return count($this->row->referencing('application', 'maintainer_id'));
+	}
+
 }

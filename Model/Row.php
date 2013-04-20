@@ -30,4 +30,9 @@ class Row
 		return $this->collection->getRelatedRow($this->id, $table, $viaColumn);
 	}
 
+	public function referencing($table, $viaColumn = null)
+	{
+		return $this->collection->getReferencingRows($this->id, $table, $viaColumn);
+	}
+
 }
