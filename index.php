@@ -18,13 +18,14 @@ Debugger::enable();
 Debugger::$strictMode = true;
 
 $connection = new DibiConnection(array(
-	'driver' => 'mysql',
-	'host' => '127.0.0.1',
+	'driver' => 'pdo',
+	'dsn' => 'mysql:host=127.0.0.1;dbname=test',
 	'username' => 'root',
 	'password' => 'drubez',
-	'database' => 'test',
 ));
 $connection->onEvent[] = array($panel, 'logEvent');
+
+echo '<h2>„Backjoin“</h2>';
 
 $repo = new AuthorRepository($connection);
 
@@ -39,8 +40,9 @@ foreach ($authors as $author) {
 	echo '---------';
 }
 
+echo '<h2>Basic example</h2>';
 
-/*$repo = new ApplicationRepository($connection);
+$repo = new ApplicationRepository($connection);
 
 $applications = $repo->findAll();
 
@@ -58,7 +60,4 @@ foreach ($applications as $application) {
 		}
 	}
 	echo '---------';
-}*/
-
-/*$application = $repo->find(1);
-dump($application->getAuthor()->getName());*/
+}
