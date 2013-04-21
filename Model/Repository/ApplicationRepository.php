@@ -5,7 +5,6 @@ namespace Model\Repository;
 use DibiConnection;
 use Model\Collection;
 use Model\Entity\Application;
-use ArrayObject;
 
 /**
  * @author Vojtěch Kohout
@@ -34,7 +33,7 @@ class ApplicationRepository
 
 	public function findAll()
 	{
-		$result = new ArrayObject;
+		$result = array();
 		$rows = $this->connection->select('*')
 				->from('application')
 				->fetchAll();

@@ -38,7 +38,9 @@ foreach ($applications as $application) {
 		dump($maintainer->getName());
 	}
 	foreach ($application->getTags() as $tag) {
-		dump('Tag: ' . $tag->getName() . '(' . $tag->getUsageCount() . ')');
+		if ($tag !== null) {
+			dump('Tag: ' . $tag->getName() . '(' . $tag->getUsageCount() . ')');
+		}
 	}
 	echo '---------';
 }

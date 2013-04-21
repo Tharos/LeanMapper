@@ -4,6 +4,7 @@ namespace Model;
 
 use DibiRow;
 use DibiConnection;
+use Nette\Callback;
 
 /**
  * @author Vojtěch Kohout
@@ -54,12 +55,19 @@ class Collection implements \Iterator
 		return $this->data[$id][$key];
 	}
 
-	public function getRelatedRow($id, $table, $viaColumn = null)
+	public function getRelatedRow($id, $table, $filter = null, $viaColumn = null)
 	{
 		if ($viaColumn === null) {
 			$viaColumn = $table . '_id';
 		}
 		$key = "$table($viaColumn)";
+
+		$statement = $this->connection->select('*')->from($table);
+		if ($filter !== null) {
+			call_user_func($filter, $statement);
+			$key .= '#' . md5((string) $statement);
+		}
+
 		if (!isset($this->related[$key])) {
 			$ids = array();
 			foreach ($this->data as $data) {
@@ -67,21 +75,20 @@ class Collection implements \Iterator
 				$ids[$data[$viaColumn]] = true;
 			}
 			$ids = array_keys($ids);
-			$data = $this->connection->select('*')
-					->from($table)
-					->where('[id] IN %in', $ids)
-					->fetchAssoc('id');
+			$data = $statement->where('[id] IN %in', $ids)
+					->fetchAll();
+
 			$this->related[$key] = new self($data, $table, $this->connection);
 		}
 		return $this->related[$key]->getRow($this->data[$id][$viaColumn]);
 	}
 
-	public function getReferencingRows($id, $table, $viaColumn = null)
+	public function getReferencingRows($id, $table, $filter = null, $viaColumn = null)
 	{
 		if ($viaColumn === null) {
 			$viaColumn = $this->table . '_id';
 		}
-		$collection = $this->getReferencingCollection($table, $viaColumn);
+		$collection = $this->getReferencingCollection($table, $viaColumn, $filter);
 		$rows = array();
 		foreach ($collection as $key => $row) {
 			if ($row[$viaColumn] === $id) {
@@ -91,9 +98,16 @@ class Collection implements \Iterator
 		return $rows;
 	}
 
-	private function getReferencingCollection($table, $viaColumn)
+	private function getReferencingCollection($table, $viaColumn, $filter = null)
 	{
 		$key = "$table($viaColumn)";
+
+		$statement = $this->connection->select('*')->from($table);
+		if ($filter !== null) {
+			call_user_func($filter, $statement);
+			$key .= '#' . md5((string) $statement);
+		}
+
 		if (!isset($this->referencing[$key])) {
 			$ids = array();
 			foreach ($this->data as $data) {
@@ -101,9 +115,7 @@ class Collection implements \Iterator
 				$ids[$data['id']] = true;
 			}
 			$ids = array_keys($ids);
-			$data = $this->connection->select('*')
-					->from($table)
-					->where('%n IN %in', $viaColumn, $ids)
+			$data =	$statement->where('%n IN %in', $viaColumn, $ids)
 					->fetchAll();
 
 			$this->referencing[$key] = new self($data, $table, $this->connection);

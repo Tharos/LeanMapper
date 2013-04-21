@@ -25,12 +25,12 @@ class Author
 
 	public function getAuthorshipCount()
 	{
-		return count($this->row->referencing('application', 'author_id'));
+		return count($this->row->referencing('application'));
 	}
 
 	public function getMaintainershipCount()
 	{
-		return count($this->row->referencing('application', 'maintainer_id'));
+		return count($this->row->referencing('application', null, 'maintainer_id'));
 	}
 
 }
