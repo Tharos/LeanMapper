@@ -27,9 +27,9 @@ class Row
 		return $this->collection->getData($this->id, $name);
 	}
 
-	public function related($table, $filter = null, $viaColumn = null)
+	public function referenced($table, $filter = null, $viaColumn = null)
 	{
-		return $this->collection->getRelatedRow($this->id, $table, $filter, $viaColumn);
+		return $this->collection->getReferencedRow($this->id, $table, $filter, $viaColumn);
 	}
 
 	public function referencing($table, $filter = null, $viaColumn = null)

@@ -20,7 +20,7 @@ class Collection implements \Iterator
 
 	private $connection;
 
-	private $related = array();
+	private $referenced = array();
 
 	private $referencing = array();
 
@@ -55,7 +55,7 @@ class Collection implements \Iterator
 		return $this->data[$id][$key];
 	}
 
-	public function getRelatedRow($id, $table, $filter = null, $viaColumn = null)
+	public function getReferencedRow($id, $table, $filter = null, $viaColumn = null)
 	{
 		if ($viaColumn === null) {
 			$viaColumn = $table . '_id';
@@ -68,7 +68,7 @@ class Collection implements \Iterator
 			$key .= '#' . md5((string) $statement);
 		}
 
-		if (!isset($this->related[$key])) {
+		if (!isset($this->referenced[$key])) {
 			$ids = array();
 			foreach ($this->data as $data) {
 				if ($data[$viaColumn] === null) continue;
@@ -78,9 +78,9 @@ class Collection implements \Iterator
 			$data = $statement->where('[id] IN %in', $ids)
 					->fetchAll();
 
-			$this->related[$key] = new self($data, $table, $this->connection);
+			$this->referenced[$key] = new self($data, $table, $this->connection);
 		}
-		return $this->related[$key]->getRow($this->data[$id][$viaColumn]);
+		return $this->referenced[$key]->getRow($this->data[$id][$viaColumn]);
 	}
 
 	public function getReferencingRows($id, $table, $filter = null, $viaColumn = null)

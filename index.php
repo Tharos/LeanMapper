@@ -4,6 +4,7 @@
  * @author Vojtěch Kohout
  */
 
+use Model\Repository\AuthorRepository;
 use Nette\Diagnostics\Debugger;
 use Model\Repository\ApplicationRepository;
 
@@ -25,7 +26,21 @@ $connection = new DibiConnection(array(
 ));
 $connection->onEvent[] = array($panel, 'logEvent');
 
-$repo = new ApplicationRepository($connection);
+$repo = new AuthorRepository($connection);
+
+$authors = $repo->findAll();
+
+foreach ($authors as $author) {
+	dump($author->getName());
+	foreach ($author->getReferencingTags() as $tag) {
+		dump('Tag: ' . $tag->getName());
+	}
+
+	echo '---------';
+}
+
+
+/*$repo = new ApplicationRepository($connection);
 
 $applications = $repo->findAll();
 
@@ -43,7 +58,7 @@ foreach ($applications as $application) {
 		}
 	}
 	echo '---------';
-}
+}*/
 
 /*$application = $repo->find(1);
 dump($application->getAuthor()->getName());*/
