@@ -3,6 +3,8 @@
 namespace Model\Entity;
 
 use Model\Row;
+use Model\TagsFilter;
+use Nette\Callback;
 
 /**
  * @author Vojtěch Kohout
@@ -35,7 +37,7 @@ class Application
 
 	public function getMaintainer()
 	{
-		$row = $this->row->related('author', 'maintainer_id');
+		$row = $this->row->related('author', null, 'maintainer_id');
 		if ($row === null) {
 			return null;
 		}
@@ -47,7 +49,12 @@ class Application
 		$rows = $this->row->referencing('application_tag');
 		$tags = array();
 		foreach ($rows as $row) {
-			$tags[] = new Tag($row->related('tag'));
+			$tagRow = $row->related('tag', function ($statement) {
+				$statement->where('[name] = %s', 'PHP');
+			});
+			if ($tagRow !== null) {
+				$tags[] = new Tag($tagRow);
+			}
 		}
 		return $tags;
 	}
