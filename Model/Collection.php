@@ -125,8 +125,8 @@ class Collection implements \Iterator
 				$this->referenced[$key] = new self($data, $table, $this->connection);
 			}
 		} else {
-			call_user_func($filter, $statement);
 			$statement->where('%n.[id] IN %in', $table, $this->extractReferencedIds($viaColumn));
+			call_user_func($filter, $statement);
 
 			$sql = (string)$statement;
 			$key .= '#' . md5($sql);
@@ -150,8 +150,8 @@ class Collection implements \Iterator
 				$this->referencing[$key] = new self($data, $table, $this->connection);
 			}
 		} else {
-			call_user_func($filter, $statement);
 			$statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractReferencedIds());
+			call_user_func($filter, $statement);
 
 			$sql = (string)$statement;
 			$key .= '#' . md5($sql);
