@@ -1,6 +1,6 @@
 <?php
 
-namespace Model;
+namespace ORM;
 
 use Nette\Callback;
 
@@ -10,7 +10,7 @@ use Nette\Callback;
 class Row
 {
 
-	/** @var Collection */
+	/** @var Result */
 	private $collection;
 
 	private $id;

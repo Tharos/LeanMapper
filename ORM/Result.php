@@ -1,6 +1,6 @@
 <?php
 
-namespace Model;
+namespace ORM;
 
 use DibiRow;
 use DibiConnection;
@@ -10,7 +10,7 @@ use Closure;
 /**
  * @author Vojtěch Kohout
  */
-class Collection implements \Iterator
+class Result implements \Iterator
 {
 
 	private $data;

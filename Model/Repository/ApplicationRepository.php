@@ -3,7 +3,7 @@
 namespace Model\Repository;
 
 use DibiConnection;
-use Model\Collection;
+use ORM\Result;
 use Model\Entity\Application;
 
 /**
@@ -26,7 +26,7 @@ class ApplicationRepository
 				->from('application')
 				->where('id = %i', $id)->fetch();
 
-		$collection = new Collection($row, 'application', $this->connection);
+		$collection = new Result($row, 'application', $this->connection);
 
 		return new Application($collection->getRow($id));
 	}
@@ -38,7 +38,7 @@ class ApplicationRepository
 				->from('application')
 				->fetchAll();
 
-		$collection = new Collection($rows, 'application', $this->connection);
+		$collection = new Result($rows, 'application', $this->connection);
 
 		foreach ($rows as $row) {
 			$result[$row->id] = new Application($collection->getRow($row->id));

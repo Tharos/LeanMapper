@@ -3,7 +3,7 @@
 namespace Model\Repository;
 
 use DibiConnection;
-use Model\Collection;
+use ORM\Result;
 use Model\Entity\Author;
 
 /**
@@ -26,9 +26,9 @@ class AuthorRepository
 				->from('author')
 				->where('id = %i', $id)->fetch();
 
-		$collection = new Collection($row, 'author', $this->connection);
+		$result = new Result($row, 'author', $this->connection);
 
-		return new Author($collection->getRow($id));
+		return new Author($result->getRow($id));
 	}
 
 	public function findAll()
@@ -38,7 +38,7 @@ class AuthorRepository
 				->from('author')
 				->fetchAll();
 
-		$collection = new Collection($rows, 'author', $this->connection);
+		$collection = new Result($rows, 'author', $this->connection);
 
 		foreach ($rows as $row) {
 			$result[$row->id] = new Author($collection->getRow($row->id));
