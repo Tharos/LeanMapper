@@ -4,6 +4,7 @@
  * @author Vojtěch Kohout
  */
 
+use Model\Repository\AuthorRepository;
 use Nette\Diagnostics\Debugger;
 use Model\Repository\ApplicationRepository;
 
@@ -17,13 +18,29 @@ Debugger::enable();
 Debugger::$strictMode = true;
 
 $connection = new DibiConnection(array(
-	'driver' => 'mysql',
-	'host' => '127.0.0.1',
+	'driver' => 'pdo',
+	'dsn' => 'mysql:host=127.0.0.1;dbname=test',
 	'username' => 'root',
 	'password' => 'drubez',
-	'database' => 'test',
 ));
 $connection->onEvent[] = array($panel, 'logEvent');
+
+echo '<h2>„Backjoin“</h2>';
+
+$repo = new AuthorRepository($connection);
+
+$authors = $repo->findAll();
+
+foreach ($authors as $author) {
+	dump($author->getName());
+	foreach ($author->getReferencingTags() as $tag) {
+		dump('Tag: ' . $tag->getName());
+	}
+
+	echo '---------';
+}
+
+echo '<h2>Basic example</h2>';
 
 $repo = new ApplicationRepository($connection);
 
@@ -44,6 +61,3 @@ foreach ($applications as $application) {
 	}
 	echo '---------';
 }
-
-/*$application = $repo->find(1);
-dump($application->getAuthor()->getName());*/

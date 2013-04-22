@@ -32,12 +32,12 @@ class Application
 
 	public function getAuthor()
 	{
-		return new Author($this->row->related('author'));
+		return new Author($this->row->referenced('author'));
 	}
 
 	public function getMaintainer()
 	{
-		$row = $this->row->related('author', null, 'maintainer_id');
+		$row = $this->row->referenced('author', null, 'maintainer_id');
 		if ($row === null) {
 			return null;
 		}
@@ -49,7 +49,7 @@ class Application
 		$rows = $this->row->referencing('application_tag');
 		$tags = array();
 		foreach ($rows as $row) {
-			$tagRow = $row->related('tag', function ($statement) {
+			$tagRow = $row->referenced('tag', function ($statement) {
 				$statement->where('[name] = %s', 'PHP');
 			});
 			if ($tagRow !== null) {

@@ -18,9 +18,22 @@ Debugger::addPanel($panel);
 Debugger::enable();
 Debugger::$strictMode = true;
 
-$connection = new Connection('mysql:host=localhost;dbname=test', 'root', 'drubez');
+$connection = new Connection('mysql:host=127.0.0.1;dbname=test', 'root', 'drubez');
 $connection->onQuery[] = array($panel, 'logQuery');
 
 $applications = $connection->table('application');
 
-dump($applications[1]->author->name);
+foreach ($applications as $application) {
+	dump($application->title);
+	dump($application->author->name . '(' . $application->author->related('application')->count() . ', ' . $application->author->related('application', 'maintainer_id')->count() . ')');
+
+	$maintainer = $application->ref('author', 'maintainer_id');
+	if ($maintainer !== null) {
+		dump($maintainer->name);
+	}
+	foreach ($application->related('application_tag') as $tagRelation) {
+		$tag = $tagRelation->tag;
+		dump('Tag: ' . $tag->name . '(' . $tag->related('application_tag')->count() . ')');
+	}
+	echo '---------';
+}
