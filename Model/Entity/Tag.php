@@ -2,7 +2,7 @@
 
 namespace Model\Entity;
 
-use Model\Row;
+use ORM\Row;
 
 /**
  * @author Vojtěch Kohout

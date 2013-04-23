@@ -4,7 +4,8 @@
 	},
 	"autoload": {
 		"psr-0": {
-			"Model": ""
+			"Model": "",
+			"ORM": ""
 		}
 	}
 }

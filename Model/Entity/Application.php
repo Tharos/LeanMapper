@@ -2,8 +2,7 @@
 
 namespace Model\Entity;
 
-use Model\Row;
-use Model\TagsFilter;
+use ORM\Row;
 use Nette\Callback;
 
 /**
