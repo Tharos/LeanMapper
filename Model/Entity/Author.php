@@ -3,7 +3,6 @@
 namespace Model\Entity;
 
 use ORM\Row;
-use Nette\Diagnostics\Debugger;
 
 /**
  * @author Vojtěch Kohout
