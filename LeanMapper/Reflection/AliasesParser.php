@@ -97,5 +97,5 @@ class AliasesParser
 
 		return $aliases->getAll();
 	}
-	
+
 }

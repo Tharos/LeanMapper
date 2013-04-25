@@ -18,7 +18,7 @@ class Aliases
 {
 
 	/** @var array */
-	private $aliases;
+	private $aliases = array();
 
 	/** @var string */
 	private $current = '';
