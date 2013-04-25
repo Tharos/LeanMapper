@@ -2,7 +2,7 @@
 
 namespace Model\Entity;
 
-use ORM\Row;
+use LeanMapper\Row;
 
 /**
  * @author Vojtěch Kohout

@@ -1,11 +1,20 @@
 <?php
 
-namespace ORM;
+/**
+ * This file is part of the Lean Mapper library
+ *
+ * Copyright (c) 2013 Vojtěch Kohout (aka Tharos)
+ *
+ * @license MIT
+ * @link http://leanmapper.tharos.cz
+ */
 
-use DibiRow;
-use DibiConnection;
-use Nette\Callback;
+namespace LeanMapper;
+
 use Closure;
+use DibiConnection;
+use DibiRow;
+use Nette\Callback;
 
 /**
  * @author Vojtěch Kohout
@@ -13,19 +22,30 @@ use Closure;
 class Result implements \Iterator
 {
 
+	/** @var array */
 	private $data;
 
+	/** @var string */
 	private $table;
 
+	/** @var array */
 	private $keys;
 
+	/** @var DibiConnection */
 	private $connection;
 
+	/** @var array */
 	private $referenced = array();
 
+	/** @var array */
 	private $referencing = array();
 
 
+	/**
+	 * @param DibiRow|DibiRow[] $data
+	 * @param string $table
+	 * @param DibiConnection $connection
+	 */
 	public function __construct($data, $table, DibiConnection $connection)
 	{
 		if ($data instanceof DibiRow) {
@@ -45,6 +65,10 @@ class Result implements \Iterator
 		$this->connection = $connection;
 	}
 
+	/**
+	 * @param int $id
+	 * @return Row|null
+	 */
 	public function getRow($id)
 	{
 		if (!array_key_exists($id, $this->data)) {
@@ -53,25 +77,44 @@ class Result implements \Iterator
 		return new Row($this, $id);
 	}
 
+	/**
+	 * @param int $id
+	 * @param string $key
+	 * @return mixed
+	 */
 	public function getData($id, $key)
 	{
 		return $this->data[$id][$key];
 	}
 
+	/**
+	 * @param int $id
+	 * @param string $table
+	 * @param callable|null $filter
+	 * @param string|null $viaColumn
+	 * @return Row
+	 */
 	public function getReferencedRow($id, $table, Closure $filter = null, $viaColumn = null)
 	{
 		if ($viaColumn === null) {
 			$viaColumn = $table . '_id';
 		}
-		return $this->getReferencedCollection($table, $viaColumn, $filter)->getRow($this->data[$id][$viaColumn]);
+		return $this->getReferencedResult($table, $viaColumn, $filter)->getRow($this->data[$id][$viaColumn]);
 	}
 
+	/**
+	 * @param int $id
+	 * @param string $table
+	 * @param callable|null $filter
+	 * @param string|null $viaColumn
+	 * @return Row[]
+	 */
 	public function getReferencingRows($id, $table, Closure $filter = null, $viaColumn = null)
 	{
 		if ($viaColumn === null) {
 			$viaColumn = $this->table . '_id';
 		}
-		$collection = $this->getReferencingCollection($table, $viaColumn, $filter);
+		$collection = $this->getReferencingResult($table, $viaColumn, $filter);
 		$rows = array();
 		foreach ($collection as $key => $row) {
 			if ($row[$viaColumn] === $id) {
@@ -83,6 +126,9 @@ class Result implements \Iterator
 
 	//========== interface \Iterator ====================
 
+	/**
+	 * @return mixed
+	 */
 	public function current()
 	{
 		$key = current($this->keys);
@@ -94,11 +140,17 @@ class Result implements \Iterator
 		next($this->keys);
 	}
 
+	/**
+	 * @return int
+	 */
 	public function key()
 	{
 		return current($this->keys);
 	}
 
+	/**
+	 * @return bool
+	 */
 	public function valid()
 	{
 		return current($this->keys) !== false;
@@ -113,7 +165,13 @@ class Result implements \Iterator
 	////////////////////
 	////////////////////
 
-	private function getReferencedCollection($table, $viaColumn, $filter = null)
+	/**
+	 * @param string $table
+	 * @param string $viaColumn
+	 * @param Closure|null $filter
+	 * @return self
+	 */
+	private function getReferencedResult($table, $viaColumn, Closure $filter = null)
 	{
 		$key = "$table($viaColumn)";
 		$statement = $this->connection->select('*')->from($table);
@@ -126,7 +184,7 @@ class Result implements \Iterator
 			}
 		} else {
 			$statement->where('%n.[id] IN %in', $table, $this->extractReferencedIds($viaColumn));
-			call_user_func($filter, $statement);
+			$filter($statement);
 
 			$sql = (string)$statement;
 			$key .= '#' . md5($sql);
@@ -138,7 +196,13 @@ class Result implements \Iterator
 		return $this->referenced[$key];
 	}
 
-	private function getReferencingCollection($table, $viaColumn, $filter = null)
+	/**
+	 * @param string $table
+	 * @param string $viaColumn
+	 * @param Closure|null $filter
+	 * @return self
+	 */
+	private function getReferencingResult($table, $viaColumn, Closure $filter = null)
 	{
 		$key = "$table($viaColumn)";
 		$statement = $this->connection->select('*')->from($table);
@@ -151,7 +215,7 @@ class Result implements \Iterator
 			}
 		} else {
 			$statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractReferencedIds());
-			call_user_func($filter, $statement);
+			$filter($statement);
 
 			$sql = (string)$statement;
 			$key .= '#' . md5($sql);
@@ -163,6 +227,10 @@ class Result implements \Iterator
 		return $this->referencing[$key];
 	}
 
+	/**
+	 * @param string $column
+	 * @return array
+	 */
 	private function extractReferencedIds($column = 'id')
 	{
 		$ids = array();
@@ -172,4 +240,5 @@ class Result implements \Iterator
 		}
 		return array_keys($ids);
 	}
+
 }
