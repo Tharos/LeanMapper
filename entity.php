@@ -26,4 +26,4 @@ $connection = new DibiConnection(array(
 $connection->onEvent[] = array($panel, 'logEvent');
 
 $reflection = new EntityReflection('Model\Entity\Book');
-$reflection->getEntityProperty('application');
+dump($reflection->getEntityProperty('authors'));
