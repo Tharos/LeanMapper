@@ -19,11 +19,25 @@ class EntityReflection extends \Nette\Reflection\ClassType
 
 	private $properties;
 
+	private $aliases;
+
+
 	public function getEntityProperty($name)
 	{
 		$this->initProperties();
 		return isset($this->properties[$name]) ? $this->properties[$name] : null;
 	}
+
+	public function getAliases()
+	{
+		if ($this->aliases === null) {
+			$this->aliases = AliasesParser::parseSource(file_get_contents($this->getFileName()));
+		}
+		return $this->aliases;
+	}
+
+	////////////////////
+	////////////////////
 
 	private function initProperties()
 	{
@@ -34,14 +48,13 @@ class EntityReflection extends \Nette\Reflection\ClassType
 
 	private function parseProperties()
 	{
-		$namespace = $this->getNamespaceName();
-		$aliases = AliasesParser::parseSource(file_get_contents($this->getFileName()));
-
 		$annotations = $this->getAnnotations();
+
 		foreach (array('property', 'property-read') as $type) {
 			if (isset($annotations[$type])) {
 				foreach ($annotations[$type] as $annotation) {
-					$property = PropertyParser::parseFromAnnotation($type, $annotation, $namespace, $aliases);
+					$property = PropertyFactory::createFromAnnotation($type, $annotation, $this);
+					$this->properties[$property->getName()] = $property;
 				}
 			}
 		}

@@ -11,6 +11,11 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\Relationship\BelongsToMany;
+use LeanMapper\Relationship\BelongsToOne;
+use LeanMapper\Relationship\HasMany;
+use LeanMapper\Relationship\HasOne;
+
 /**
  * @author Vojtěch Kohout
  */
@@ -20,39 +25,38 @@ class Property
 	/** @var string */
 	private $name;
 
-	/** @var bool */
-	private $writable;
-
-	/** @var bool */
-	private $collection;
-
-	/** @var string */
+	/** @var PropertyType */
 	private $type;
 
 	/** @var bool */
-	private $basicType;
+	private $isWritable;
 
 	/** @var bool */
-	private $nullable;
+	private $isNullable;
+
+	/** @var bool */
+	private $containsCollection;
+
+	/** @var HasOne|HasMany|BelongsToOne|BelongsToMany|null */
+	private $relationship;
 
 
 	/**
 	 * @param string $name
-	 * @param bool $writable
-	 * @param bool $collection
-	 * @param string $type
-	 * @param bool $nullable
-	 * @param string $namespace
-	 * @param array $aliases
+	 * @param PropertyType $type
+	 * @param bool $isWritable
+	 * @param bool $isNullable
+	 * @param bool $containsCollection
+	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
 	 */
-	public function __construct($name, $writable, $collection, $type, $nullable, $namespace, array $aliases)
+	public function __construct($name, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null)
 	{
 		$this->name = $name;
-		$this->writable = $writable;
-		$this->collection = $collection;
 		$this->type = $type;
-		$this->nullable = $nullable;
-		$this->initType($type, $namespace, $aliases);
+		$this->isWritable = $isWritable;
+		$this->nullable = $isNullable;
+		$this->containsCollection = $containsCollection;
+		$this->relationship = $relationship;
 	}
 
 	/**
@@ -68,7 +72,7 @@ class Property
 	 */
 	public function isWritable()
 	{
-		return $this->writable;
+		return $this->isWritable;
 	}
 
 	/**
@@ -76,7 +80,7 @@ class Property
 	 */
 	public function containsCollection()
 	{
-		return $this->collection;
+		return $this->containsCollection;
 	}
 
 	/**
@@ -84,7 +88,15 @@ class Property
 	 */
 	public function getType()
 	{
-		return $this->type;
+		return $this->type->getType();
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isBasicType()
+	{
+		return $this->type->isBasicType();
 	}
 
 	/**
@@ -92,40 +104,23 @@ class Property
 	 */
 	public function isNullable()
 	{
-		return $this->nullable;
+		return $this->isNullable;
 	}
 
-	////////////////////
-	////////////////////
+	/**
+	 * @return bool
+	 */
+	public function hasRelationship()
+	{
+		return $this->relationship !== null;
+	}
 
 	/**
-	 * @param string $type
-	 * @param string $namespace
-	 * @param array $aliases
+	 * @return BelongsToMany|BelongsToOne|HasMany|HasOne|null
 	 */
-	private function initType($type, $namespace, array $aliases)
+	public function getRelationship()
 	{
-		if (preg_match('#^(boolean|bool|integer|int|float|string|array)$#', $type)) {
-			if ($type === 'bool') {
-				$type = 'boolean';
-			}
-			if ($type === 'int') {
-				$type = 'integer';
-			}
-			$this->basicType = true;
-		} else {
-			if (substr($type, 0, 1) === '\\') {
-				$type = substr($type, 1);
-			} else {
-				if (isset($aliases[$type])) {
-					$type = $aliases[$type];
-				} else {
-					$type = $namespace . '\\' . $type;
-				}
-			}
-			$this->basicType = false;
-		}
-		$this->type = $type;
+		return $this->relationship;
 	}
 
 }

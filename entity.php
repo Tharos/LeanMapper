@@ -9,6 +9,7 @@ use Nette\Diagnostics\Debugger;
 
 require __DIR__ . '/nette.min.php';
 require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/Model/Entity/Book.php';
 
 $panel = new DibiNettePanel;
 Debugger::addPanel($panel);
@@ -25,4 +26,4 @@ $connection = new DibiConnection(array(
 $connection->onEvent[] = array($panel, 'logEvent');
 
 $reflection = new EntityReflection('Model\Entity\Book');
-$reflection->getEntityProperty('id');
+$reflection->getEntityProperty('application');

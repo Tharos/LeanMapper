@@ -2,7 +2,7 @@
 
 namespace Model\Entity;
 
-use Model\Entity\Application;
+use Model\Entity\Application as Appl;
 
 /**
  * @author Vojtěch Kohout
@@ -10,8 +10,9 @@ use Model\Entity\Application;
  * @property-read int $id
  * @property string $name
  * @property bool|null $secret
- * @property Application $application m:hasOne
- * @property \Model\Reader[]|null $reader m:hasMany(book_id:book_reader:reader_id:reader)
+ * @property Appl $application m:hasOne
+ * @property \Model\Reader[]|null $reader m:hasMany(::reader_book)
+ * @property \Model\Author[]|null $authors m:belongsToMany
  */
 class Book extends \LeanMapper\Entity
 {
