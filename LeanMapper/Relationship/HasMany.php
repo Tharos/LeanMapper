@@ -9,9 +9,6 @@ class HasMany
 {
 
 	/** @var string */
-	private $sourceTable;
-
-	/** @var string */
 	private $columnReferencingSourceTable;
 
 	/** @var string */
@@ -25,27 +22,17 @@ class HasMany
 
 
 	/**
-	 * @param string $sourceTable
 	 * @param string $columnReferencingSourceTable
 	 * @param string $relationshipTable
 	 * @param string $columnReferencingTargetTable
 	 * @param string $targetTable
 	 */
-	public function __construct($sourceTable, $columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable, $targetTable)
+	public function __construct($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable, $targetTable)
 	{
-		$this->sourceTable = $sourceTable;
 		$this->columnReferencingSourceTable = $columnReferencingSourceTable;
 		$this->relationshipTable = $relationshipTable;
 		$this->columnReferencingTargetTable = $columnReferencingTargetTable;
 		$this->targetTable = $targetTable;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getSourceTable()
-	{
-		return $this->sourceTable;
 	}
 
 	/**

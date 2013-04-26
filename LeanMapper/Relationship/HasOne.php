@@ -9,9 +9,6 @@ class HasOne
 {
 
 	/** @var string */
-	private $sourceTable;
-
-	/** @var string */
 	private $columnReferencingTargetTable;
 
 	/** @var string */
@@ -19,23 +16,13 @@ class HasOne
 
 
 	/**
-	 * @param string $sourceTable
 	 * @param string $columnReferencingTargetTable
 	 * @param string $targetTable
 	 */
-	public function __construct($sourceTable, $columnReferencingTargetTable, $targetTable)
+	public function __construct($columnReferencingTargetTable, $targetTable)
 	{
-		$this->sourceTable = $sourceTable;
 		$this->columnReferencingTargetTable = $columnReferencingTargetTable;
 		$this->targetTable = $targetTable;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getSourceTable()
-	{
-		return $this->sourceTable;
 	}
 
 	/**

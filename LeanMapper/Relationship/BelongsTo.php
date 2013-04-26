@@ -9,9 +9,6 @@ abstract class BelongsTo
 {
 
 	/** @var string */
-	private $sourceTable;
-
-	/** @var string */
 	private $columnReferencingSourceTable;
 
 	/** @var string */
@@ -19,23 +16,13 @@ abstract class BelongsTo
 
 
 	/**
-	 * @param string $sourceTable
 	 * @param string $columnReferencingSourceTable
 	 * @param string $targetTable
 	 */
-	public function __construct($sourceTable, $columnReferencingSourceTable, $targetTable)
+	public function __construct($columnReferencingSourceTable, $targetTable)
 	{
-		$this->sourceTable = $sourceTable;
 		$this->columnReferencingSourceTable = $columnReferencingSourceTable;
 		$this->targetTable = $targetTable;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getSourceTable()
-	{
-		return $this->sourceTable;
 	}
 
 	/**

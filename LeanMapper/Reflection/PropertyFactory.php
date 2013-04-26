@@ -117,19 +117,18 @@ class PropertyFactory
 
 		switch ($relationshipType) {
 			case 'hasOne':
-				return new HasOne($pieces[0] ? : $sourceTable, $pieces[1] ? : $targetTable . '_id', $pieces[2] ? : $targetTable);
+				return new HasOne($pieces[0] ? : $targetTable . '_id', $pieces[1] ? : $targetTable);
 			case 'hasMany':
 				return new HasMany(
-					$pieces[0] ? : $sourceTable,
-					$pieces[1] ? : $sourceTable . '_id',
-					$pieces[2] ? : $sourceTable . '_' . $targetTable,
-					$pieces[3] ? : $targetTable . '_id',
-					$pieces[4] ? : $targetTable
+					$pieces[0] ? : $sourceTable . '_id',
+					$pieces[1] ? : $sourceTable . '_' . $targetTable,
+					$pieces[2] ? : $targetTable . '_id',
+					$pieces[3] ? : $targetTable
 				);
 			case 'belongsToOne':
-				return new BelongsToOne($pieces[0] ? : $sourceTable, $pieces[1] ? : $sourceTable . '_id', $pieces[2] ? : $targetTable);
+				return new BelongsToOne($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable);
 			case 'belongsToMany':
-				return new BelongsToMany($pieces[0] ? : $sourceTable, $pieces[1] ? : $sourceTable . '_id', $pieces[2] ? : $targetTable);
+				return new BelongsToMany($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable);
 		}
 		return null;
 	}
