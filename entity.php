@@ -27,4 +27,4 @@ $connection->onEvent[] = array($panel, 'logEvent');
 
 $reflection = new EntityReflection('Model\Entity\Book');
 dump($reflection->getEntityProperty('readers'));
-dump($reflection->getEntityProperty('authors'));
+dump($reflection->getEntityProperty('test'));
