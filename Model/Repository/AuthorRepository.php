@@ -2,10 +2,6 @@
 
 namespace Model\Repository;
 
-use DibiConnection;
-use LeanMapper\Result;
-use Model\Entity\Author;
-
 /**
  * @author Vojtěch Kohout
  */
