@@ -54,7 +54,7 @@ class Property
 		$this->name = $name;
 		$this->type = $type;
 		$this->isWritable = $isWritable;
-		$this->nullable = $isNullable;
+		$this->isNullable = $isNullable;
 		$this->containsCollection = $containsCollection;
 		$this->relationship = $relationship;
 	}

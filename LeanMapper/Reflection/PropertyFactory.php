@@ -75,8 +75,8 @@ class PropertyFactory
 		return new Property(
 			substr($matches[5], 1),
 			$propertyType,
-				$annotationType === 'property',
-				$matches[1] !== '' or $matches[3] !== '',
+			$annotationType === 'property',
+			$matches[1] !== '' or $matches[4] !== '',
 			$containsCollection,
 			$relationship
 		);

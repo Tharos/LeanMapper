@@ -32,9 +32,9 @@ $repo = new AuthorRepository($connection);
 $authors = $repo->findAll();
 
 foreach ($authors as $author) {
-	dump($author->getName());
-	foreach ($author->getReferencingTags() as $tag) {
-		dump('Tag: ' . $tag->getName());
+	dump($author->name);
+	foreach ($author->referencingTags as $tag) {
+		dump('Tag: ' . $tag->name);
 	}
 
 	echo '---------';
@@ -47,16 +47,16 @@ $repo = new ApplicationRepository($connection);
 $applications = $repo->findAll();
 
 foreach ($applications as $application) {
-	dump($application->getTitle());
-	dump($application->getAuthor()->getName() . '(' . $application->getAuthor()->getAuthorshipCount() . ', ' . $application->getAuthor()->getMaintainershipCount() . ')');
+	dump($application->title);
+	dump($application->author->name . '(' . $application->author->authorshipCount . ', ' . $application->author->maintainershipCount . ')');
 
-	$maintainer = $application->getMaintainer();
+	$maintainer = $application->maintainer;
 	if ($maintainer !== null) {
-		dump($maintainer->getName());
+		dump($maintainer->name);
 	}
-	foreach ($application->getTags() as $tag) {
+	foreach ($application->tags as $tag) {
 		if ($tag !== null) {
-			dump('Tag: ' . $tag->getName() . '(' . $tag->getUsageCount() . ')');
+			dump('Tag: ' . $tag->name . '(' . $tag->usageCount . ')');
 		}
 	}
 	echo '---------';

@@ -4,8 +4,8 @@
  * @author Vojtěch Kohout
  */
 
-use LeanMapper\Reflection\EntityReflection;
 use Nette\Diagnostics\Debugger;
+use Model\Repository\ApplicationRepository;
 
 require __DIR__ . '/nette.min.php';
 require __DIR__ . '/vendor/autoload.php';
@@ -25,6 +25,8 @@ $connection = new DibiConnection(array(
 ));
 $connection->onEvent[] = array($panel, 'logEvent');
 
-$reflection = new EntityReflection('Model\Entity\Book');
-dump($reflection->getEntityProperty('readers'));
-dump($reflection->getEntityProperty('test'));
+$repo = new ApplicationRepository($connection);
+
+$application = $repo->find(4);
+
+dump($application->tags);

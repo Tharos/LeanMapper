@@ -57,7 +57,7 @@ class EntityReflection extends \Nette\Reflection\ClassType
 
 	private function parseProperties()
 	{
-		foreach ($this->getFamilyAnnotations() as $member) {
+		foreach ($this->getFamilyLine() as $member) {
 			$annotations = $member->getAnnotations();
 
 			foreach (array('property', 'property-read') as $type) {
@@ -74,15 +74,14 @@ class EntityReflection extends \Nette\Reflection\ClassType
 	/**
 	 * @return self[]
 	 */
-	private function getFamilyAnnotations()
+	private function getFamilyLine()
 	{
-		$family = array();
-		$member = $this;
-		do {
-			$family[] = $member;
-		} while ($member = $member->getParentClass());
-
-		return array_reverse($family);
+		$line = array($member = $this);
+		while ($member = $member->getParentClass()) {
+			if ($member->name === 'LeanMapper\Entity') break;
+			$line[] = $member;
+		}
+		return array_reverse($line);
 	}
 
 }

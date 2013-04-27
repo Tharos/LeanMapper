@@ -2,26 +2,14 @@
 
 namespace Model\Entity;
 
-use LeanMapper\Row;
-
 /**
  * @author Vojtěch Kohout
+ *
+ * @property-read int $id
+ * @property string $name
  */
-class Tag
+class Tag extends \LeanMapper\Entity
 {
-
-	private $row;
-
-
-	public function __construct(Row $row)
-	{
-		$this->row = $row;
-	}
-
-	public function getName()
-	{
-		return $this->row->name;
-	}
 
 	public function getUsageCount()
 	{
