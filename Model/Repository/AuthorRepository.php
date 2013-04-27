@@ -3,7 +3,7 @@
 namespace Model\Repository;
 
 use DibiConnection;
-use ORM\Result;
+use LeanMapper\Result;
 use Model\Entity\Author;
 
 /**

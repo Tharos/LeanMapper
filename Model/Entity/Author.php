@@ -2,27 +2,18 @@
 
 namespace Model\Entity;
 
-use ORM\Row;
-use Nette\Diagnostics\Debugger;
+use LeanMapper\Row;
 
 /**
  * @author Vojtěch Kohout
+ *
+ * @property-read int $id
+ * @property string $name
+ * @property string $web
+ * @property DibiDateTime|null $born
  */
-class Author
+class Author extends \LeanMapper\Entity
 {
-
-	private $row;
-
-
-	public function __construct(Row $row)
-	{
-		$this->row = $row;
-	}
-
-	public function getName()
-	{
-		return $this->row->name;
-	}
 
 	public function getAuthorshipCount()
 	{
