@@ -2,23 +2,12 @@
 
 namespace Model\Repository;
 
-use DibiConnection;
-use LeanMapper\Result;
-use Model\Entity\Application;
 
 /**
  * @author Vojtěch Kohout
  */
-class ApplicationRepository
+class ApplicationRepository extends \LeanMapper\Repository
 {
-
-	private $connection;
-
-
-	public function __construct(DibiConnection $connection)
-	{
-		$this->connection = $connection;
-	}
 
 	public function find($id)
 	{
@@ -26,25 +15,16 @@ class ApplicationRepository
 				->from('application')
 				->where('id = %i', $id)->fetch();
 
-		$collection = new Result($row, 'application', $this->connection);
-
-		return new Application($collection->getRow($id));
+		return $this->createEntity($row, 'Model\Entity\Application', 'application');
 	}
 
 	public function findAll()
 	{
-		$result = array();
 		$rows = $this->connection->select('*')
 				->from('application')
 				->fetchAll();
 
-		$collection = new Result($rows, 'application', $this->connection);
-
-		foreach ($rows as $row) {
-			$result[$row->id] = new Application($collection->getRow($row->id));
-		}
-
-		return $result;
+		return $this->createEntities($rows, 'Model\Entity\Application', 'application');
 	}
 
 }

@@ -2,7 +2,7 @@
 
 namespace Model\Entity;
 
-use LeanMapper\Row;
+use DibiDateTime;
 
 /**
  * @author Vojtěch Kohout
