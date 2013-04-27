@@ -33,13 +33,12 @@ class PropertyFactory
 	}
 
 	/**
-	 * @param string $annotationType
 	 * @param string $annotation
 	 * @param EntityReflection $reflection
 	 * @return Property
 	 * @throws InvalidAnnotationException
 	 */
-	public static function createFromAnnotation($annotationType, $annotation, EntityReflection $reflection)
+	public static function createFromAnnotation($annotation, EntityReflection $reflection)
 	{
 		$namespace = $reflection->getNamespaceName();
 		$aliases = $reflection->getAliases();
@@ -55,11 +54,15 @@ class PropertyFactory
 		~xi', $annotation, $matches);
 
 		if (!$matched) {
-			throw new InvalidAnnotationException("Invalid property annotation given: @$annotationType $annotation");
+			throw new InvalidAnnotationException("Invalid property annotation given: @property $annotation");
 		}
-
-		$propertyType = new PropertyType($matches[2], $namespace, $aliases);
 		$containsCollection = $matches[3] !== '';
+		$isNullable = ($matches[1] !== '' or $matches[4] !== '');
+
+		if ($containsCollection and $isNullable) {
+			throw new InvalidAnnotationException("It doesn't make sense to have a property containing collection nullable: @property $annotation");
+		}
+		$propertyType = new PropertyType($matches[2], $namespace, $aliases);
 
 		$relationship = null;
 		if (isset($matches[6])) {
@@ -75,8 +78,7 @@ class PropertyFactory
 		return new Property(
 			substr($matches[5], 1),
 			$propertyType,
-			$annotationType === 'property',
-			$matches[1] !== '' or $matches[4] !== '',
+			$isNullable,
 			$containsCollection,
 			$relationship
 		);

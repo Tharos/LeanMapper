@@ -60,12 +60,10 @@ class EntityReflection extends \Nette\Reflection\ClassType
 		foreach ($this->getFamilyLine() as $member) {
 			$annotations = $member->getAnnotations();
 
-			foreach (array('property', 'property-read') as $type) {
-				if (isset($annotations[$type])) {
-					foreach ($annotations[$type] as $annotation) {
-						$property = PropertyFactory::createFromAnnotation($type, $annotation, $this);
-						$this->properties[$property->getName()] = $property;
-					}
+			if (isset($annotations['property'])) {
+				foreach ($annotations['property'] as $annotation) {
+					$property = PropertyFactory::createFromAnnotation($annotation, $this);
+					$this->properties[$property->getName()] = $property;
 				}
 			}
 		}

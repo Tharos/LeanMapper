@@ -5,7 +5,7 @@ namespace Model\Entity;
 /**
  * @author Vojtěch Kohout
  *
- * @property-read int $id
+ * @property int $id
  * @property string $name
  */
 class Tag extends \LeanMapper\Entity

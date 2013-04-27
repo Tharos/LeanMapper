@@ -5,7 +5,7 @@ namespace Model\Entity;
 /**
  * @author Vojtěch Kohout
  *
- * @property-read int $id
+ * @property int $id
  * @property \DibiDateTime|null $released
  * @property Author $author m:hasOne
  * @property Author|null $maintainer m:hasOne(maintainer_id)

@@ -44,16 +44,14 @@ class Property
 	/**
 	 * @param string $name
 	 * @param PropertyType $type
-	 * @param bool $isWritable
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
 	 */
-	public function __construct($name, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null)
+	public function __construct($name, PropertyType $type, $isNullable, $containsCollection, $relationship = null)
 	{
 		$this->name = $name;
 		$this->type = $type;
-		$this->isWritable = $isWritable;
 		$this->isNullable = $isNullable;
 		$this->containsCollection = $containsCollection;
 		$this->relationship = $relationship;
@@ -65,14 +63,6 @@ class Property
 	public function getName()
 	{
 		return $this->name;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isWritable()
-	{
-		return $this->isWritable;
 	}
 
 	/**
