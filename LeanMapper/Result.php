@@ -52,6 +52,7 @@ class Result implements \Iterator
 			$this->data = array(isset($data->id) ? $data->id : 0 => $data->toArray());
 		} elseif (is_array($data)) {
 			foreach ($data as $record) {
+				/** @var DibiRow $record */
 				if (isset($record->id)) {
 					$this->data[$record->id] = $record->toArray();
 				} else {
