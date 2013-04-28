@@ -2,12 +2,12 @@
 
 namespace Model\Entity;
 
-use LeanMapper\Row;
+use DibiDateTime;
 
 /**
  * @author Vojtěch Kohout
  *
- * @property-read int $id
+ * @property int $id
  * @property string $name
  * @property string $web
  * @property DibiDateTime|null $born

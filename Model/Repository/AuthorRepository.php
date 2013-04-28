@@ -2,49 +2,33 @@
 
 namespace Model\Repository;
 
-use DibiConnection;
-use LeanMapper\Result;
 use Model\Entity\Author;
 
 /**
  * @author Vojtěch Kohout
  */
-class AuthorRepository
+class AuthorRepository extends \LeanMapper\Repository
 {
 
-	private $connection;
-
-
-	public function __construct(DibiConnection $connection)
-	{
-		$this->connection = $connection;
-	}
-
+	/**
+	 * @param int $id
+	 * @return Author
+	 */
 	public function find($id)
 	{
-		$row = $this->connection->select('*')
-				->from('author')
-				->where('id = %i', $id)->fetch();
-
-		$result = new Result($row, 'author', $this->connection);
-
-		return new Author($result->getRow($id));
+		return $this->createEntity(
+			$this->connection->select('*')->from('author')->where('id = %i', $id)->fetch()
+		);
 	}
 
+	/**
+	 * @return Author[]
+	 */
 	public function findAll()
 	{
-		$result = array();
-		$rows = $this->connection->select('*')
-				->from('author')
-				->fetchAll();
-
-		$collection = new Result($rows, 'author', $this->connection);
-
-		foreach ($rows as $row) {
-			$result[$row->id] = new Author($collection->getRow($row->id));
-		}
-
-		return $result;
+		return $this->createEntities(
+			$this->connection->select('*')->from('author')->fetchAll()
+		);
 	}
 
 }
