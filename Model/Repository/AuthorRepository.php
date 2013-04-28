@@ -17,7 +17,7 @@ class AuthorRepository extends \LeanMapper\Repository
 	public function find($id)
 	{
 		return $this->createEntity(
-			$this->connection->select('*')->from('author')->where('id = %i', $id)->fetch()
+			$this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch()
 		);
 	}
 
@@ -27,7 +27,7 @@ class AuthorRepository extends \LeanMapper\Repository
 	public function findAll()
 	{
 		return $this->createEntities(
-			$this->connection->select('*')->from('author')->fetchAll()
+			$this->connection->select('*')->from($this->getTable())->fetchAll()
 		);
 	}
 
