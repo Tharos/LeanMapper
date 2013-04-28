@@ -4,9 +4,6 @@
  * This file is part of the Lean Mapper library
  *
  * Copyright (c) 2013 Vojtěch Kohout (aka Tharos)
- *
- * @license MIT
- * @link http://leanmapper.tharos.cz
  */
 
 namespace LeanMapper;
@@ -16,10 +13,7 @@ use LeanMapper\Exception\InvalidValueException;
 use LeanMapper\Exception\MemberAccessException;
 use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
-use LeanMapper\Relationship\BelongsToMany;
-use LeanMapper\Relationship\BelongsToOne;
-use LeanMapper\Relationship\HasMany;
-use LeanMapper\Relationship\HasOne;
+use LeanMapper\Relationship;
 use LeanMapper\Row;
 
 /**
@@ -73,16 +67,16 @@ abstract class Entity
 			if ($property->hasRelationship()) {
 				$relationship = $property->getRelationship();
 
-				if ($relationship instanceof HasOne) {
+				if ($relationship instanceof Relationship\HasOne) {
 					$value = $this->getHasOneValue($relationship, $property);
 
-				} elseif ($relationship instanceof HasMany) {
+				} elseif ($relationship instanceof Relationship\HasMany) {
 					$value = $this->getHasManyValue($relationship);
 
-				} elseif ($relationship instanceof BelongsToOne) {
+				} elseif ($relationship instanceof Relationship\BelongsToOne) {
 					$value = $this->getBelongsToOneValue($relationship, $property);
 
-				} elseif ($relationship instanceof BelongsToMany) {
+				} elseif ($relationship instanceof Relationship\BelongsToMany) {
 					$value = $this->getBelongsToManyValue($relationship);
 				}
 			} else {
@@ -143,12 +137,12 @@ abstract class Entity
 	}
 
 	/**
-	 * @param HasOne $relationship
+	 * @param Relationship\HasOne $relationship
 	 * @param Property $property
 	 * @return mixed
 	 * @throws InvalidValueException
 	 */
-	private function getHasOneValue(HasOne $relationship, Property $property)
+	private function getHasOneValue(Relationship\HasOne $relationship, Property $property)
 	{
 		$row = $this->row->referenced($relationship->getTargetTable(), null, $relationship->getColumnReferencingTargetTable());
 		if ($row === null) {
@@ -164,10 +158,10 @@ abstract class Entity
 	}
 
 	/**
-	 * @param HasMany $relationship
+	 * @param Relationship\HasMany $relationship
 	 * @return array
 	 */
-	private function getHasManyValue(HasMany $relationship)
+	private function getHasManyValue(Relationship\HasMany $relationship)
 	{
 		$rows = $this->row->referencing($relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable());
 		$class = $this->buildEntityClassName($relationship->getTargetTable());
@@ -182,12 +176,12 @@ abstract class Entity
 	}
 
 	/**
-	 * @param BelongsToOne $relationship
+	 * @param Relationship\BelongsToOne $relationship
 	 * @param Property $property
 	 * @return mixed
 	 * @throws InvalidValueException
 	 */
-	private function getBelongsToOneValue(BelongsToOne $relationship, Property $property)
+	private function getBelongsToOneValue(Relationship\BelongsToOne $relationship, Property $property)
 	{
 		$rows = $this->row->referencing($relationship->getTargetTable(), null, $relationship->getColumnReferencingSourceTable());
 		$count = count($rows);
@@ -207,10 +201,10 @@ abstract class Entity
 	}
 
 	/**
-	 * @param BelongsToMany $relationship
+	 * @param Relationship\BelongsToMany $relationship
 	 * @return array
 	 */
-	private function getBelongsToManyValue(BelongsToMany $relationship)
+	private function getBelongsToManyValue(Relationship\BelongsToMany $relationship)
 	{
 		$rows = $this->row->referencing($relationship->getTargetTable(), null, $relationship->getColumnReferencingSourceTable());
 		$class = $this->buildEntityClassName($relationship->getTargetTable());
