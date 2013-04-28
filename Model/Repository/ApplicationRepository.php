@@ -2,28 +2,33 @@
 
 namespace Model\Repository;
 
+use Model\Entity\Application;
+
 /**
  * @author Vojtěch Kohout
  */
 class ApplicationRepository extends \LeanMapper\Repository
 {
 
+	/**
+	 * @param int $id
+	 * @return Application
+	 */
 	public function find($id)
 	{
-		$row = $this->connection->select('*')
-				->from('application')
-				->where('id = %i', $id)->fetch();
-
-		return $this->createEntity($row, 'Model\Entity\Application', 'application');
+		return $this->createEntity(
+			$this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch()
+		);
 	}
 
+	/**
+	 * @return Application[]
+	 */
 	public function findAll()
 	{
-		$rows = $this->connection->select('*')
-				->from('application')
-				->fetchAll();
-
-		return $this->createEntities($rows, 'Model\Entity\Application', 'application');
+		return $this->createEntities(
+			$this->connection->select('*')->from($this->getTable())->fetchAll()
+		);
 	}
 
 }
