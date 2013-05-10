@@ -20,7 +20,7 @@ class Result implements \Iterator
 {
 
 	/** @var array */
-	private $data;
+	private $data = array();
 
 	/** @var string */
 	private $table;
