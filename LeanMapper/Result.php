@@ -97,7 +97,8 @@ class Result implements \Iterator
 		if ($viaColumn === null) {
 			$viaColumn = $table . '_id';
 		}
-		return $this->getReferencedResult($table, $viaColumn, $filter)->getRow($this->data[$id][$viaColumn]);
+		return $this->getReferencedResult($table, $viaColumn, $filter)
+				->getRow($this->data[$id][$viaColumn]);
 	}
 
 	/**
