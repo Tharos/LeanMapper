@@ -121,44 +121,40 @@ abstract class Entity
 				throw new MemberAccessException("Undefined property: $name");
 			}
 		} else {
-			if ($property->isBasicType()) {
-				if ($value === null) {
-					if (!$property->isNullable()) {
-						throw new InvalidValueException("Property '$name' cannot be null.");
-					}
-					$this->row->$name = null;
-				} else {
+			if ($value === null) {
+				if (!$property->isNullable()) {
+					throw new InvalidValueException("Property '$name' cannot be null.");
+				}
+				$this->row->$name = null;
+			} else {
+				if ($property->isBasicType()) {
 					if (!settype($value, $property->getType())) {
 						throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
 					}
 					$this->row->$name = $value;
-				}
-			} else {
-				if ($property->hasRelationship()) {
-					$relationship = $property->getRelationship();
-					if (!($relationship instanceof Relationship\HasOne)) {
-						throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set via magic __set.');
-					}
-					if ($value === null) {
-						if (!$property->isNullable()) {
-							throw new InvalidValueException("Property '$name' cannot be null.");
-						}
-						$this->row->$name = null;
-					} else {
+				} else {
+					if ($property->hasRelationship()) {
 						if (!($value instanceof Entity)) {
 							throw new InvalidValueException("Only entites can be set via magic __set on field with relationships.");
+						}
+						$relationship = $property->getRelationship();
+						if (!($relationship instanceof Relationship\HasOne)) {
+							throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set via magic __set.');
 						}
 						$column = $relationship->getColumnReferencingTargetTable();
 						$table = $relationship->getTargetTable();
 
-						// TODO: chech that $value is already stored in database
+						// TODO: check that $value is already stored in database
 						$this->row->$column = $value->id;
 						$this->row->cleanReferencedRowsCache($table, $column);
-
-						/*if (get_class($value) !== $property->getType()) {
-							throw new InvalidValueException("Unexpected value type: '" . $property->getType() . "' expected, '" . get_class($value) . "' given.");
+					} else {
+						if (!is_object($value)) {
+							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . gettype($value) . " given.");
 						}
-						$this->row->$name = $value;*/
+						if (get_class($value) !== $property->getType()) {
+							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
+						}
+						$this->row->$name = $value;
 					}
 				}
 			}
