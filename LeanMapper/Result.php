@@ -170,6 +170,23 @@ class Result implements \Iterator
 		return $rows;
 	}
 
+	/**
+	 * @param string|null $table
+	 * @param string|null $column
+	 */
+	public function cleanReferencedResultsCache($table = null, $column = null)
+	{
+		if ($table === null or $column === null) {
+			$this->referenced = array();
+		} else {
+			foreach ($this->referenced as $key => $value) {
+				if (preg_match("~^$table\\($column\\)(#.*)?$~", $key)) {
+					unset($this->referenced[$key]);
+				}
+			}
+		}
+	}
+
 	//========== interface \Iterator ====================
 
 	/**
@@ -232,7 +249,7 @@ class Result implements \Iterator
 			$statement->where('%n.[id] IN %in', $table, $this->extractReferencedIds($viaColumn));
 			$filter($statement);
 
-			$sql = (string)$statement;
+			$sql = (string) $statement;
 			$key .= '#' . md5($sql);
 
 			if (!isset($this->referenced[$key])) {

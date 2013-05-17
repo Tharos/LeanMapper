@@ -61,7 +61,9 @@ abstract class Entity
 				}
 				return null;
 			}
-			settype($value, $property->getType());
+			if (!settype($value, $property->getType())) {
+				throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
+			}
 		} else {
 			if ($property->hasRelationship()) {
 				$relationship = $property->getRelationship();
@@ -104,8 +106,9 @@ abstract class Entity
 	/**
 	 * @param string $name
 	 * @param mixed $value
-	 * @throws Exception\InvalidValueException
-	 * @throws Exception\MemberAccessException
+	 * @throws InvalidMethodCallException
+	 * @throws InvalidValueException
+	 * @throws MemberAccessException
 	 */
 	function __set($name, $value)
 	{
@@ -114,17 +117,50 @@ abstract class Entity
 			$method = 'set' . ucfirst($name);
 			if (is_callable(array($this, $method))) {
 				call_user_func(array($this, $method), $value);
-			}
-			throw new MemberAccessException("Undefined property: $name");
-		}
-		if ($property->isBasicType()) {
-			if ($value === null) {
-				if (!$property->isNullable()) {
-					throw new InvalidValueException("Property '$name' cannot be null.");
-				}
-				$this->row->$name = null;
 			} else {
-				$this->row->$name = $value;
+				throw new MemberAccessException("Undefined property: $name");
+			}
+		} else {
+			if ($property->isBasicType()) {
+				if ($value === null) {
+					if (!$property->isNullable()) {
+						throw new InvalidValueException("Property '$name' cannot be null.");
+					}
+					$this->row->$name = null;
+				} else {
+					if (!settype($value, $property->getType())) {
+						throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
+					}
+					$this->row->$name = $value;
+				}
+			} else {
+				if ($property->hasRelationship()) {
+					$relationship = $property->getRelationship();
+					if (!($relationship instanceof Relationship\HasOne)) {
+						throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set via magic __set.');
+					}
+					if ($value === null) {
+						if (!$property->isNullable()) {
+							throw new InvalidValueException("Property '$name' cannot be null.");
+						}
+						$this->row->$name = null;
+					} else {
+						if (!($value instanceof Entity)) {
+							throw new InvalidValueException("Only entites can be set via magic __set on field with relationships.");
+						}
+						$column = $relationship->getColumnReferencingTargetTable();
+						$table = $relationship->getTargetTable();
+
+						// TODO: chech that $value is already stored in database
+						$this->row->$column = $value->id;
+						$this->row->cleanReferencedRowsCache($table, $column);
+
+						/*if (get_class($value) !== $property->getType()) {
+							throw new InvalidValueException("Unexpected value type: '" . $property->getType() . "' expected, '" . get_class($value) . "' given.");
+						}
+						$this->row->$name = $value;*/
+					}
+				}
 			}
 		}
 	}

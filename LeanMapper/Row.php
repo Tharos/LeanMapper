@@ -68,6 +68,15 @@ class Row
 	}
 
 	/**
+	 * @param string|null $table
+	 * @param string|null $column
+	 */
+	public function cleanReferencedRowsCache($table = null, $column = null)
+	{
+		$this->result->cleanReferencedResultsCache($table, $column);
+	}
+
+	/**
 	 * @param string $table
 	 * @param Closure|null $filter
 	 * @param string|null $viaColumn

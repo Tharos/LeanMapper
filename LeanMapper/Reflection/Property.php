@@ -26,9 +26,6 @@ class Property
 	private $type;
 
 	/** @var bool */
-	private $isWritable;
-
-	/** @var bool */
 	private $isNullable;
 
 	/** @var bool */
