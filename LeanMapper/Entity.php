@@ -147,6 +147,22 @@ abstract class Entity
 		throw new InvalidMethodCallException("Method '$name' is not callable.");
 	}
 
+	/**
+	 * @return bool
+	 */
+	public function isModified()
+	{
+		return $this->row->isModified();
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getModifiedFields()
+	{
+		return $this->row->getModifiedData();
+	}
+
 	////////////////////
 	////////////////////
 

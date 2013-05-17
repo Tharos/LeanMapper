@@ -110,6 +110,30 @@ class Result implements \Iterator
 
 	/**
 	 * @param int $id
+	 * @return bool
+	 */
+	public function isModified($id)
+	{
+		return isset($this->modified[$id]) and !empty($this->modified[$id]);
+	}
+
+	/**
+	 * @param int $id
+	 * @return array
+	 */
+	public function getModifiedData($id)
+	{
+		$result = array();
+		if (isset($this->modified[$id])) {
+			foreach (array_keys($this->modified[$id]) as $field) {
+				$result[$field] = $this->data[$id][$field];
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * @param int $id
 	 * @param string $table
 	 * @param callable|null $filter
 	 * @param string|null $viaColumn

@@ -37,7 +37,7 @@ class Row
 	 * @param string $name
 	 * @return mixed
 	 */
-	function __get($name)
+	public function __get($name)
 	{
 		return $this->result->getData($this->id, $name);
 	}
@@ -46,9 +46,25 @@ class Row
 	 * @param string $name
 	 * @param mixed $value
 	 */
-	function __set($name, $value)
+	public function __set($name, $value)
 	{
 		$this->result->setData($this->id, $name, $value);
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isModified()
+	{
+		return $this->result->isModified($this->id);
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getModifiedData()
+	{
+		return $this->result->getModifiedData($this->id);
 	}
 
 	/**
