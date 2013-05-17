@@ -25,6 +25,9 @@ abstract class Entity
 	/** @var Row */
 	protected $row;
 
+	/** @var EntityReflection[] */
+	protected static $reflections = array();
+
 
 	/**
 	 * @param Row $row
@@ -33,10 +36,6 @@ abstract class Entity
 	{
 		$this->row = $row;
 	}
-
-	/** @var EntityReflection[] */
-	protected static $reflections = array();
-
 
 	/**
 	 * @param string $name
