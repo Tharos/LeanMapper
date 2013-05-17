@@ -9,6 +9,7 @@
 namespace LeanMapper;
 
 use Closure;
+use DibiConnection;
 
 /**
  * @author Vojtěch Kohout
@@ -57,6 +58,30 @@ class Row
 	public function isModified()
 	{
 		return $this->result->isModified($this->id);
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isDetached()
+	{
+		return $this->result->isDetached();
+	}
+
+	public function markAsUpdated()
+	{
+		$this->result->markAsUpdated($this->id);
+	}
+
+	/**
+	 * @param int $id
+	 * @param string $table
+	 * @param DibiConnection $connection
+	 */
+	public function markAsCreated($id, $table, DibiConnection $connection)
+	{
+		$this->id = $id;
+		$this->result->markAsCreated($this->id, $table, $connection);
 	}
 
 	/**

@@ -42,6 +42,9 @@ class Result implements \Iterator
 	/** @var array */
 	private $referencing = array();
 
+	/** @var bool */
+	private $isDetached = false;
+
 
 	/**
 	 * @param DibiRow|DibiRow[] $data
@@ -64,7 +67,7 @@ class Result implements \Iterator
 				}
 			}
 		} else {
-			throw new InvalidArgumentException('Invalid type of data given, only DibiRow or DibiRow[] is supported at this moment.');
+			throw new InvalidArgumentException('Invalid type of data given, only DibiRow or array of DibiRow is supported at this moment.');
 		}
 		return new self($dataArray, $table, $connection);
 	}
@@ -74,7 +77,7 @@ class Result implements \Iterator
 	 */
 	public static function getDetachedInstance()
 	{
-		return new self(array(array()));
+		return new self;
 	}
 
 	/**
@@ -128,6 +131,43 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * @return bool
+	 */
+	public function isDetached()
+	{
+		return $this->isDetached;
+	}
+
+	/**
+	 * @param int $id
+	 */
+	public function markAsUpdated($id)
+	{
+		if (isset($this->modified[$id])) {
+			unset($this->modified[$id]);
+		}
+	}
+
+	/**
+	 * @param int $id
+	 * @param string $table
+	 * @param DibiConnection $connection
+	 * @throws InvalidStateException
+	 */
+	public function markAsCreated($id, $table, DibiConnection $connection)
+	{
+		if (!$this->isDetached()) {
+			throw new InvalidStateException('Result is not in detached state.');
+		}
+		$this->data = array($id => array('id' => $id) + $this->data[0]);
+		unset($this->modified[0]);
+
+		$this->table = $table;
+		$this->connection = $connection;
+		$this->isDetached = false;
+	}
+
+	/**
 	 * @param int $id
 	 * @return array
 	 */
@@ -152,8 +192,8 @@ class Result implements \Iterator
 	 */
 	public function getReferencedRow($id, $table, Closure $filter = null, $viaColumn = null)
 	{
-		if ($this->connection === null or $this->table === null) {
-			throw new InvalidStateException('Cannot get referenced row for detached result.');
+		if ($this->connection === null) {
+			throw new InvalidStateException('Cannot get referenced row for result without DibiConnection instance.');
 		}
 		if ($viaColumn === null) {
 			$viaColumn = $table . '_id';
@@ -247,15 +287,21 @@ class Result implements \Iterator
 	////////////////////
 
 	/**
-	 * @param array $data
+	 * @param array|null $data
 	 * @param string|null $table
 	 * @param DibiConnection|null $connection
 	 */
-	private function __construct(array $data, $table = null, DibiConnection $connection = null)
+	private function __construct(array $data = null, $table = null, DibiConnection $connection = null)
 	{
+		if ($data === null) {
+			$data = array(array());
+		}
 		$this->data = $data;
 		$this->table = $table;
 		$this->connection = $connection;
+		if (func_num_args() === 0) {
+			$this->isDetached = true;
+		}
 	}
 
 	/**

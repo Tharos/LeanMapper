@@ -8,6 +8,7 @@
 
 namespace LeanMapper;
 
+use DibiConnection;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidValueException;
 use LeanMapper\Exception\MemberAccessException;
@@ -144,7 +145,9 @@ abstract class Entity
 						$column = $relationship->getColumnReferencingTargetTable();
 						$table = $relationship->getTargetTable();
 
-						// TODO: check that $value is already stored in database
+						if ($value->isDetached()) {
+							throw new InvalidValueException('Detached entity must be stored in database before use in relationships.');
+						}
 						$this->row->$column = $value->id;
 						$this->row->cleanReferencedRowsCache($table, $column);
 					} else {
@@ -188,11 +191,34 @@ abstract class Entity
 	}
 
 	/**
+	 * @return bool
+	 */
+	public function isDetached()
+	{
+		return $this->row->isDetached();
+	}
+
+	/**
 	 * @return array
 	 */
 	public function getModifiedFields()
 	{
 		return $this->row->getModifiedData();
+	}
+
+	public function markAsUpdated()
+	{
+		$this->row->markAsUpdated();
+	}
+
+	/**
+	 * @param int $id
+	 * @param string $table
+	 * @param DibiConnection $connection
+	 */
+	public function markAsCreated($id, $table, DibiConnection $connection)
+	{
+		$this->row->markAsCreated($id, $table, $connection);
 	}
 
 	////////////////////
