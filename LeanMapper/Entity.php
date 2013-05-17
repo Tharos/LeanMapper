@@ -113,6 +113,9 @@ abstract class Entity
 	 */
 	function __set($name, $value)
 	{
+		if ($name === 'id') {
+			throw new MemberAccessException('Entity ID cannot be set via setter.');
+		}
 		$property = $this->getReflection()->getEntityProperty($name);
 		if ($property === null) {
 			$method = 'set' . ucfirst($name);
