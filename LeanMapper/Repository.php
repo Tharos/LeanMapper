@@ -56,7 +56,7 @@ abstract class Repository
 		if ($table === null) {
 			$table = $this->getTable();
 		}
-		$collection = new Result($row, $table, $this->connection);
+		$collection = Result::getInstance($row, $table, $this->connection);
 		return new $entityClass($collection->getRow($row->id));
 	}
 
@@ -75,7 +75,7 @@ abstract class Repository
 			$table = $this->getTable();
 		}
 		$entities = array();
-		$collection = new Result($rows, $table, $this->connection);
+		$collection = Result::getInstance($rows, $table, $this->connection);
 		foreach ($rows as $row) {
 			$entities[$row->id] = new $entityClass($collection->getRow($row->id));
 		}
