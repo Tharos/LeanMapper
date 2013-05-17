@@ -11,6 +11,7 @@ namespace LeanMapper;
 use Closure;
 use DibiConnection;
 use DibiRow;
+use LeanMapper\Exception\InvalidStateException;
 use Nette\Callback;
 use LeanMapper\Exception\InvalidArgumentException;
 
@@ -21,7 +22,7 @@ class Result implements \Iterator
 {
 
 	/** @var array */
-	private $data = array();
+	private $data;
 
 	/** @var array */
 	private $modified = array();
@@ -46,32 +47,41 @@ class Result implements \Iterator
 	 * @param DibiRow|DibiRow[] $data
 	 * @param string $table
 	 * @param DibiConnection $connection
+	 * @return self
+	 * @throws InvalidArgumentException
 	 */
-	public function __construct($data, $table, DibiConnection $connection)
+	public static function getInstance($data, $table, DibiConnection $connection)
 	{
+		$dataArray = array();
 		if ($data instanceof DibiRow) {
-			$this->data = array(isset($data->id) ? $data->id : 0 => $data->toArray());
+			$dataArray = array(isset($data->id) ? $data->id : 0 => $data->toArray());
 		} elseif (is_array($data)) {
 			foreach ($data as $record) {
-				/** @var DibiRow $record */
 				if (isset($record->id)) {
-					$this->data[$record->id] = $record->toArray();
+					$dataArray[$record->id] = $record->toArray();
 				} else {
-					$this->data[] = $record->toArray();
+					$dataArray[] = $record->toArray();
 				}
 			}
 		} else {
-			// TODO: Throw Exception
+			throw new InvalidArgumentException('Invalid type of data given, only DibiRow or DibiRow[] is supported at this moment.');
 		}
-		$this->table = $table;
-		$this->connection = $connection;
+		return new self($dataArray, $table, $connection);
+	}
+
+	/**
+	 * @return self
+	 */
+	public static function getDetachedInstance()
+	{
+		return new self(array(array()));
 	}
 
 	/**
 	 * @param int $id
 	 * @return Row|null
 	 */
-	public function getRow($id)
+	public function getRow($id = 0)
 	{
 		if (!array_key_exists($id, $this->data)) {
 			return null;
@@ -85,10 +95,10 @@ class Result implements \Iterator
 	 * @return mixed
 	 * @throws InvalidArgumentException
 	 */
-	public function getData($id, $key)
+	public function getDataEntry($id, $key)
 	{
 		if (!array_key_exists($id, $this->data) or !array_key_exists($key, $this->data[$id])) {
-			throw new InvalidArgumentException("Missing '$key' value for row with ID $id.");
+			throw new InvalidArgumentException("Missing '$key' value for requested row.");
 		}
 		return $this->data[$id][$key];
 	}
@@ -99,10 +109,10 @@ class Result implements \Iterator
 	 * @param mixed $value
 	 * @throws InvalidArgumentException
 	 */
-	public function setData($id, $key, $value)
+	public function setDataEntry($id, $key, $value)
 	{
-		if (!array_key_exists($id, $this->data) or !array_key_exists($key, $this->data[$id])) {
-			throw new InvalidArgumentException("Missing '$key' value for row with ID $id.");
+		if (!array_key_exists($id, $this->data)) {
+			throw new InvalidArgumentException("Missing row with ID $id.");
 		}
 		$this->data[$id][$key] = $value;
 		$this->modified[$id][$key] = true;
@@ -137,15 +147,19 @@ class Result implements \Iterator
 	 * @param string $table
 	 * @param callable|null $filter
 	 * @param string|null $viaColumn
+	 * @throws InvalidStateException
 	 * @return Row
 	 */
 	public function getReferencedRow($id, $table, Closure $filter = null, $viaColumn = null)
 	{
+		if ($this->connection === null or $this->table === null) {
+			throw new InvalidStateException('Cannot get referenced row for detached result.');
+		}
 		if ($viaColumn === null) {
 			$viaColumn = $table . '_id';
 		}
 		return $this->getReferencedResult($table, $viaColumn, $filter)
-				->getRow($this->getData($id, $viaColumn));
+				->getRow($this->getDataEntry($id, $viaColumn));
 	}
 
 	/**
@@ -153,10 +167,14 @@ class Result implements \Iterator
 	 * @param string $table
 	 * @param callable|null $filter
 	 * @param string|null $viaColumn
+	 * @throws InvalidStateException
 	 * @return Row[]
 	 */
 	public function getReferencingRows($id, $table, Closure $filter = null, $viaColumn = null)
 	{
+		if ($this->connection === null or $this->table === null) {
+			throw new InvalidStateException('Cannot get referencing rows for detached result.');
+		}
 		if ($viaColumn === null) {
 			$viaColumn = $this->table . '_id';
 		}
@@ -229,6 +247,18 @@ class Result implements \Iterator
 	////////////////////
 
 	/**
+	 * @param array $data
+	 * @param string|null $table
+	 * @param DibiConnection|null $connection
+	 */
+	private function __construct(array $data, $table = null, DibiConnection $connection = null)
+	{
+		$this->data = $data;
+		$this->table = $table;
+		$this->connection = $connection;
+	}
+
+	/**
 	 * @param string $table
 	 * @param string $viaColumn
 	 * @param Closure|null $filter
@@ -243,7 +273,7 @@ class Result implements \Iterator
 			if (!isset($this->referenced[$key])) {
 				$data = $statement->where('%n.[id] IN %in', $table, $this->extractReferencedIds($viaColumn))
 						->fetchAll();
-				$this->referenced[$key] = new self($data, $table, $this->connection);
+				$this->referenced[$key] = self::getInstance($data, $table, $this->connection);
 			}
 		} else {
 			$statement->where('%n.[id] IN %in', $table, $this->extractReferencedIds($viaColumn));
@@ -253,7 +283,7 @@ class Result implements \Iterator
 			$key .= '#' . md5($sql);
 
 			if (!isset($this->referenced[$key])) {
-				$this->referenced[$key] = new self($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+				$this->referenced[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
 			}
 		}
 		return $this->referenced[$key];
@@ -274,7 +304,7 @@ class Result implements \Iterator
 			if (!isset($this->referencing[$key])) {
 				$data = $statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractReferencedIds())
 						->fetchAll();
-				$this->referencing[$key] = new self($data, $table, $this->connection);
+				$this->referencing[$key] = self::getInstance($data, $table, $this->connection);
 			}
 		} else {
 			$statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractReferencedIds());
@@ -284,7 +314,7 @@ class Result implements \Iterator
 			$key .= '#' . md5($sql);
 
 			if (!isset($this->referencing[$key])) {
-				$this->referencing[$key] = new self($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+				$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
 			}
 		}
 		return $this->referencing[$key];

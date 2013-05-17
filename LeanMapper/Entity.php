@@ -30,11 +30,11 @@ abstract class Entity
 
 
 	/**
-	 * @param Row $row
+	 * @param Row|null $row
 	 */
-	public function __construct(Row $row)
+	public function __construct(Row $row = null)
 	{
-		$this->row = $row;
+		$this->row = $row !== null ? $row : Result::getDetachedInstance()->getRow();
 	}
 
 	/**

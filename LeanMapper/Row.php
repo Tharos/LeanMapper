@@ -39,7 +39,7 @@ class Row
 	 */
 	public function __get($name)
 	{
-		return $this->result->getData($this->id, $name);
+		return $this->result->getDataEntry($this->id, $name);
 	}
 
 	/**
@@ -48,7 +48,7 @@ class Row
 	 */
 	public function __set($name, $value)
 	{
-		$this->result->setData($this->id, $name, $value);
+		$this->result->setDataEntry($this->id, $name, $value);
 	}
 
 	/**
