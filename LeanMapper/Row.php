@@ -43,6 +43,15 @@ class Row
 	}
 
 	/**
+	 * @param string $name
+	 * @param mixed $value
+	 */
+	function __set($name, $value)
+	{
+		$this->result->setData($this->id, $name, $value);
+	}
+
+	/**
 	 * @param string $table
 	 * @param Closure|null $filter
 	 * @param string|null $viaColumn

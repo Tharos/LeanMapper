@@ -103,6 +103,34 @@ abstract class Entity
 
 	/**
 	 * @param string $name
+	 * @param mixed $value
+	 * @throws Exception\InvalidValueException
+	 * @throws Exception\MemberAccessException
+	 */
+	function __set($name, $value)
+	{
+		$property = $this->getReflection()->getEntityProperty($name);
+		if ($property === null) {
+			$method = 'set' . ucfirst($name);
+			if (is_callable(array($this, $method))) {
+				call_user_func(array($this, $method), $value);
+			}
+			throw new MemberAccessException("Undefined property: $name");
+		}
+		if ($property->isBasicType()) {
+			if ($value === null) {
+				if (!$property->isNullable()) {
+					throw new InvalidValueException("Property '$name' cannot be null.");
+				}
+				$this->row->$name = null;
+			} else {
+				$this->row->$name = $value;
+			}
+		}
+	}
+
+	/**
+	 * @param string $name
 	 * @param array $arguments
 	 * @param array $arguments
 	 * @return mixed

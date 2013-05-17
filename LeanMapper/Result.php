@@ -12,6 +12,7 @@ use Closure;
 use DibiConnection;
 use DibiRow;
 use Nette\Callback;
+use LeanMapper\Exception\InvalidArgumentException;
 
 /**
  * @author Vojtěch Kohout
@@ -21,6 +22,9 @@ class Result implements \Iterator
 
 	/** @var array */
 	private $data = array();
+
+	/** @var array */
+	private $modified = array();
 
 	/** @var string */
 	private $table;
@@ -79,10 +83,29 @@ class Result implements \Iterator
 	 * @param int $id
 	 * @param string $key
 	 * @return mixed
+	 * @throws InvalidArgumentException
 	 */
 	public function getData($id, $key)
 	{
+		if (!array_key_exists($id, $this->data) or !array_key_exists($key, $this->data[$id])) {
+			throw new InvalidArgumentException("Missing '$key' value for row with ID $id.");
+		}
 		return $this->data[$id][$key];
+	}
+
+	/**
+	 * @param int $id
+	 * @param string $key
+	 * @param mixed $value
+	 * @throws InvalidArgumentException
+	 */
+	public function setData($id, $key, $value)
+	{
+		if (!array_key_exists($id, $this->data) or !array_key_exists($key, $this->data[$id])) {
+			throw new InvalidArgumentException("Missing '$key' value for row with ID $id.");
+		}
+		$this->data[$id][$key] = $value;
+		$this->modified[$id][$key] = true;
 	}
 
 	/**
@@ -98,7 +121,7 @@ class Result implements \Iterator
 			$viaColumn = $table . '_id';
 		}
 		return $this->getReferencedResult($table, $viaColumn, $filter)
-				->getRow($this->data[$id][$viaColumn]);
+				->getRow($this->getData($id, $viaColumn));
 	}
 
 	/**
