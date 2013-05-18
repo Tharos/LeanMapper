@@ -8,6 +8,7 @@
 
 namespace LeanMapper;
 
+use dibi;
 use DibiConnection;
 use DibiRow;
 use LeanMapper\Exception\InvalidStateException;
@@ -40,6 +41,41 @@ abstract class Repository
 	public function __construct(DibiConnection $connection)
 	{
 		$this->connection = $connection;
+	}
+
+	/**
+	 * @param Entity $entity
+	 * @return int
+	 */
+	public function persist(Entity $entity)
+	{
+		if ($entity->isModified()) {
+			$values = $entity->getModifiedData();
+			if ($entity->isDetached()) {
+				$this->connection->insert($this->getTable(), $values)
+						->execute(); // dibi::IDENTIFIER would lead to exception when there is no column with AUTO_INCREMENT
+				$id = isset($values['id']) ? $values['id'] : $this->connection->getInsertId();
+				$entity->markAsCreated($id, $this->getTable(), $this->connection);
+				return $id;
+			} else {
+				$result = $this->connection->update($this->getTable(), $values)
+						->where('[id] = %i', $entity->id)
+						->execute();
+				$entity->markAsUpdated();
+				return $result;
+			}
+		}
+	}
+
+	/**
+	 * @param Entity|int $arg
+	 */
+	public function delete($arg)
+	{
+		$id = ($arg instanceof Entity) ? $arg->id : $arg;
+		$this->connection->delete($this->getTable())
+				->where('[id] = %i', $id)
+				->execute();
 	}
 
 	/**
