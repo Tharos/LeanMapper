@@ -11,9 +11,9 @@ namespace LeanMapper;
 use Closure;
 use DibiConnection;
 use DibiRow;
+use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidStateException;
 use Nette\Callback;
-use LeanMapper\Exception\InvalidArgumentException;
 
 /**
  * @author Vojtěch Kohout

@@ -201,7 +201,7 @@ abstract class Entity
 	/**
 	 * @return array
 	 */
-	public function getModifiedFields()
+	public function getModifiedData()
 	{
 		return $this->row->getModifiedData();
 	}
