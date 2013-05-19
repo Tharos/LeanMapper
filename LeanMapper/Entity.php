@@ -49,7 +49,7 @@ abstract class Entity
 		$property = $this->getReflection()->getEntityProperty($name);
 		if ($property === null) {
 			$method = 'get' . ucfirst($name);
-			if (is_callable(array($this, $method))) {
+			if (method_exists($this, $method)) { // TODO: find better solution (using reflection)
 				return call_user_func(array($this, $method));
 			}
 			throw new MemberAccessException("Undefined property: $name");
@@ -116,7 +116,7 @@ abstract class Entity
 		$property = $this->getReflection()->getEntityProperty($name);
 		if ($property === null) {
 			$method = 'set' . ucfirst($name);
-			if (is_callable(array($this, $method))) {
+			if (method_exists($this, $method)) { // TODO: find better solution (using reflection)
 				call_user_func(array($this, $method), $value);
 			} else {
 				throw new MemberAccessException("Undefined property: $name");

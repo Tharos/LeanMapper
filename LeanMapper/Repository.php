@@ -12,7 +12,8 @@ use dibi;
 use DibiConnection;
 use DibiRow;
 use LeanMapper\Exception\InvalidStateException;
-use Nette\Reflection\ClassType;
+use LeanMapper\Reflection\AnnotationsParser;
+use ReflectionClass;
 
 /**
  * @author Vojtěch Kohout
@@ -31,8 +32,8 @@ abstract class Repository
 	/** @var string */
 	protected $entityClass;
 
-	/** @var ClassType */
-	private $reflection;
+	/** @var string */
+	private $docComment;
 
 
 	/**
@@ -125,8 +126,8 @@ abstract class Repository
 	protected function getTable()
 	{
 		if ($this->table === null) {
-			$reflection = $this->getReflection();
-			if (($name = $reflection->getAnnotation('table')) !== null) {
+			$name = AnnotationsParser::parseSimpleAnnotationValue('table', $this->getDocComment());
+			if ($name !== null) {
 				$this->table = $name;
 			} else {
 				$matches = array();
@@ -147,8 +148,8 @@ abstract class Repository
 	protected function getEntityClass()
 	{
 		if ($this->entityClass === null) {
-			$reflection = $this->getReflection();
-			if (($name = $reflection->getAnnotation('entity')) !== null) {
+			$name = AnnotationsParser::parseSimpleAnnotationValue('entity', $this->getDocComment());
+			if ($name !== null) {
 				$this->entityClass = $name;
 			} else {
 				$matches = array();
@@ -166,14 +167,15 @@ abstract class Repository
 	////////////////////
 
 	/**
-	 * @return ClassType
+	 * @return string
 	 */
-	private function getReflection()
+	public function getDocComment()
 	{
-		if ($this->reflection === null) {
-			$this->reflection = new ClassType(get_called_class());
+		if ($this->docComment === null) {
+			$reflection = new ReflectionClass(get_called_class());
+			$this->docComment = $reflection->getDocComment();
 		}
-		return $this->reflection;
+		return $this->docComment;
 	}
 	
 }
