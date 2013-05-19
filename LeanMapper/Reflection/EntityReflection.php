@@ -11,7 +11,7 @@ namespace LeanMapper\Reflection;
 /**
  * @author Vojtěch Kohout
  */
-class EntityReflection extends \Nette\Reflection\ClassType
+class EntityReflection extends \ReflectionClass
 {
 
 	/** @var Property[] */
@@ -19,6 +19,9 @@ class EntityReflection extends \Nette\Reflection\ClassType
 
 	/** @var array */
 	private $aliases;
+
+	/** @var string */
+	private $docComment;
 
 
 	/**
@@ -42,6 +45,25 @@ class EntityReflection extends \Nette\Reflection\ClassType
 		return $this->aliases;
 	}
 
+	/**
+	 * @return self|null
+	 */
+	public function getParentClass()
+	{
+		return ($reflection = parent::getParentClass()) ? new self($reflection->getName()) : null;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getDocComment()
+	{
+		if ($this->docComment === null) {
+			$this->docComment = parent::getDocComment();
+		}
+		return $this->docComment;
+	}
+
 	////////////////////
 	////////////////////
 
@@ -55,6 +77,13 @@ class EntityReflection extends \Nette\Reflection\ClassType
 	private function parseProperties()
 	{
 		foreach ($this->getFamilyLine() as $member) {
+			foreach (AnnotationsParser::parseAnnotationValues('property', $member->getDocComment()) as $definition) {
+				$property = PropertyFactory::createFromAnnotation($definition, $this);
+				$this->properties[$property->getName()] = $property;
+			}
+		}
+
+		/*foreach ($this->getFamilyLine() as $member) {
 			$annotations = $member->getAnnotations();
 
 			if (isset($annotations['property'])) {
@@ -63,7 +92,7 @@ class EntityReflection extends \Nette\Reflection\ClassType
 					$this->properties[$property->getName()] = $property;
 				}
 			}
-		}
+		}*/
 	}
 
 	/**
