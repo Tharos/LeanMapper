@@ -9,6 +9,7 @@
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
+use LeanMapper\Exception\RuntimeException;
 
 /**
  * @author Vojtěch Kohout
@@ -50,14 +51,19 @@ class PropertyFilters
 				$this->filters[] = $function;
 			}
 		}
+		// TODO: support for multiple filters
+		if (count($this->filters) > 1) {
+			throw new RuntimeException('Support for multiple filters in annotations is not supported yet.');
+		}
 	}
 
 	/**
-	 * @return string[]
+	 * @return string|null
 	 */
-	public function getFilters()
+	public function getFilter()
 	{
-		return $this->filters;
+		// TODO: support for multiple filters
+		return empty($this->filters) ? null : reset($this->filters);
 	}
 
 }

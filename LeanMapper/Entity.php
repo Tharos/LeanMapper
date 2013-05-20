@@ -44,7 +44,7 @@ abstract class Entity
 	 * @throws InvalidValueException
 	 * @throws MemberAccessException
 	 */
-	public function __get($name)
+	public function __get($name/*, $filterArg1, $filterArg2, ...*/)
 	{
 		$property = $this->getReflection()->getEntityProperty($name);
 		if ($property === null) {
@@ -176,7 +176,7 @@ abstract class Entity
 		if (strlen($name) > 3) {
 			$prefix = substr($name, 0, 3);
 			if ($prefix === 'get') {
-				return $this->__get(lcfirst(substr($name, 3)));
+				return $this->__get(lcfirst(substr($name, 3)), $arguments);
 			}
 		}
 		throw new InvalidMethodCallException("Method '$name' is not callable.");
