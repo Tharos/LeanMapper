@@ -23,10 +23,9 @@ class PropertyType
 
 	/**
 	 * @param string $type
-	 * @param string $namespace
-	 * @param array $aliases
+	 * @param Aliases $aliases
 	 */
-	public function __construct($type, $namespace, array $aliases)
+	public function __construct($type, Aliases $aliases)
 	{
 		if (preg_match('#^(boolean|bool|integer|int|float|string|array)$#', $type)) {
 			if ($type === 'bool') {
@@ -40,11 +39,7 @@ class PropertyType
 			if (substr($type, 0, 1) === '\\') {
 				$type = substr($type, 1);
 			} else {
-				if (isset($aliases[$type])) {
-					$type = $aliases[$type];
-				} else {
-					$type = $namespace !== '' ? $namespace . '\\' . $type : $type;
-				}
+				$type = $aliases->translate($type);
 			}
 			$this->isBasicType = false;
 		}
