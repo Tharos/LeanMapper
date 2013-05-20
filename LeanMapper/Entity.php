@@ -8,10 +8,13 @@
 
 namespace LeanMapper;
 
+use Closure;
 use DibiConnection;
+use DibiFluent;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidValueException;
 use LeanMapper\Exception\MemberAccessException;
+use LeanMapper\Exception\RuntimeException;
 use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
 use LeanMapper\Relationship;
@@ -43,14 +46,15 @@ abstract class Entity
 	 * @return mixed
 	 * @throws InvalidValueException
 	 * @throws MemberAccessException
+	 * @throws RuntimeException
 	 */
-	public function __get($name/*, $filterArg1, $filterArg2, ...*/)
+	public function __get($name/*, array $filterArgs*/)
 	{
 		$property = $this->getReflection()->getEntityProperty($name);
 		if ($property === null) {
 			$method = 'get' . ucfirst($name);
 			if (method_exists($this, $method)) { // TODO: find better solution (using reflection)
-				return call_user_func(array($this, $method));
+				return call_user_func(array($this, $method)); // $filterArgs are not relevant here
 			}
 			throw new MemberAccessException("Undefined property: $name");
 		}
@@ -69,18 +73,21 @@ abstract class Entity
 			if ($property->hasRelationship()) {
 				$relationship = $property->getRelationship();
 
-				if ($relationship instanceof Relationship\HasOne) {
-					$value = $this->getHasOneValue($property);
-
-				} elseif ($relationship instanceof Relationship\HasMany) {
-					$value = $this->getHasManyValue($property);
-
-				} elseif ($relationship instanceof Relationship\BelongsToOne) {
-					$value = $this->getBelongsToOneValue($property);
-
-				} elseif ($relationship instanceof Relationship\BelongsToMany) {
-					$value = $this->getBelongsToManyValue($property);
+				$filter = null;
+				$callbacks = $property->getFilters();
+				if (!empty($callbacks) and func_num_args() === 2) {
+					$filterArgs = func_get_arg(1);
+					$filter = function (DibiFluent $statement) use ($callbacks, $filterArgs) {
+						foreach ($callbacks as $callback) {
+							call_user_func_array($callback, array_merge(array($statement), $filterArgs));
+						}
+					};
 				}
+
+				$method = explode('\\', get_class($relationship));
+				$method = 'get' . array_pop($method) . 'Value';
+				$value = $this->$method($property, $filter);
+
 			} else {
 				$value = $this->row->$name;
 				$actualClass = get_class($value);
@@ -239,13 +246,14 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
+	 * @param Closure|null $filter
 	 * @return mixed
 	 * @throws InvalidValueException
 	 */
-	private function getHasOneValue(Property $property)
+	private function getHasOneValue(Property $property, Closure $filter = null)
 	{
 		$relationship = $property->getRelationship();
-		$row = $this->row->referenced($relationship->getTargetTable(), null, $relationship->getColumnReferencingTargetTable());
+		$row = $this->row->referenced($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingTargetTable());
 		if ($row === null) {
 			if (!$property->isNullable()) {
 				$name = $property->getName();
@@ -260,16 +268,17 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
+	 * @param Closure|null $filter
 	 * @return array
 	 */
-	private function getHasManyValue(Property $property)
+	private function getHasManyValue(Property $property, Closure $filter = null)
 	{
 		$relationship = $property->getRelationship();
 		$rows = $this->row->referencing($relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable());
 		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {
-			$valueRow = $row->referenced($relationship->getTargetTable(), null, $relationship->getColumnReferencingTargetTable());
+			$valueRow = $row->referenced($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingTargetTable());
 			if ($valueRow !== null) {
 				$value[] = new $class($valueRow);
 			}
@@ -279,13 +288,14 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
+	 * @param Closure|null $filter
 	 * @return mixed
 	 * @throws InvalidValueException
 	 */
-	private function getBelongsToOneValue(Property $property)
+	private function getBelongsToOneValue(Property $property, Closure $filter = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), null, $relationship->getColumnReferencingSourceTable());
+		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable());
 		$count = count($rows);
 		if ($count > 1) {
 			throw new InvalidValueException('There cannot be more than one entity referencing to entity with m:belongToOne relationship.');
@@ -304,12 +314,13 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
+	 * @param Closure|null $filter
 	 * @return array
 	 */
-	private function getBelongsToManyValue(Property $property)
+	private function getBelongsToManyValue(Property $property, Closure $filter = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), null, $relationship->getColumnReferencingSourceTable());
+		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable());
 		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {

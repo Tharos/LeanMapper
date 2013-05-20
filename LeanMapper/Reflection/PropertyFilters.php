@@ -51,19 +51,14 @@ class PropertyFilters
 				$this->filters[] = $function;
 			}
 		}
-		// TODO: support for multiple filters
-		if (count($this->filters) > 1) {
-			throw new RuntimeException('Support for multiple filters in annotations is not supported yet.');
-		}
 	}
 
 	/**
-	 * @return string|null
+	 * @return string[]
 	 */
-	public function getFilter()
+	public function getFilters()
 	{
-		// TODO: support for multiple filters
-		return empty($this->filters) ? null : reset($this->filters);
+		return $this->filters;
 	}
 
 }

@@ -113,11 +113,11 @@ class Property
 	}
 
 	/**
-	 * @return array|null
+	 * @return string[]
 	 */
 	public function getFilters()
 	{
-		return $this->filters->getFilters();
+		return $this->filters !== null ? $this->filters->getFilters() : null;
 	}
 
 }
