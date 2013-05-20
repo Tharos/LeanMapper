@@ -71,18 +71,19 @@ abstract class Entity
 			}
 		} else {
 			if ($property->hasRelationship()) {
-				$relationship = $property->getRelationship();
 
 				$filter = null;
 				$callbacks = $property->getFilters();
-				if (!empty($callbacks) and func_num_args() === 2) {
-					$filterArgs = func_get_arg(1);
+				if (!empty($callbacks)) {
+					$args = func_get_args();
+					$filterArgs = isset($args[1]) ? $args[1] : array();
 					$filter = function (DibiFluent $statement) use ($callbacks, $filterArgs) {
 						foreach ($callbacks as $callback) {
 							call_user_func_array($callback, array_merge(array($statement), $filterArgs));
 						}
 					};
 				}
+				$relationship = $property->getRelationship();
 
 				$method = explode('\\', get_class($relationship));
 				$method = 'get' . array_pop($method) . 'Value';
