@@ -70,16 +70,16 @@ abstract class Entity
 				$relationship = $property->getRelationship();
 
 				if ($relationship instanceof Relationship\HasOne) {
-					$value = $this->getHasOneValue($relationship, $property);
+					$value = $this->getHasOneValue($property);
 
 				} elseif ($relationship instanceof Relationship\HasMany) {
-					$value = $this->getHasManyValue($relationship);
+					$value = $this->getHasManyValue($property);
 
 				} elseif ($relationship instanceof Relationship\BelongsToOne) {
-					$value = $this->getBelongsToOneValue($relationship, $property);
+					$value = $this->getBelongsToOneValue($property);
 
 				} elseif ($relationship instanceof Relationship\BelongsToMany) {
-					$value = $this->getBelongsToManyValue($relationship);
+					$value = $this->getBelongsToManyValue($property);
 				}
 			} else {
 				$value = $this->row->$name;
@@ -238,13 +238,13 @@ abstract class Entity
 	}
 
 	/**
-	 * @param Relationship\HasOne $relationship
 	 * @param Property $property
 	 * @return mixed
 	 * @throws InvalidValueException
 	 */
-	private function getHasOneValue(Relationship\HasOne $relationship, Property $property)
+	private function getHasOneValue(Property $property)
 	{
+		$relationship = $property->getRelationship();
 		$row = $this->row->referenced($relationship->getTargetTable(), null, $relationship->getColumnReferencingTargetTable());
 		if ($row === null) {
 			if (!$property->isNullable()) {
@@ -253,19 +253,20 @@ abstract class Entity
 			}
 			return null;
 		} else {
-			$class = $this->buildEntityClassName($relationship->getTargetTable());
+			$class = $property->getType();
 			return new $class($row);
 		}
 	}
 
 	/**
-	 * @param Relationship\HasMany $relationship
+	 * @param Property $property
 	 * @return array
 	 */
-	private function getHasManyValue(Relationship\HasMany $relationship)
+	private function getHasManyValue(Property $property)
 	{
+		$relationship = $property->getRelationship();
 		$rows = $this->row->referencing($relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable());
-		$class = $this->buildEntityClassName($relationship->getTargetTable());
+		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {
 			$valueRow = $row->referenced($relationship->getTargetTable(), null, $relationship->getColumnReferencingTargetTable());
@@ -277,13 +278,13 @@ abstract class Entity
 	}
 
 	/**
-	 * @param Relationship\BelongsToOne $relationship
 	 * @param Property $property
 	 * @return mixed
 	 * @throws InvalidValueException
 	 */
-	private function getBelongsToOneValue(Relationship\BelongsToOne $relationship, Property $property)
+	private function getBelongsToOneValue(Property $property)
 	{
+		$relationship = $property->getRelationship();
 		$rows = $this->row->referencing($relationship->getTargetTable(), null, $relationship->getColumnReferencingSourceTable());
 		$count = count($rows);
 		if ($count > 1) {
@@ -296,34 +297,25 @@ abstract class Entity
 			return null;
 		} else {
 			$row = reset($rows);
-			$class = $this->buildEntityClassName($relationship->getTargetTable());
+			$class = $property->getType();
 			return new $class($row);
 		}
 	}
 
 	/**
-	 * @param Relationship\BelongsToMany $relationship
+	 * @param Property $property
 	 * @return array
 	 */
-	private function getBelongsToManyValue(Relationship\BelongsToMany $relationship)
+	private function getBelongsToManyValue(Property $property)
 	{
+		$relationship = $property->getRelationship();
 		$rows = $this->row->referencing($relationship->getTargetTable(), null, $relationship->getColumnReferencingSourceTable());
-		$class = $this->buildEntityClassName($relationship->getTargetTable());
+		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {
 			$value[] = new $class($row);
 		}
 		return $value;
-	}
-
-	/**
-	 * @param string $targetTable
-	 * @return string
-	 */
-	private function buildEntityClassName($targetTable)
-	{
-		$namespace = implode('\\', array_slice(explode('\\', get_called_class()), 0, -1));
-		return ($namespace !== '' ? $namespace . '\\' : $namespace) . ucfirst($targetTable);
 	}
 	
 }

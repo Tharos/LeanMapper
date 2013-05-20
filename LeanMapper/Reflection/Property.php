@@ -34,6 +34,9 @@ class Property
 	/** @var HasOne|HasMany|BelongsToOne|BelongsToMany|null */
 	private $relationship;
 
+	/** @var PropertyFilters|null */
+	private $filters;
+
 
 	/**
 	 * @param string $name
@@ -41,14 +44,16 @@ class Property
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
+	 * @param PropertyFilters|null $filters
 	 */
-	public function __construct($name, PropertyType $type, $isNullable, $containsCollection, $relationship = null)
+	public function __construct($name, PropertyType $type, $isNullable, $containsCollection, $relationship = null, PropertyFilters $filters = null)
 	{
 		$this->name = $name;
 		$this->type = $type;
 		$this->isNullable = $isNullable;
 		$this->containsCollection = $containsCollection;
 		$this->relationship = $relationship;
+		$this->filters = $filters;
 	}
 
 	/**
@@ -105,6 +110,14 @@ class Property
 	public function getRelationship()
 	{
 		return $this->relationship;
+	}
+
+	/**
+	 * @return array|null
+	 */
+	public function getFilters()
+	{
+		return $this->filters->getFilters();
 	}
 
 }

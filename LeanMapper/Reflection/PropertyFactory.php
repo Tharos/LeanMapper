@@ -37,7 +37,6 @@ class PropertyFactory
 	 */
 	public static function createFromAnnotation($annotation, EntityReflection $reflection)
 	{
-		$namespace = $reflection->getNamespaceName();
 		$aliases = $reflection->getAliases();
 
 		$matches = array();
@@ -47,7 +46,8 @@ class PropertyFactory
 			(\[\])?
 			(\|null)? \s+
 			(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
-			(?:\s+m:(?:(hasOne|hasMany|belongsToOne|belongsToMany)(?:\\(([^)]+)\\))?))?
+			(?:\s+m:(?:(hasOne|hasMany|belongsToOne|belongsToMany)(?:\(([^)]+)\))?))?
+			(?:\s+m:filter\(([^)]+)\))?
 		~xi', $annotation, $matches);
 
 		if (!$matched) {
@@ -59,7 +59,8 @@ class PropertyFactory
 		if ($containsCollection and $isNullable) {
 			throw new InvalidAnnotationException("It doesn't make sense to have a property containing collection nullable: @property $annotation");
 		}
-		$propertyType = new PropertyType($matches[2], $namespace, $aliases);
+		$propertyType = new PropertyType($matches[2], $aliases);
+		$propertyFilters = isset($matches[8]) ? new PropertyFilters($matches[8], $aliases) : null;
 
 		$relationship = null;
 		if (isset($matches[6])) {
@@ -77,7 +78,8 @@ class PropertyFactory
 			$propertyType,
 			$isNullable,
 			$containsCollection,
-			$relationship
+			$relationship,
+			$propertyFilters
 		);
 	}
 
