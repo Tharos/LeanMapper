@@ -10,10 +10,7 @@ namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
 use LeanMapper\Exception\UtilityClassException;
-use LeanMapper\Relationship\BelongsToMany;
-use LeanMapper\Relationship\BelongsToOne;
-use LeanMapper\Relationship\HasMany;
-use LeanMapper\Relationship\HasOne;
+use LeanMapper\Relationship;
 
 /**
  * @author Vojtěch Kohout
@@ -37,7 +34,6 @@ class PropertyFactory
 	 */
 	public static function createFromAnnotation($annotation, EntityReflection $reflection)
 	{
-		$namespace = $reflection->getNamespaceName();
 		$aliases = $reflection->getAliases();
 
 		$matches = array();
@@ -47,7 +43,8 @@ class PropertyFactory
 			(\[\])?
 			(\|null)? \s+
 			(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
-			(?:\s+m:(?:(hasOne|hasMany|belongsToOne|belongsToMany)(?:\\(([^)]+)\\))?))?
+			(?:\s+m:(?:(hasOne|hasMany|belongsToOne|belongsToMany)(?:\(([^)]+)\))?))?
+			(?:\s+m:filter\(([^)]+)\))?
 		~xi', $annotation, $matches);
 
 		if (!$matched) {
@@ -59,7 +56,14 @@ class PropertyFactory
 		if ($containsCollection and $isNullable) {
 			throw new InvalidAnnotationException("It doesn't make sense to have a property containing collection nullable: @property $annotation");
 		}
-		$propertyType = new PropertyType($matches[2], $namespace, $aliases);
+		$propertyType = new PropertyType($matches[2], $aliases);
+		$propertyFilters = null;
+		if (isset($matches[8])) {
+			if ($propertyType->isBasicType()) {
+				throw new InvalidAnnotationException("Invalid property annotation given: {$propertyType->getType()} property cannot be filtered");
+			}
+			$propertyFilters =  new PropertyFilters($matches[8], $aliases);
+		}
 
 		$relationship = null;
 		if (isset($matches[6])) {
@@ -77,7 +81,8 @@ class PropertyFactory
 			$propertyType,
 			$isNullable,
 			$containsCollection,
-			$relationship
+			$relationship,
+			$propertyFilters
 		);
 	}
 
@@ -90,7 +95,7 @@ class PropertyFactory
 	 * @param bool $containsCollection
 	 * @param string $relationshipType
 	 * @param string $definition
-	 * @return BelongsToMany|BelongsToOne|HasMany|HasOne|null
+	 * @return Relationship\BelongsToMany|Relationship\BelongsToOne|Relationship\HasMany|Relationship\HasOne|null
 	 * @throws InvalidAnnotationException
 	 */
 	private static function createRelationship($sourceClass, PropertyType $propertyType, $containsCollection, $relationshipType, $definition = null)
@@ -116,18 +121,18 @@ class PropertyFactory
 
 		switch ($relationshipType) {
 			case 'hasOne':
-				return new HasOne($pieces[0] ? : $targetTable . '_id', $pieces[1] ? : $targetTable);
+				return new Relationship\HasOne($pieces[0] ? : $targetTable . '_id', $pieces[1] ? : $targetTable);
 			case 'hasMany':
-				return new HasMany(
+				return new Relationship\HasMany(
 					$pieces[0] ? : $sourceTable . '_id',
 					$pieces[1] ? : $sourceTable . '_' . $targetTable,
 					$pieces[2] ? : $targetTable . '_id',
 					$pieces[3] ? : $targetTable
 				);
 			case 'belongsToOne':
-				return new BelongsToOne($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable);
+				return new Relationship\BelongsToOne($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable);
 			case 'belongsToMany':
-				return new BelongsToMany($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable);
+				return new Relationship\BelongsToMany($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable);
 		}
 		return null;
 	}

@@ -35,12 +35,12 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
-	 * @return array
+	 * @return Aliases
 	 */
 	public function getAliases()
 	{
 		if ($this->aliases === null) {
-			$this->aliases = AliasesParser::parseSource(file_get_contents($this->getFileName()));
+			$this->aliases = AliasesParser::parseSource(file_get_contents($this->getFileName()), $this->getNamespaceName());
 		}
 		return $this->aliases;
 	}

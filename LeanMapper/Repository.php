@@ -21,7 +21,8 @@ use ReflectionClass;
 abstract class Repository
 {
 
-	const DEFAULT_ENTITY_NAMESPACE = 'Model\Entity';
+	/** @varstring */
+	public static $defaultEntityNamespace = 'Model\Entity';
 
 	/** @var DibiConnection */
 	protected $connection;
@@ -154,7 +155,7 @@ abstract class Repository
 			} else {
 				$matches = array();
 				if (preg_match('#([a-z0-9]+)repository$#i', get_called_class(), $matches)) {
-					$this->entityClass = self::DEFAULT_ENTITY_NAMESPACE . '\\' . $matches[1];
+					$this->entityClass = self::$defaultEntityNamespace . '\\' . $matches[1];
 				} else {
 					throw new InvalidStateException('Cannot determine entity class name.');
 				}

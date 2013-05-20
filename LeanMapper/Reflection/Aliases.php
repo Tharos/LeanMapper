@@ -15,51 +15,39 @@ class Aliases
 {
 
 	/** @var array */
-	private $aliases = array();
+	private $aliases;
 
 	/** @var string */
-	private $current = '';
-
-	/** @var string */
-	private $lastPart = '';
+	private $namespace;
 
 
-	public function resetCurrent()
+	/**
+	 * @param array $aliases
+	 * @param string $namespace
+	 */
+	public function __construct(array $aliases, $namespace = '')
 	{
-		$this->current = $this->lastPart = '';
+		$this->aliases = $aliases;
+		$this->namespace = $namespace;
 	}
 
 	/**
-	 * @param string $name
+	 * @param string $identifier
+	 * @return string
 	 */
-	public function appendToCurrent($name)
+	public function translate($identifier)
 	{
-		if ($this->current !== '') {
-			$this->current .= '\\';
+		$pieces = explode('\\', $identifier);
+		if (isset($this->aliases[$pieces[0]])) {
+			$return = $this->aliases[$pieces[0]];
+			if (count($pieces) > 1) {
+				array_shift($pieces);
+				$return .= '\\' . implode('\\', $pieces);
+			}
+		} else {
+			$return = $this->namespace !== '' ? $this->namespace . '\\' . $identifier : $identifier;
 		}
-		$this->current .= $this->lastPart = $name;
-	}
-
-	/**
-	 * @param string $name
-	 */
-	public function setLast($name)
-	{
-		$this->lastPart = $name;
-	}
-
-	public function finishCurrent()
-	{
-		$this->aliases[$this->lastPart] = $this->current;
-		$this->resetCurrent();
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getAll()
-	{
-		return $this->aliases;
+		return $return;
 	}
 
 }

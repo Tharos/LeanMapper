@@ -35,48 +35,49 @@ class AliasesParser
 
 	/**
 	 * @param string $source
+	 * @param string $namespace
 	 * @return array
 	 */
-	public static function parseSource($source)
+	public static function parseSource($source, $namespace = '')
 	{
-		$aliases = new Aliases;
+		$builder = new AliasesBuilder;
 
 		$states = array(
-			self::STATE_WAITING_FOR_USE => function ($token) use ($aliases) {
+			self::STATE_WAITING_FOR_USE => function ($token) use ($builder) {
 				if (is_array($token) and $token[0] === T_USE) {
-					$aliases->resetCurrent();
+					$builder->resetCurrent();
 					return AliasesParser::STATE_GATHERING;
 				}
 				return AliasesParser::STATE_WAITING_FOR_USE;
 			},
-			self::STATE_GATHERING => function ($token) use ($aliases) {
+			self::STATE_GATHERING => function ($token) use ($builder) {
 				if (is_array($token)) {
 					if ($token[0] === T_STRING) {
-						$aliases->appendToCurrent($token[1]);
+						$builder->appendToCurrent($token[1]);
 					} elseif ($token[0] === T_AS) {
 						return AliasesParser::STATE_IN_AS_PART;
 					}
 				} else {
 					if ($token === ';') {
-						$aliases->finishCurrent();
+						$builder->finishCurrent();
 						return AliasesParser::STATE_WAITING_FOR_USE;
 					} elseif ($token === ',') {
-						$aliases->finishCurrent();
+						$builder->finishCurrent();
 					}
 				}
 				return AliasesParser::STATE_GATHERING;
 			},
-			self::STATE_IN_AS_PART => function ($token) use ($aliases) {
+			self::STATE_IN_AS_PART => function ($token) use ($builder) {
 				if (is_array($token)) {
 					if ($token[0] === T_STRING) {
-						$aliases->setLast($token[1]);
-						$aliases->finishCurrent();
+						$builder->setLast($token[1]);
+						$builder->finishCurrent();
 						return AliasesParser::STATE_JUST_FINISHED;
 					}
 				}
 				return AliasesParser::STATE_IN_AS_PART;
 			},
-			self::STATE_JUST_FINISHED => function ($token) use ($aliases) {
+			self::STATE_JUST_FINISHED => function ($token) use ($builder) {
 				if ($token === ';') {
 					return AliasesParser::STATE_WAITING_FOR_USE;
 				}
@@ -92,7 +93,7 @@ class AliasesParser
 			}
 		}
 
-		return $aliases->getAll();
+		return $builder->getAliases($namespace);
 	}
 
 }
