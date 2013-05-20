@@ -8,10 +8,12 @@
 
 namespace LeanMapper;
 
+use dibi;
 use DibiConnection;
 use DibiRow;
 use LeanMapper\Exception\InvalidStateException;
-use Nette\Reflection\ClassType;
+use LeanMapper\Reflection\AnnotationsParser;
+use ReflectionClass;
 
 /**
  * @author Vojtěch Kohout
@@ -30,8 +32,8 @@ abstract class Repository
 	/** @var string */
 	protected $entityClass;
 
-	/** @var ClassType */
-	private $reflection;
+	/** @var string */
+	private $docComment;
 
 
 	/**
@@ -40,6 +42,41 @@ abstract class Repository
 	public function __construct(DibiConnection $connection)
 	{
 		$this->connection = $connection;
+	}
+
+	/**
+	 * @param Entity $entity
+	 * @return int
+	 */
+	public function persist(Entity $entity)
+	{
+		if ($entity->isModified()) {
+			$values = $entity->getModifiedData();
+			if ($entity->isDetached()) {
+				$this->connection->insert($this->getTable(), $values)
+						->execute(); // dibi::IDENTIFIER would lead to exception when there is no column with AUTO_INCREMENT
+				$id = isset($values['id']) ? $values['id'] : $this->connection->getInsertId();
+				$entity->markAsCreated($id, $this->getTable(), $this->connection);
+				return $id;
+			} else {
+				$result = $this->connection->update($this->getTable(), $values)
+						->where('[id] = %i', $entity->id)
+						->execute();
+				$entity->markAsUpdated();
+				return $result;
+			}
+		}
+	}
+
+	/**
+	 * @param Entity|int $arg
+	 */
+	public function delete($arg)
+	{
+		$id = ($arg instanceof Entity) ? $arg->id : $arg;
+		$this->connection->delete($this->getTable())
+				->where('[id] = %i', $id)
+				->execute();
 	}
 
 	/**
@@ -56,7 +93,7 @@ abstract class Repository
 		if ($table === null) {
 			$table = $this->getTable();
 		}
-		$collection = new Result($row, $table, $this->connection);
+		$collection = Result::getInstance($row, $table, $this->connection);
 		return new $entityClass($collection->getRow($row->id));
 	}
 
@@ -75,7 +112,7 @@ abstract class Repository
 			$table = $this->getTable();
 		}
 		$entities = array();
-		$collection = new Result($rows, $table, $this->connection);
+		$collection = Result::getInstance($rows, $table, $this->connection);
 		foreach ($rows as $row) {
 			$entities[$row->id] = new $entityClass($collection->getRow($row->id));
 		}
@@ -89,8 +126,8 @@ abstract class Repository
 	protected function getTable()
 	{
 		if ($this->table === null) {
-			$reflection = $this->getReflection();
-			if (($name = $reflection->getAnnotation('table')) !== null) {
+			$name = AnnotationsParser::parseSimpleAnnotationValue('table', $this->getDocComment());
+			if ($name !== null) {
 				$this->table = $name;
 			} else {
 				$matches = array();
@@ -111,8 +148,8 @@ abstract class Repository
 	protected function getEntityClass()
 	{
 		if ($this->entityClass === null) {
-			$reflection = $this->getReflection();
-			if (($name = $reflection->getAnnotation('entity')) !== null) {
+			$name = AnnotationsParser::parseSimpleAnnotationValue('entity', $this->getDocComment());
+			if ($name !== null) {
 				$this->entityClass = $name;
 			} else {
 				$matches = array();
@@ -130,14 +167,15 @@ abstract class Repository
 	////////////////////
 
 	/**
-	 * @return ClassType
+	 * @return string
 	 */
-	private function getReflection()
+	public function getDocComment()
 	{
-		if ($this->reflection === null) {
-			$this->reflection = new ClassType(get_called_class());
+		if ($this->docComment === null) {
+			$reflection = new ReflectionClass(get_called_class());
+			$this->docComment = $reflection->getDocComment();
 		}
-		return $this->reflection;
+		return $this->docComment;
 	}
 	
 }

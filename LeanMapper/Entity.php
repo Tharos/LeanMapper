@@ -8,6 +8,7 @@
 
 namespace LeanMapper;
 
+use DibiConnection;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidValueException;
 use LeanMapper\Exception\MemberAccessException;
@@ -30,11 +31,11 @@ abstract class Entity
 
 
 	/**
-	 * @param Row $row
+	 * @param Row|null $row
 	 */
-	public function __construct(Row $row)
+	public function __construct(Row $row = null)
 	{
-		$this->row = $row;
+		$this->row = $row !== null ? $row : Result::getDetachedInstance()->getRow();
 	}
 
 	/**
@@ -48,7 +49,7 @@ abstract class Entity
 		$property = $this->getReflection()->getEntityProperty($name);
 		if ($property === null) {
 			$method = 'get' . ucfirst($name);
-			if (is_callable(array($this, $method))) {
+			if (method_exists($this, $method)) { // TODO: find better solution (using reflection)
 				return call_user_func(array($this, $method));
 			}
 			throw new MemberAccessException("Undefined property: $name");
@@ -61,7 +62,9 @@ abstract class Entity
 				}
 				return null;
 			}
-			settype($value, $property->getType());
+			if (!settype($value, $property->getType())) {
+				throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
+			}
 		} else {
 			if ($property->hasRelationship()) {
 				$relationship = $property->getRelationship();
@@ -103,6 +106,66 @@ abstract class Entity
 
 	/**
 	 * @param string $name
+	 * @param mixed $value
+	 * @throws InvalidMethodCallException
+	 * @throws InvalidValueException
+	 * @throws MemberAccessException
+	 */
+	function __set($name, $value)
+	{
+		$property = $this->getReflection()->getEntityProperty($name);
+		if ($property === null) {
+			$method = 'set' . ucfirst($name);
+			if (method_exists($this, $method)) { // TODO: find better solution (using reflection)
+				call_user_func(array($this, $method), $value);
+			} else {
+				throw new MemberAccessException("Undefined property: $name");
+			}
+		} else {
+			if ($value === null) {
+				if (!$property->isNullable()) {
+					throw new InvalidValueException("Property '$name' cannot be null.");
+				}
+				$this->row->$name = null;
+			} else {
+				if ($property->isBasicType()) {
+					if (!settype($value, $property->getType())) {
+						throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
+					}
+					$this->row->$name = $value;
+				} else {
+					if ($property->hasRelationship()) {
+						if (!($value instanceof Entity)) {
+							throw new InvalidValueException("Only entites can be set via magic __set on field with relationships.");
+						}
+						$relationship = $property->getRelationship();
+						if (!($relationship instanceof Relationship\HasOne)) {
+							throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set via magic __set.');
+						}
+						$column = $relationship->getColumnReferencingTargetTable();
+						$table = $relationship->getTargetTable();
+
+						if ($value->isDetached()) {
+							throw new InvalidValueException('Detached entity must be stored in database before use in relationships.');
+						}
+						$this->row->$column = $value->id;
+						$this->row->cleanReferencedRowsCache($table, $column);
+					} else {
+						if (!is_object($value)) {
+							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . gettype($value) . " given.");
+						}
+						if (get_class($value) !== $property->getType()) {
+							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
+						}
+						$this->row->$name = $value;
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * @param string $name
 	 * @param array $arguments
 	 * @param array $arguments
 	 * @return mixed
@@ -117,6 +180,45 @@ abstract class Entity
 			}
 		}
 		throw new InvalidMethodCallException("Method '$name' is not callable.");
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isModified()
+	{
+		return $this->row->isModified();
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isDetached()
+	{
+		return $this->row->isDetached();
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getModifiedData()
+	{
+		return $this->row->getModifiedData();
+	}
+
+	public function markAsUpdated()
+	{
+		$this->row->markAsUpdated();
+	}
+
+	/**
+	 * @param int $id
+	 * @param string $table
+	 * @param DibiConnection $connection
+	 */
+	public function markAsCreated($id, $table, DibiConnection $connection)
+	{
+		$this->row->markAsCreated($id, $table, $connection);
 	}
 
 	////////////////////
