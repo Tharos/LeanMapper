@@ -117,8 +117,10 @@ class Result implements \Iterator
 		if (!array_key_exists($id, $this->data)) {
 			throw new InvalidArgumentException("Missing row with ID $id.");
 		}
+		if ($this->isDetached() or array_key_exists($key, $this->data[$id])) {
+			$this->modified[$id][$key] = true;
+		}
 		$this->data[$id][$key] = $value;
-		$this->modified[$id][$key] = true;
 	}
 
 	/**
