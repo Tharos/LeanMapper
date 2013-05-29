@@ -206,6 +206,11 @@ abstract class Entity
 		return $this->row->isDetached();
 	}
 
+	public function detach()
+	{
+		$this->row->detach();
+	}
+
 	/**
 	 * @return array
 	 */
