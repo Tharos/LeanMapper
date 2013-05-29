@@ -191,6 +191,16 @@ abstract class Entity
 	}
 
 	/**
+	 * @param array $values
+	 */
+	public function assign(array $values)
+	{
+		foreach ($values as $field => $value) {
+			$this->__set($field, $value);
+		}
+	}
+
+	/**
 	 * @return bool
 	 */
 	public function isModified()
