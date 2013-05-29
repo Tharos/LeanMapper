@@ -74,13 +74,14 @@ abstract class Repository
 	 */
 	public function delete($arg)
 	{
-		$id = ($arg instanceof Entity) ? $arg->id : $arg;
+		$id = $arg;
+		if ($arg instanceof Entity) {
+			$id = $arg->id;
+			$arg->detach();
+		}
 		$this->connection->delete($this->getTable())
 				->where('[id] = %i', $id)
 				->execute();
-		if ($arg instanceof Entity) {
-			$arg->detach();
-		}
 	}
 
 	/**
