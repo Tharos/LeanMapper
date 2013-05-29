@@ -71,10 +71,18 @@ abstract class Repository
 
 	/**
 	 * @param Entity|int $arg
+	 * @throws InvalidStateException
 	 */
 	public function delete($arg)
 	{
-		$id = ($arg instanceof Entity) ? $arg->id : $arg;
+		$id = $arg;
+		if ($arg instanceof Entity) {
+			if ($arg->isDetached()) {
+				throw new InvalidStateException('Cannot delete detached entity.');
+			}
+			$id = $arg->id;
+			$arg->detach();
+		}
 		$this->connection->delete($this->getTable())
 				->where('[id] = %i', $id)
 				->execute();

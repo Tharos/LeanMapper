@@ -42,8 +42,8 @@ class Result implements \Iterator
 	/** @var array */
 	private $referencing = array();
 
-	/** @var bool */
-	private $isDetached = false;
+	/** @var array */
+	private $detached = array();
 
 
 	/**
@@ -86,7 +86,7 @@ class Result implements \Iterator
 	 */
 	public function getRow($id = 0)
 	{
-		if (!array_key_exists($id, $this->data)) {
+		if (!isset($this->data[$id])) {
 			return null;
 		}
 		return new Row($this, $id);
@@ -100,7 +100,7 @@ class Result implements \Iterator
 	 */
 	public function getDataEntry($id, $key)
 	{
-		if (!array_key_exists($id, $this->data) or !array_key_exists($key, $this->data[$id])) {
+		if (!isset($this->data[$id]) or !array_key_exists($key, $this->data[$id])) {
 			throw new InvalidArgumentException("Missing '$key' value for requested row.");
 		}
 		return $this->data[$id][$key];
@@ -114,11 +114,17 @@ class Result implements \Iterator
 	 */
 	public function setDataEntry($id, $key, $value)
 	{
-		if (!array_key_exists($id, $this->data)) {
+		if (!isset($this->data[$id])) {
 			throw new InvalidArgumentException("Missing row with ID $id.");
 		}
-		$this->data[$id][$key] = $value;
+		if (!$this->isDetached($id) and !array_key_exists($key, $this->data[$id])) {
+			throw new InvalidArgumentException("Missing field '$key' in row.");
+		}
+		if ($key === 'id' and !$this->isDetached($id)) {
+			throw new InvalidArgumentException("ID can only be set in detached rows.");
+		}
 		$this->modified[$id][$key] = true;
+		$this->data[$id][$key] = $value;
 	}
 
 	/**
@@ -131,11 +137,33 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * @param int $id
 	 * @return bool
 	 */
-	public function isDetached()
+	public function isDetached($id)
 	{
-		return $this->isDetached;
+		return !isset($this->data[$id]) or isset($this->detached[$id]);
+	}
+
+	/**
+	 * @param int $id
+	 * @throws InvalidArgumentException
+	 */
+	public function detach($id)
+	{
+		if (!isset($this->data[$id])) {
+			throw new InvalidArgumentException("Missing row with ID $id.");
+		}
+		if ($this->isDetached($id)) {
+			throw new InvalidArgumentException("Row with ID $id is already detached.");
+		}
+		if (array_key_exists('id', $this->data[$id])) {
+			unset($this->data[$id]['id']);
+		}
+		$this->detached[$id] = true;
+		foreach ($this->data[$id] as $field => $value) {
+			$this->modified[$id][$field] = true;
+		}
 	}
 
 	/**
@@ -156,15 +184,15 @@ class Result implements \Iterator
 	 */
 	public function markAsCreated($id, $table, DibiConnection $connection)
 	{
-		if (!$this->isDetached()) {
+		if (!$this->isDetached($id)) {
 			throw new InvalidStateException('Result is not in detached state.');
 		}
-		$this->data = array($id => array('id' => $id) + $this->data[0]);
-		unset($this->modified[0]);
+		$this->data = array($id => array('id' => $id) + $this->getModifiedData($id));
+		unset($this->modified[$id]);
+		unset($this->detached[$id]);
 
 		$this->table = $table;
 		$this->connection = $connection;
-		$this->isDetached = false;
 	}
 
 	/**
@@ -300,7 +328,7 @@ class Result implements \Iterator
 		$this->table = $table;
 		$this->connection = $connection;
 		if (func_num_args() === 0) {
-			$this->isDetached = true;
+			$this->detached[0] = true;
 		}
 	}
 
