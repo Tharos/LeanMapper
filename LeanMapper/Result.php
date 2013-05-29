@@ -13,7 +13,6 @@ use DibiConnection;
 use DibiRow;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidStateException;
-use Nette\Callback;
 
 /**
  * @author Vojtěch Kohout
