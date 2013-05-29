@@ -65,7 +65,12 @@ class Row
 	 */
 	public function isDetached()
 	{
-		return $this->result->isDetached();
+		return $this->result->isDetached($this->id);
+	}
+
+	public function detach()
+	{
+		$this->result->detach($this->id);
 	}
 
 	public function markAsUpdated()

@@ -78,6 +78,9 @@ abstract class Repository
 		$this->connection->delete($this->getTable())
 				->where('[id] = %i', $id)
 				->execute();
+		if ($arg instanceof Entity) {
+			$arg->detach();
+		}
 	}
 
 	/**
