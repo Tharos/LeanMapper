@@ -156,9 +156,6 @@ class Result implements \Iterator
 		if ($this->isDetached($id)) {
 			throw new InvalidArgumentException("Row with ID $id is already detached.");
 		}
-		if (array_key_exists('id', $this->data[$id])) {
-			unset($this->data[$id]['id']);
-		}
 		$this->detached[$id] = true;
 		foreach ($this->data[$id] as $field => $value) {
 			$this->modified[$id][$field] = true;
