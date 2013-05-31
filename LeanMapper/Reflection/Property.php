@@ -1,9 +1,12 @@
 <?php
 
 /**
- * This file is part of the Lean Mapper library
+ * This file is part of the Lean Mapper library (http://www.leanmapper.com)
  *
  * Copyright (c) 2013 Vojtěch Kohout (aka Tharos)
+ *
+ * For the full copyright and license information, please view the file
+ * license-mit.txt that was distributed with this source code.
  */
 
 namespace LeanMapper\Reflection;
@@ -14,6 +17,8 @@ use LeanMapper\Relationship\HasMany;
 use LeanMapper\Relationship\HasOne;
 
 /**
+ * Entity property (field) reflection
+ *
  * @author Vojtěch Kohout
  */
 class Property
@@ -57,6 +62,8 @@ class Property
 	}
 
 	/**
+	 * Returns property name
+	 *
 	 * @return string
 	 */
 	public function getName()
@@ -65,6 +72,8 @@ class Property
 	}
 
 	/**
+	 * Tells whether property is assumed to contain collection
+	 *
 	 * @return bool
 	 */
 	public function containsCollection()
@@ -73,6 +82,8 @@ class Property
 	}
 
 	/**
+	 * Returns property type
+	 *
 	 * @return string
 	 */
 	public function getType()
@@ -81,6 +92,8 @@ class Property
 	}
 
 	/**
+	 * Tells whether property type is basic type (boolean|integer|float|string|array)
+	 *
 	 * @return bool
 	 */
 	public function isBasicType()
@@ -89,6 +102,8 @@ class Property
 	}
 
 	/**
+	 * Tells whether property can be null
+	 *
 	 * @return bool
 	 */
 	public function isNullable()
@@ -97,6 +112,8 @@ class Property
 	}
 
 	/**
+	 * Tells whether property represents relationship
+	 *
 	 * @return bool
 	 */
 	public function hasRelationship()
@@ -105,6 +122,8 @@ class Property
 	}
 
 	/**
+	 * Returns relationship that property represents
+	 *
 	 * @return BelongsToMany|BelongsToOne|HasMany|HasOne|null
 	 */
 	public function getRelationship()
@@ -113,6 +132,8 @@ class Property
 	}
 
 	/**
+	 * Returns property filters
+	 *
 	 * @return string[]
 	 */
 	public function getFilters()

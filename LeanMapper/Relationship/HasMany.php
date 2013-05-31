@@ -1,14 +1,19 @@
 <?php
 
 /**
- * This file is part of the Lean Mapper library
+ * This file is part of the Lean Mapper library (http://www.leanmapper.com)
  *
  * Copyright (c) 2013 Vojtěch Kohout (aka Tharos)
+ *
+ * For the full copyright and license information, please view the file
+ * license-mit.txt that was distributed with this source code.
  */
 
 namespace LeanMapper\Relationship;
 
 /**
+ * Has many relationship
+ *
  * @author Vojtěch Kohout
  */
 class HasMany
@@ -42,6 +47,8 @@ class HasMany
 	}
 
 	/**
+	 * Returns name of column referencing source table
+	 *
 	 * @return string
 	 */
 	public function getColumnReferencingSourceTable()
@@ -50,6 +57,8 @@ class HasMany
 	}
 
 	/**
+	 * Returns name of relationship table
+	 *
 	 * @return string
 	 */
 	public function getRelationshipTable()
@@ -58,6 +67,8 @@ class HasMany
 	}
 
 	/**
+	 * Returns name of column referencing target table
+	 *
 	 * @return string
 	 */
 	public function getColumnReferencingTargetTable()
@@ -66,6 +77,8 @@ class HasMany
 	}
 
 	/**
+	 * Returns name of target table
+	 *
 	 * @return string
 	 */
 	public function getTargetTable()

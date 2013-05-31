@@ -1,10 +1,19 @@
 {
-	"require": {
-		"dibi/dibi": "v2.0.3"
-	},
+	"name": "tharos/leanmapper",
+	"description": "Tiny ORM based on powerful dibi database abstraction library for PHP 5.",
+	"homepage": "http://www.leanmapper.com",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Vojtěch Kohout"
+		}
+	],
 	"autoload": {
 		"psr-0": {
 			"LeanMapper": ""
 		}
+	},
+	"require": {
+		"dibi/dibi": "v2.0.3"
 	}
 }

@@ -1,9 +1,12 @@
 <?php
 
 /**
- * This file is part of the Lean Mapper library
+ * This file is part of the Lean Mapper library (http://www.leanmapper.com)
  *
  * Copyright (c) 2013 Vojtěch Kohout (aka Tharos)
+ *
+ * For the full copyright and license information, please view the file
+ * license-mit.txt that was distributed with this source code.
  */
 
 namespace LeanMapper\Reflection;
@@ -11,6 +14,8 @@ namespace LeanMapper\Reflection;
 use LeanMapper\Exception\UtilityClassException;
 
 /**
+ * Simple class annotations parser
+ *
  * @author Vojtěch Kohout
  */
 class AnnotationsParser
@@ -25,6 +30,8 @@ class AnnotationsParser
 	}
 
 	/**
+	 * Parse value of requested simple annotation from given doc comment
+	 *
 	 * @param string $annotation
 	 * @param string $docComment
 	 * @return string|null
@@ -37,6 +44,8 @@ class AnnotationsParser
 	}
 
 	/**
+	 * Parse value parts of requested annotation from given doc comment
+	 *
 	 * @param string $annotation
 	 * @param string $docComment
 	 * @return array

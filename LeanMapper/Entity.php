@@ -1,9 +1,12 @@
 <?php
 
 /**
- * This file is part of the Lean Mapper library
+ * This file is part of the Lean Mapper library (http://www.leanmapper.com)
  *
  * Copyright (c) 2013 Vojtěch Kohout (aka Tharos)
+ *
+ * For the full copyright and license information, please view the file
+ * license-mit.txt that was distributed with this source code.
  */
 
 namespace LeanMapper;
@@ -21,6 +24,8 @@ use LeanMapper\Relationship;
 use LeanMapper\Row;
 
 /**
+ * Base class for custom entities
+ *
  * @author Vojtěch Kohout
  */
 abstract class Entity
@@ -42,6 +47,8 @@ abstract class Entity
 	}
 
 	/**
+	 * Returns value of given field
+	 *
 	 * @param string $name
 	 * @return mixed
 	 * @throws InvalidValueException
@@ -113,6 +120,8 @@ abstract class Entity
 	}
 
 	/**
+	 * Sets value of given field
+	 *
 	 * @param string $name
 	 * @param mixed $value
 	 * @throws InvalidMethodCallException
@@ -173,6 +182,8 @@ abstract class Entity
 	}
 
 	/**
+	 * Try to call get<$name> method and calls __get($name) when get method doesn't exist
+	 *
 	 * @param string $name
 	 * @param array $arguments
 	 * @param array $arguments
@@ -191,16 +202,26 @@ abstract class Entity
 	}
 
 	/**
+	 * Performs a mass value assignment (using setters)
+	 *
 	 * @param array $values
+	 * @param array|null $whitelist
 	 */
-	public function assign(array $values)
+	public function assign(array $values, array $whitelist = null)
 	{
+		if ($whitelist !== null) {
+			$whitelist = array_flip($whitelist);
+		}
 		foreach ($values as $field => $value) {
-			$this->__set($field, $value);
+			if ($whitelist === null or isset($whitelist[$field])) {
+				$this->__set($field, $value);
+			}
 		}
 	}
 
 	/**
+	 * Tells whether entity is in modified state
+	 *
 	 * @return bool
 	 */
 	public function isModified()
@@ -209,6 +230,8 @@ abstract class Entity
 	}
 
 	/**
+	 * Tells whether entity is in detached state (like newly created entity)
+	 *
 	 * @return bool
 	 */
 	public function isDetached()
@@ -216,12 +239,17 @@ abstract class Entity
 		return $this->row->isDetached();
 	}
 
+	/**
+	 * Marks entity as detached (it means non-persisted)
+	 */
 	public function detach()
 	{
 		$this->row->detach();
 	}
 
 	/**
+	 * Returns array of modified fields with new values
+	 *
 	 * @return array
 	 */
 	public function getModifiedData()
@@ -229,12 +257,17 @@ abstract class Entity
 		return $this->row->getModifiedData();
 	}
 
+	/**
+	 * Marks entity as non-updated (isModified() returns false right after this method call)
+	 */
 	public function markAsUpdated()
 	{
 		$this->row->markAsUpdated();
 	}
 
 	/**
+	 * Marks entity as persisted
+	 *
 	 * @param int $id
 	 * @param string $table
 	 * @param DibiConnection $connection

@@ -1,9 +1,12 @@
 <?php
 
 /**
- * This file is part of the Lean Mapper library
+ * This file is part of the Lean Mapper library (http://www.leanmapper.com)
  *
  * Copyright (c) 2013 Vojtěch Kohout (aka Tharos)
+ *
+ * For the full copyright and license information, please view the file
+ * license-mit.txt that was distributed with this source code.
  */
 
 namespace LeanMapper;
@@ -12,6 +15,8 @@ use Closure;
 use DibiConnection;
 
 /**
+ * Pointer to specific position inside LeanMapper\Result instance
+ *
  * @author Vojtěch Kohout
  */
 class Row
@@ -35,6 +40,8 @@ class Row
 	}
 
 	/**
+	 * Returns value of given field
+	 *
 	 * @param string $name
 	 * @return mixed
 	 */
@@ -44,6 +51,8 @@ class Row
 	}
 
 	/**
+	 * Sets value of given field
+	 *
 	 * @param string $name
 	 * @param mixed $value
 	 */
@@ -53,6 +62,8 @@ class Row
 	}
 
 	/**
+	 * Tells whether row is in modified state
+	 *
 	 * @return bool
 	 */
 	public function isModified()
@@ -61,6 +72,8 @@ class Row
 	}
 
 	/**
+	 * Tells whether row is in modified state
+	 *
 	 * @return bool
 	 */
 	public function isDetached()
@@ -68,17 +81,25 @@ class Row
 		return $this->result->isDetached($this->id);
 	}
 
+	/**
+	 * Marks row as detached (it means non-persisted)
+	 */
 	public function detach()
 	{
 		$this->result->detach($this->id);
 	}
 
+	/**
+	 * Marks row as non-updated (isModified() returns false right after this method call)
+	 */
 	public function markAsUpdated()
 	{
 		$this->result->markAsUpdated($this->id);
 	}
 
 	/**
+	 * Marks row as persisted
+	 *
 	 * @param int $id
 	 * @param string $table
 	 * @param DibiConnection $connection
@@ -90,6 +111,8 @@ class Row
 	}
 
 	/**
+	 * Returns array of modified fields with new values
+	 *
 	 * @return array
 	 */
 	public function getModifiedData()
@@ -98,6 +121,8 @@ class Row
 	}
 
 	/**
+	 * Clean in-memory cache of referenced rows
+	 *
 	 * @param string|null $table
 	 * @param string|null $column
 	 */
@@ -107,6 +132,8 @@ class Row
 	}
 
 	/**
+	 * Returns referenced LeanMapper\Row instance
+	 *
 	 * @param string $table
 	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
@@ -118,6 +145,8 @@ class Row
 	}
 
 	/**
+	 * Returns array of LeanMapper\Row instances referencing current row
+	 *
 	 * @param string $table
 	 * @param Closure|null $filter
 	 * @param string|null $viaColumn

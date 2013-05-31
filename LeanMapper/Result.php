@@ -1,9 +1,12 @@
 <?php
 
 /**
- * This file is part of the Lean Mapper library
+ * This file is part of the Lean Mapper library (http://www.leanmapper.com)
  *
  * Copyright (c) 2013 Vojtěch Kohout (aka Tharos)
+ *
+ * For the full copyright and license information, please view the file
+ * license-mit.txt that was distributed with this source code.
  */
 
 namespace LeanMapper;
@@ -15,6 +18,8 @@ use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidStateException;
 
 /**
+ * Set of related data
+ *
  * @author Vojtěch Kohout
  */
 class Result implements \Iterator
@@ -46,6 +51,8 @@ class Result implements \Iterator
 
 
 	/**
+	 * Creates new common instance (it means persisted)
+	 *
 	 * @param DibiRow|DibiRow[] $data
 	 * @param string $table
 	 * @param DibiConnection $connection
@@ -72,6 +79,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Creates new detached instance (it means non-persisted)
+	 *
 	 * @return self
 	 */
 	public static function getDetachedInstance()
@@ -80,6 +89,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Creates new LeanMapper\Row instance pointing to requested row in LeanMapper\Result
+	 *
 	 * @param int $id
 	 * @return Row|null
 	 */
@@ -92,6 +103,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Returns data of given field from row with given id
+	 *
 	 * @param int $id
 	 * @param string $key
 	 * @return mixed
@@ -106,6 +119,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Sets data of given field in row with given id
+	 *
 	 * @param int $id
 	 * @param string $key
 	 * @param mixed $value
@@ -127,6 +142,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Tells whether requested row is modified state
+	 *
 	 * @param int $id
 	 * @return bool
 	 */
@@ -136,6 +153,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Tells whether requested row is in detached state (like newly created row)
+	 *
 	 * @param int $id
 	 * @return bool
 	 */
@@ -145,6 +164,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Marks requested row as detached (it means non-persisted)
+	 *
 	 * @param int $id
 	 * @throws InvalidArgumentException
 	 */
@@ -163,6 +184,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Marks requested row as non-updated (isModified($id) returns false right after this method call)
+	 *
 	 * @param int $id
 	 */
 	public function markAsUpdated($id)
@@ -173,6 +196,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Marks requested row as persisted
+	 *
 	 * @param int $id
 	 * @param string $table
 	 * @param DibiConnection $connection
@@ -192,6 +217,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Returns array of modified fields of requested row with new values
+	 *
 	 * @param int $id
 	 * @return array
 	 */
@@ -207,6 +234,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Creates new LeanMapper\Row instance pointing to requested row in referenced result
+	 *
 	 * @param int $id
 	 * @param string $table
 	 * @param callable|null $filter
@@ -227,6 +256,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Creates new array of LeanMapper\Row instances pointing to requested row in referencing result
+	 *
 	 * @param int $id
 	 * @param string $table
 	 * @param callable|null $filter
@@ -253,6 +284,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Clean in-memory cache of referenced results
+	 *
 	 * @param string|null $table
 	 * @param string|null $column
 	 */
