@@ -15,6 +15,8 @@ use LeanMapper\Exception\InvalidAnnotationException;
 use LeanMapper\Exception\RuntimeException;
 
 /**
+ * Set of entity filters
+ *
  * @author Vojtěch Kohout
  */
 class PropertyFilters
@@ -57,6 +59,8 @@ class PropertyFilters
 	}
 
 	/**
+	 * Returns array of entity filters (array of callable strings)
+	 *
 	 * @return string[]
 	 */
 	public function getFilters()

@@ -12,6 +12,8 @@
 namespace LeanMapper\Relationship;
 
 /**
+ * Has one relationship
+ *
  * @author Vojtěch Kohout
  */
 class HasOne
@@ -35,6 +37,8 @@ class HasOne
 	}
 
 	/**
+	 * Returns name of column referencing target table
+	 *
 	 * @return string
 	 */
 	public function getColumnReferencingTargetTable()
@@ -43,6 +47,8 @@ class HasOne
 	}
 
 	/**
+	 * Returns name of target table
+	 *
 	 * @return string
 	 */
 	public function getTargetTable()

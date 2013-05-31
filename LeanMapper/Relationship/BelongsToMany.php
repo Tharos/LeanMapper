@@ -12,6 +12,8 @@
 namespace LeanMapper\Relationship;
 
 /**
+ * Belongs to many relationship
+ *
  * @author Vojtěch Kohout
  */
 class BelongsToMany extends BelongsTo

@@ -12,6 +12,8 @@
 namespace LeanMapper\Reflection;
 
 /**
+ * Behaves like factory of LeanMapper\Reflection\Aliases
+ *
  * @author Vojtěch Kohout
  */
 class AliasesBuilder
@@ -27,12 +29,17 @@ class AliasesBuilder
 	private $lastPart = '';
 
 
+	/**
+	 * Reset current definition
+	 */
 	public function resetCurrent()
 	{
 		$this->current = $this->lastPart = '';
 	}
 
 	/**
+	 * Appends name to current definition
+	 *
 	 * @param string $name
 	 */
 	public function appendToCurrent($name)
@@ -44,6 +51,8 @@ class AliasesBuilder
 	}
 
 	/**
+	 * Appends last part to current definition
+	 *
 	 * @param string $name
 	 */
 	public function setLast($name)
@@ -51,6 +60,9 @@ class AliasesBuilder
 		$this->lastPart = $name;
 	}
 
+	/**
+	 * Finishes building of current definition and begins to build new one
+	 */
 	public function finishCurrent()
 	{
 		$this->aliases[$this->lastPart] = $this->current;
@@ -58,6 +70,8 @@ class AliasesBuilder
 	}
 
 	/**
+	 * Creates new LeanMapper\Reflection\Aliases instance
+	 *
 	 * @param string $namespace
 	 * @return Aliases
 	 */

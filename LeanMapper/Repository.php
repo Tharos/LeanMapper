@@ -19,6 +19,8 @@ use LeanMapper\Reflection\AnnotationsParser;
 use ReflectionClass;
 
 /**
+ * Base class for custom repositories
+ *
  * @author Vojtěch Kohout
  */
 abstract class Repository
@@ -49,6 +51,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Stored modified fields of entity into database and creates new row in database when entity is in detached state
+	 *
 	 * @param Entity $entity
 	 * @return int
 	 */
@@ -73,6 +77,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Removes given entity (or entity with given id) from database
+	 *
 	 * @param Entity|int $arg
 	 * @throws InvalidStateException
 	 */
@@ -92,6 +98,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Helps to create entity instance from given DibiRow instance
+	 *
 	 * @param DibiRow $row
 	 * @param string|null $entityClass
 	 * @param string|null $table
@@ -110,6 +118,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Helps to create array of entites from given array of DibiRow instances
+	 *
 	 * @param array $rows
 	 * @param string|null $entityClass
 	 * @param string|null $table
@@ -132,6 +142,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Returns name of database table related to entity which repository can handle
+	 *
 	 * @return string
 	 * @throws InvalidStateException
 	 */
@@ -154,6 +166,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Returns fully qualified name of entity class which repository can handle
+	 *
 	 * @return string
 	 * @throws InvalidStateException
 	 */
@@ -181,7 +195,7 @@ abstract class Repository
 	/**
 	 * @return string
 	 */
-	public function getDocComment()
+	private function getDocComment()
 	{
 		if ($this->docComment === null) {
 			$reflection = new ReflectionClass(get_called_class());

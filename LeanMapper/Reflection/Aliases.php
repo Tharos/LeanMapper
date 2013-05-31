@@ -12,6 +12,8 @@
 namespace LeanMapper\Reflection;
 
 /**
+ * Class names translator
+ *
  * @author Vojtěch Kohout
  */
 class Aliases
@@ -35,6 +37,8 @@ class Aliases
 	}
 
 	/**
+	 * Returns fully qualified class name
+	 *
 	 * @param string $identifier
 	 * @return string
 	 */

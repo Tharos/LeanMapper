@@ -12,6 +12,8 @@
 namespace LeanMapper\Relationship;
 
 /**
+ * Base class for belongs to relationships
+ *
  * @author Vojtěch Kohout
  */
 abstract class BelongsTo
@@ -35,6 +37,8 @@ abstract class BelongsTo
 	}
 
 	/**
+	 * Returns name of column referencing source table
+	 *
 	 * @return string
 	 */
 	public function getColumnReferencingSourceTable()
@@ -43,6 +47,8 @@ abstract class BelongsTo
 	}
 
 	/**
+	 * Returns name of target table
+	 *
 	 * @return string
 	 */
 	public function getTargetTable()

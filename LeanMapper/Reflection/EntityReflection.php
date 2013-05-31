@@ -12,6 +12,8 @@
 namespace LeanMapper\Reflection;
 
 /**
+ * Entity reflection
+ *
  * @author Vojtěch Kohout
  */
 class EntityReflection extends \ReflectionClass
@@ -28,6 +30,8 @@ class EntityReflection extends \ReflectionClass
 
 
 	/**
+	 * Gets requested entity property
+	 *
 	 * @param string $name
 	 * @return Property|null
 	 */
@@ -38,6 +42,8 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
+	 * Gets LeanMapper\Reflection\Aliases instance valid for current class
+	 *
 	 * @return Aliases
 	 */
 	public function getAliases()
@@ -49,6 +55,8 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
+	 * Returns parent entity reflection
+	 *
 	 * @return self|null
 	 */
 	public function getParentClass()
@@ -57,6 +65,8 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
+	 * Returns doc comment of current class
+	 *
 	 * @return string
 	 */
 	public function getDocComment()
@@ -85,17 +95,6 @@ class EntityReflection extends \ReflectionClass
 				$this->properties[$property->getName()] = $property;
 			}
 		}
-
-		/*foreach ($this->getFamilyLine() as $member) {
-			$annotations = $member->getAnnotations();
-
-			if (isset($annotations['property'])) {
-				foreach ($annotations['property'] as $annotation) {
-					$property = PropertyFactory::createFromAnnotation($annotation, $this);
-					$this->properties[$property->getName()] = $property;
-				}
-			}
-		}*/
 	}
 
 	/**

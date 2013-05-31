@@ -12,6 +12,8 @@
 namespace LeanMapper\Reflection;
 
 /**
+ * Property type
+ *
  * @author Vojtěch Kohout
  */
 class PropertyType
@@ -50,6 +52,8 @@ class PropertyType
 	}
 
 	/**
+	 * Returns type
+	 *
 	 * @return string
 	 */
 	public function getType()
@@ -58,6 +62,8 @@ class PropertyType
 	}
 
 	/**
+	 * Tells whether current type is basic type (boolean|integer|float|string|array)
+	 *
 	 * @return bool
 	 */
 	public function isBasicType()

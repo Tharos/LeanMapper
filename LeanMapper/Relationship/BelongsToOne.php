@@ -12,6 +12,8 @@
 namespace LeanMapper\Relationship;
 
 /**
+ * Belongs to one relationship
+ *
  * @author Vojtěch Kohout
  */
 class BelongsToOne extends BelongsTo

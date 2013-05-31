@@ -12,6 +12,8 @@
 namespace LeanMapper\Relationship;
 
 /**
+ * Has many relationship
+ *
  * @author Vojtěch Kohout
  */
 class HasMany
@@ -45,6 +47,8 @@ class HasMany
 	}
 
 	/**
+	 * Returns name of column referencing source table
+	 *
 	 * @return string
 	 */
 	public function getColumnReferencingSourceTable()
@@ -53,6 +57,8 @@ class HasMany
 	}
 
 	/**
+	 * Returns name of relationship table
+	 *
 	 * @return string
 	 */
 	public function getRelationshipTable()
@@ -61,6 +67,8 @@ class HasMany
 	}
 
 	/**
+	 * Returns name of column referencing target table
+	 *
 	 * @return string
 	 */
 	public function getColumnReferencingTargetTable()
@@ -69,6 +77,8 @@ class HasMany
 	}
 
 	/**
+	 * Returns name of target table
+	 *
 	 * @return string
 	 */
 	public function getTargetTable()

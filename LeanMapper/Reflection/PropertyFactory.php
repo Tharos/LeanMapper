@@ -16,6 +16,8 @@ use LeanMapper\Exception\UtilityClassException;
 use LeanMapper\Relationship;
 
 /**
+ * Property factory
+ *
  * @author Vojtěch Kohout
  */
 class PropertyFactory
@@ -30,6 +32,8 @@ class PropertyFactory
 	}
 
 	/**
+	 * Creates new LeanMapper\Reflection\Property instance from given annotation
+	 *
 	 * @param string $annotation
 	 * @param EntityReflection $reflection
 	 * @return Property

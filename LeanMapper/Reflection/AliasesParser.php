@@ -14,6 +14,8 @@ namespace LeanMapper\Reflection;
 use LeanMapper\Exception\UtilityClassException;
 
 /**
+ * Use statement parser (state machine)
+ *
  * @author Vojtěch Kohout
  */
 class AliasesParser
@@ -37,6 +39,8 @@ class AliasesParser
 	}
 
 	/**
+	 * Returns LeanMapper\Reflection\Aliases instance valid for given class source code
+	 *
 	 * @param string $source
 	 * @param string $namespace
 	 * @return array
