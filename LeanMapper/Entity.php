@@ -205,11 +205,17 @@ abstract class Entity
 	 * Performs a mass value assignment (using setters)
 	 *
 	 * @param array $values
+	 * @param array|null $whitelist
 	 */
-	public function assign(array $values)
+	public function assign(array $values, array $whitelist = null)
 	{
+		if ($whitelist !== null) {
+			$whitelist = array_flip($whitelist);
+		}
 		foreach ($values as $field => $value) {
-			$this->__set($field, $value);
+			if ($whitelist === null or isset($whitelist[$field])) {
+				$this->__set($field, $value);
+			}
 		}
 	}
 
