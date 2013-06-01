@@ -72,7 +72,7 @@ class Row
 	}
 
 	/**
-	 * Tells whether row is in modified state
+	 * Tells whether row is in detached state
 	 *
 	 * @return bool
 	 */
