@@ -65,8 +65,9 @@ abstract class Entity
 			}
 			throw new MemberAccessException("Undefined property: $name");
 		}
+		$column = $property->getColumn();
 		if ($property->isBasicType()) {
-			$value = $this->row->$name;
+			$value = $this->row->$column;
 			if ($value === null) {
 				if (!$property->isNullable()) {
 					throw new InvalidValueException("Property '$name' cannot be null.");
@@ -97,7 +98,7 @@ abstract class Entity
 				$value = $this->$method($property, $filter);
 
 			} else {
-				$value = $this->row->$name;
+				$value = $this->row->$column;
 				$actualClass = get_class($value);
 				if ($value === null) {
 					if (!$property->isNullable()) {
@@ -139,17 +140,18 @@ abstract class Entity
 				throw new MemberAccessException("Undefined property: $name");
 			}
 		} else {
+			$column = $property->getColumn();
 			if ($value === null) {
 				if (!$property->isNullable()) {
 					throw new InvalidValueException("Property '$name' cannot be null.");
 				}
-				$this->row->$name = null;
+				$this->row->$column = null;
 			} else {
 				if ($property->isBasicType()) {
 					if (!settype($value, $property->getType())) {
 						throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
 					}
-					$this->row->$name = $value;
+					$this->row->$column = $value;
 				} else {
 					if ($property->hasRelationship()) {
 						if (!($value instanceof Entity)) {
@@ -174,7 +176,7 @@ abstract class Entity
 						if (get_class($value) !== $property->getType()) {
 							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
 						}
-						$this->row->$name = $value;
+						$this->row->$column = $value;
 					}
 				}
 			}
