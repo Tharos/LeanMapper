@@ -106,8 +106,8 @@ class Row
 	 */
 	public function markAsCreated($id, $table, DibiConnection $connection)
 	{
+		$this->result->markAsCreated($id, $this->id, $table, $connection);
 		$this->id = $id;
-		$this->result->markAsCreated($this->id, $table, $connection);
 	}
 
 	/**
