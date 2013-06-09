@@ -34,12 +34,13 @@ class PropertyFactory
 	/**
 	 * Creates new LeanMapper\Reflection\Property instance from given annotation
 	 *
+	 * @param string $annotationType
 	 * @param string $annotation
 	 * @param EntityReflection $reflection
 	 * @return Property
 	 * @throws InvalidAnnotationException
 	 */
-	public static function createFromAnnotation($annotation, EntityReflection $reflection)
+	public static function createFromAnnotation($annotationType, $annotation, EntityReflection $reflection)
 	{
 		$aliases = $reflection->getAliases();
 
@@ -56,7 +57,7 @@ class PropertyFactory
 		~xi', $annotation, $matches);
 
 		if (!$matched) {
-			throw new InvalidAnnotationException("Invalid property annotation given: @property $annotation");
+			throw new InvalidAnnotationException("Invalid property annotation given: @$annotationType $annotation");
 		}
 		$containsCollection = $matches[3] !== '';
 		$isNullable = ($matches[1] !== '' or $matches[4] !== '');
@@ -94,6 +95,7 @@ class PropertyFactory
 			$name,
 			$column,
 			$propertyType,
+			$annotationType === 'property',
 			$isNullable,
 			$containsCollection,
 			$relationship,

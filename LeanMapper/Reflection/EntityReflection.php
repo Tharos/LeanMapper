@@ -89,10 +89,14 @@ class EntityReflection extends \ReflectionClass
 
 	private function parseProperties()
 	{
+		$this->properties = array();
+		$annotationTypes = array('property', 'property-read');
 		foreach ($this->getFamilyLine() as $member) {
-			foreach (AnnotationsParser::parseAnnotationValues('property', $member->getDocComment()) as $definition) {
-				$property = PropertyFactory::createFromAnnotation($definition, $this);
-				$this->properties[$property->getName()] = $property;
+			foreach ($annotationTypes as $annotationType) {
+				foreach (AnnotationsParser::parseAnnotationValues($annotationType, $member->getDocComment()) as $definition) {
+					$property = PropertyFactory::createFromAnnotation($annotationType, $definition, $this);
+					$this->properties[$property->getName()] = $property;
+				}
 			}
 		}
 	}

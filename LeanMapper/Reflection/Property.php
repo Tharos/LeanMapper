@@ -34,6 +34,9 @@ class Property
 	private $type;
 
 	/** @var bool */
+	private $isWritable;
+
+	/** @var bool */
 	private $isNullable;
 
 	/** @var bool */
@@ -50,16 +53,18 @@ class Property
 	 * @param string $name
 	 * @param string $column
 	 * @param PropertyType $type
+	 * @param bool $isWritable
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
 	 * @param PropertyFilters|null $filters
 	 */
-	public function __construct($name, $column, PropertyType $type, $isNullable, $containsCollection, $relationship = null, PropertyFilters $filters = null)
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $filters = null)
 	{
 		$this->name = $name;
 		$this->column = $column;
 		$this->type = $type;
+		$this->isWritable = $isWritable;
 		$this->isNullable = $isNullable;
 		$this->containsCollection = $containsCollection;
 		$this->relationship = $relationship;
@@ -114,6 +119,16 @@ class Property
 	public function isBasicType()
 	{
 		return $this->type->isBasicType();
+	}
+
+	/**
+	 * Tells whether property is writable
+	 *
+	 * @return bool
+	 */
+	public function isWritable()
+	{
+		return $this->isWritable;
 	}
 
 	/**

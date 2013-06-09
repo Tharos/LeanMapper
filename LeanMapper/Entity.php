@@ -140,6 +140,9 @@ abstract class Entity
 				throw new MemberAccessException("Undefined property: $name");
 			}
 		} else {
+			if (!$property->isWritable()) {
+				throw new MemberAccessException("Cannot write to read only property '$name'.");
+			}
 			$column = $property->getColumn();
 			if ($value === null) {
 				if (!$property->isNullable()) {
@@ -184,7 +187,7 @@ abstract class Entity
 	}
 
 	/**
-	 * Try to call get<$name> method and calls __get($name) when get method doesn't exist
+	 * Calls __get() or __set() method when get<$name> or set<$name> methods don't exist
 	 *
 	 * @param string $name
 	 * @param array $arguments
@@ -194,13 +197,18 @@ abstract class Entity
 	 */
 	public function __call($name, array $arguments)
 	{
-		if (strlen($name) > 3) {
-			$prefix = substr($name, 0, 3);
-			if ($prefix === 'get') {
-				return $this->__get(lcfirst(substr($name, 3)), $arguments);
-			}
+		$e = new InvalidMethodCallException("Method '$name' is not callable.");
+		if (strlen($name) < 4) {
+			throw $e;
 		}
-		throw new InvalidMethodCallException("Method '$name' is not callable.");
+		$prefix = substr($name, 0, 3);
+		if ($prefix === 'get') {
+			return $this->__get(lcfirst(substr($name, 3)), $arguments);
+		} elseif ($prefix === 'set') {
+			$this->__set(lcfirst(substr($name, 3)), $arguments);
+		} else {
+			throw $e;
+		}
 	}
 
 	/**
