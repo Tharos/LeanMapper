@@ -27,8 +27,8 @@ use ReflectionClass;
 abstract class Repository
 {
 
-	/** @varstring */
-	public static $defaultEntityNamespace = 'Model\Entity';
+	/** @var string */
+	protected $defaultEntityNamespace = 'Model\Entity';
 
 	/** @var DibiConnection */
 	protected $connection;
@@ -177,19 +177,19 @@ abstract class Repository
 	protected function getEntityClass()
 	{
 		if ($this->entityClass === null) {
-			$name = AnnotationsParser::parseSimpleAnnotationValue('entity', $this->getDocComment());
-			if ($name !== null) {
-				$this->entityClass = $name;
+			$entityClass = AnnotationsParser::parseSimpleAnnotationValue('entity', $this->getDocComment());
+			if ($entityClass !== null) {
+				$this->entityClass = $entityClass;
 			} else {
 				$matches = array();
 				if (preg_match('#([a-z0-9]+)repository$#i', get_called_class(), $matches)) {
-					$this->entityClass = self::$defaultEntityNamespace . '\\' . $matches[1];
+					$this->entityClass = $matches[1];
 				} else {
 					throw new InvalidStateException('Cannot determine entity class name.');
 				}
 			}
 		}
-		return $this->entityClass;
+		return $this->getFullyQualifiedClass($this->entityClass);
 	}
 
 	////////////////////
@@ -217,6 +217,21 @@ abstract class Repository
 		if (!($entity instanceof $entityClass)) {
 			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
 		}
+	}
+
+	/**
+	 * @param string $entityClass
+	 * @return string
+	 */
+	private function getFullyQualifiedClass($entityClass)
+	{
+		if (substr($entityClass, 0, 1) === '\\') {
+			return substr($entityClass, 1);
+		}
+		if ($this->defaultEntityNamespace === null) {
+			return $entityClass;
+		}
+		return $this->defaultEntityNamespace . '\\' . $entityClass;
 	}
 	
 }
