@@ -376,12 +376,12 @@ class Result implements \Iterator
 
 		if ($filter === null) {
 			if (!isset($this->referenced[$key])) {
-				$data = $statement->where('%n.[id] IN %in', $table, $this->extractReferencedIds($viaColumn))
+				$data = $statement->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn))
 						->fetchAll();
 				$this->referenced[$key] = self::getInstance($data, $table, $this->connection);
 			}
 		} else {
-			$statement->where('%n.[id] IN %in', $table, $this->extractReferencedIds($viaColumn));
+			$statement->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn));
 			$filter($statement);
 
 			$sql = (string) $statement;
@@ -407,12 +407,12 @@ class Result implements \Iterator
 
 		if ($filter === null) {
 			if (!isset($this->referencing[$key])) {
-				$data = $statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractReferencedIds())
+				$data = $statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds())
 						->fetchAll();
 				$this->referencing[$key] = self::getInstance($data, $table, $this->connection);
 			}
 		} else {
-			$statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractReferencedIds());
+			$statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds());
 			$filter($statement);
 
 			$sql = (string)$statement;
@@ -429,7 +429,7 @@ class Result implements \Iterator
 	 * @param string $column
 	 * @return array
 	 */
-	private function extractReferencedIds($column = 'id')
+	private function extractIds($column = 'id')
 	{
 		$ids = array();
 		foreach ($this->data as $data) {
