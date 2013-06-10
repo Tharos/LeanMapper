@@ -12,10 +12,9 @@
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
-use LeanMapper\Exception\RuntimeException;
 
 /**
- * Set of entity filters
+ * Set of property filters
  *
  * @author Vojtěch Kohout
  */

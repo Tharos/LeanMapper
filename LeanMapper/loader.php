@@ -29,6 +29,7 @@ require_once __DIR__ . '/Reflection/AliasesParser.php';
 require_once __DIR__ . '/Reflection/AnnotationsParser.php';
 require_once __DIR__ . '/Reflection/EntityReflection.php';
 require_once __DIR__ . '/Reflection/Property.php';
+require_once __DIR__ . '/Reflection/PropertyValuesEnum.php';
 require_once __DIR__ . '/Reflection/PropertyFactory.php';
 require_once __DIR__ . '/Reflection/PropertyFilters.php';
 require_once __DIR__ . '/Reflection/PropertyType.php';

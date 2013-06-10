@@ -11,6 +11,7 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Relationship\BelongsToMany;
 use LeanMapper\Relationship\BelongsToOne;
 use LeanMapper\Relationship\HasMany;
@@ -48,6 +49,9 @@ class Property
 	/** @var PropertyFilters|null */
 	private $filters;
 
+	/** @var PropertyValuesEnum|null */
+	private $propertyValuesEnum;
+
 
 	/**
 	 * @param string $name
@@ -58,8 +62,9 @@ class Property
 	 * @param bool $containsCollection
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
 	 * @param PropertyFilters|null $filters
+	 * @param PropertyValuesEnum|null $propertyValuesEnum
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $filters = null)
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $filters = null, PropertyValuesEnum $propertyValuesEnum = null)
 	{
 		$this->name = $name;
 		$this->column = $column;
@@ -69,6 +74,7 @@ class Property
 		$this->containsCollection = $containsCollection;
 		$this->relationship = $relationship;
 		$this->filters = $filters;
+		$this->propertyValuesEnum = $propertyValuesEnum;
 	}
 
 	/**
@@ -169,6 +175,31 @@ class Property
 	public function getFilters()
 	{
 		return $this->filters !== null ? $this->filters->getFilters() : null;
+	}
+
+	/**
+	 * Tells whether property contains enumeration
+	 *
+	 * @return bool
+	 */
+	public function containsEnumeration()
+	{
+		return $this->propertyValuesEnum !== null;
+	}
+
+	/**
+	 * Tells wheter given value is from enumeration of possible values
+	 *
+	 * @param mixed $value
+	 * @return bool
+	 * @throws InvalidMethodCallException
+	 */
+	public function isValueFromEnum($value)
+	{
+		if (!$this->containsEnumeration()) {
+			throw new InvalidMethodCallException("It doesn't make sense to call this method on property that doesn't contain enumeration");
+		}
+		return $this->propertyValuesEnum->isValueFromEnum($value);
 	}
 
 }
