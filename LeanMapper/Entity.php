@@ -77,6 +77,9 @@ abstract class Entity
 			if (!settype($value, $property->getType())) {
 				throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
 			}
+			if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
+				throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
+			}
 		} else {
 			if ($property->hasRelationship()) {
 
@@ -153,6 +156,9 @@ abstract class Entity
 				if ($property->isBasicType()) {
 					if (!settype($value, $property->getType())) {
 						throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
+					}
+					if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
+						throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
 					}
 					$this->row->$column = $value;
 				} else {
