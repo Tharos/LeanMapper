@@ -1,14 +1,18 @@
 <?php
 
 use Tester\Assert;
-use LeanMapper\Repository;
 use LeanMapper\Entity;
 
 require_once __DIR__ . '/../bootstrap.php';
 
 //////////
 
-Repository::$defaultEntityNamespace = null;
+class Repository extends LeanMapper\Repository
+{
+
+	protected $defaultEntityNamespace = null;
+
+}
 
 class BookRepository extends Repository
 {
