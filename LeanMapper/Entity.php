@@ -65,8 +65,9 @@ abstract class Entity
 			}
 			throw new MemberAccessException("Undefined property: $name");
 		}
+		$column = $property->getColumn();
 		if ($property->isBasicType()) {
-			$value = $this->row->$name;
+			$value = $this->row->$column;
 			if ($value === null) {
 				if (!$property->isNullable()) {
 					throw new InvalidValueException("Property '$name' cannot be null.");
@@ -97,7 +98,7 @@ abstract class Entity
 				$value = $this->$method($property, $filter);
 
 			} else {
-				$value = $this->row->$name;
+				$value = $this->row->$column;
 				$actualClass = get_class($value);
 				if ($value === null) {
 					if (!$property->isNullable()) {
@@ -139,17 +140,21 @@ abstract class Entity
 				throw new MemberAccessException("Undefined property: $name");
 			}
 		} else {
+			if (!$property->isWritable()) {
+				throw new MemberAccessException("Cannot write to read only property '$name'.");
+			}
+			$column = $property->getColumn();
 			if ($value === null) {
 				if (!$property->isNullable()) {
 					throw new InvalidValueException("Property '$name' cannot be null.");
 				}
-				$this->row->$name = null;
+				$this->row->$column = null;
 			} else {
 				if ($property->isBasicType()) {
 					if (!settype($value, $property->getType())) {
 						throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
 					}
-					$this->row->$name = $value;
+					$this->row->$column = $value;
 				} else {
 					if ($property->hasRelationship()) {
 						if (!($value instanceof Entity)) {
@@ -174,7 +179,7 @@ abstract class Entity
 						if (get_class($value) !== $property->getType()) {
 							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
 						}
-						$this->row->$name = $value;
+						$this->row->$column = $value;
 					}
 				}
 			}
@@ -182,7 +187,7 @@ abstract class Entity
 	}
 
 	/**
-	 * Try to call get<$name> method and calls __get($name) when get method doesn't exist
+	 * Calls __get() or __set() method when get<$name> or set<$name> methods don't exist
 	 *
 	 * @param string $name
 	 * @param array $arguments
@@ -192,13 +197,18 @@ abstract class Entity
 	 */
 	public function __call($name, array $arguments)
 	{
-		if (strlen($name) > 3) {
-			$prefix = substr($name, 0, 3);
-			if ($prefix === 'get') {
-				return $this->__get(lcfirst(substr($name, 3)), $arguments);
-			}
+		$e = new InvalidMethodCallException("Method '$name' is not callable.");
+		if (strlen($name) < 4) {
+			throw $e;
 		}
-		throw new InvalidMethodCallException("Method '$name' is not callable.");
+		$prefix = substr($name, 0, 3);
+		if ($prefix === 'get') {
+			return $this->__get(lcfirst(substr($name, 3)), $arguments);
+		} elseif ($prefix === 'set') {
+			$this->__set(lcfirst(substr($name, 3)), $arguments);
+		} else {
+			throw $e;
+		}
 	}
 
 	/**

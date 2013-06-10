@@ -72,7 +72,7 @@ class Row
 	}
 
 	/**
-	 * Tells whether row is in modified state
+	 * Tells whether row is in detached state
 	 *
 	 * @return bool
 	 */
@@ -106,8 +106,8 @@ class Row
 	 */
 	public function markAsCreated($id, $table, DibiConnection $connection)
 	{
+		$this->result->markAsCreated($id, $this->id, $table, $connection);
 		$this->id = $id;
-		$this->result->markAsCreated($this->id, $table, $connection);
 	}
 
 	/**

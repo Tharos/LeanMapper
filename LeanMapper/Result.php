@@ -198,20 +198,22 @@ class Result implements \Iterator
 	/**
 	 * Marks requested row as persisted
 	 *
-	 * @param int $id
+	 * @param int $newId
+	 * @param int $oldId
 	 * @param string $table
 	 * @param DibiConnection $connection
 	 * @throws InvalidStateException
 	 */
-	public function markAsCreated($id, $table, DibiConnection $connection)
+	public function markAsCreated($newId, $oldId, $table, DibiConnection $connection)
 	{
-		if (!$this->isDetached($id)) {
+		if (!$this->isDetached($oldId)) {
 			throw new InvalidStateException('Result is not in detached state.');
 		}
-		$this->data = array($id => array('id' => $id) + $this->getModifiedData($id));
-		unset($this->modified[$id]);
-		unset($this->detached[$id]);
-
+		$this->data = array($newId => array('id' => $newId) + $this->getModifiedData($oldId));
+		foreach (array($newId, $oldId) as $key) {
+			unset($this->modified[$key]);
+			unset($this->detached[$key]);
+		}
 		$this->table = $table;
 		$this->connection = $connection;
 	}

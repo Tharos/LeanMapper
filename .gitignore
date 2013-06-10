@@ -1,3 +1,4 @@
-.idea
-_local
-composer.lock
+/.idea
+/_local
+/vendor
+/composer.lock

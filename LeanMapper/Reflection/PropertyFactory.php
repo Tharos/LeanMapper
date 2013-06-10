@@ -34,12 +34,13 @@ class PropertyFactory
 	/**
 	 * Creates new LeanMapper\Reflection\Property instance from given annotation
 	 *
+	 * @param string $annotationType
 	 * @param string $annotation
 	 * @param EntityReflection $reflection
 	 * @return Property
 	 * @throws InvalidAnnotationException
 	 */
-	public static function createFromAnnotation($annotation, EntityReflection $reflection)
+	public static function createFromAnnotation($annotationType, $annotation, EntityReflection $reflection)
 	{
 		$aliases = $reflection->getAliases();
 
@@ -50,12 +51,13 @@ class PropertyFactory
 			(\[\])?
 			(\|null)? \s+
 			(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
+			(?:\s+\(([^)]+)\))?
 			(?:\s+m:(?:(hasOne|hasMany|belongsToOne|belongsToMany)(?:\(([^)]+)\))?))?
 			(?:\s+m:filter\(([^)]+)\))?
 		~xi', $annotation, $matches);
 
 		if (!$matched) {
-			throw new InvalidAnnotationException("Invalid property annotation given: @property $annotation");
+			throw new InvalidAnnotationException("Invalid property annotation given: @$annotationType $annotation");
 		}
 		$containsCollection = $matches[3] !== '';
 		$isNullable = ($matches[1] !== '' or $matches[4] !== '');
@@ -63,29 +65,37 @@ class PropertyFactory
 		if ($containsCollection and $isNullable) {
 			throw new InvalidAnnotationException("It doesn't make sense to have a property containing collection nullable: @property $annotation");
 		}
+		$name = substr($matches[5], 1);
+		$column = (isset($matches[6]) and $matches[6] !== '') ? $matches[6] : $name;
+
 		$propertyType = new PropertyType($matches[2], $aliases);
 		$propertyFilters = null;
-		if (isset($matches[8])) {
+		if (isset($matches[9])) {
 			if ($propertyType->isBasicType()) {
 				throw new InvalidAnnotationException("Invalid property annotation given: {$propertyType->getType()} property cannot be filtered");
 			}
-			$propertyFilters =  new PropertyFilters($matches[8], $aliases);
+			$propertyFilters =  new PropertyFilters($matches[9], $aliases);
 		}
 
 		$relationship = null;
-		if (isset($matches[6])) {
+		if (isset($matches[7])) {
 			$relationship = self::createRelationship(
 				$reflection->getName(),
 				$propertyType,
 				$containsCollection,
-				$matches[6],
-				isset($matches[7]) ? $matches[7] : null
+				$matches[7],
+				isset($matches[8]) ? $matches[8] : null
 			);
+		}
+		if ($relationship !== null and isset($matches[6]) and $matches[6] !== '') {
+			throw new InvalidAnnotationException("All special column and table names must be specified in relationship definition when property holds relationship: @property $annotation");
 		}
 
 		return new Property(
-			substr($matches[5], 1),
+			$name,
+			$column,
 			$propertyType,
+			$annotationType === 'property',
 			$isNullable,
 			$containsCollection,
 			$relationship,

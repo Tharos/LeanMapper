@@ -14,6 +14,7 @@ namespace LeanMapper;
 use dibi;
 use DibiConnection;
 use DibiRow;
+use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidStateException;
 use LeanMapper\Reflection\AnnotationsParser;
 use ReflectionClass;
@@ -58,6 +59,7 @@ abstract class Repository
 	 */
 	public function persist(Entity $entity)
 	{
+		$this->checkEntityType($entity);
 		if ($entity->isModified()) {
 			$values = $entity->getModifiedData();
 			if ($entity->isDetached()) {
@@ -86,6 +88,7 @@ abstract class Repository
 	{
 		$id = $arg;
 		if ($arg instanceof Entity) {
+			$this->checkEntityType($arg);
 			if ($arg->isDetached()) {
 				throw new InvalidStateException('Cannot delete detached entity.');
 			}
@@ -202,6 +205,18 @@ abstract class Repository
 			$this->docComment = $reflection->getDocComment();
 		}
 		return $this->docComment;
+	}
+
+	/**
+	 * @param Entity $entity
+	 * @throws InvalidArgumentException
+	 */
+	private function checkEntityType(Entity $entity)
+	{
+		$entityClass = $this->getEntityClass();
+		if (!($entity instanceof $entityClass)) {
+			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
+		}
 	}
 	
 }
