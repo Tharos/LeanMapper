@@ -49,9 +49,10 @@ class PropertyFactory
 			^(null\|)?
 			((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+)
 			(\[\])?
-			(\|null)? \s+
+			(\|null)?\s+
 			(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
 			(?:\s+\(([^)]+)\))?
+			(?:\s+m:enum\(([^)]+)\))?
 			(?:\s+m:(?:(hasOne|hasMany|belongsToOne|belongsToMany)(?:\(([^)]+)\))?))?
 			(?:\s+m:filter\(([^)]+)\))?
 		~xi', $annotation, $matches);
@@ -59,36 +60,48 @@ class PropertyFactory
 		if (!$matched) {
 			throw new InvalidAnnotationException("Invalid property annotation given: @$annotationType $annotation");
 		}
+		$propertyType = new PropertyType($matches[2], $aliases);
+
 		$containsCollection = $matches[3] !== '';
+		if ($propertyType->isBasicType() and $containsCollection) {
+			throw new InvalidAnnotationException("Unsupported property annotation given: @$annotationType $annotation");
+		}
 		$isNullable = ($matches[1] !== '' or $matches[4] !== '');
 
 		if ($containsCollection and $isNullable) {
-			throw new InvalidAnnotationException("It doesn't make sense to have a property containing collection nullable: @property $annotation");
+			throw new InvalidAnnotationException("It doesn't make sense to have a property containing collection nullable: @$annotationType $annotation");
 		}
 		$name = substr($matches[5], 1);
 		$column = (isset($matches[6]) and $matches[6] !== '') ? $matches[6] : $name;
 
-		$propertyType = new PropertyType($matches[2], $aliases);
+		$propertyValuesEnum = null;
+		if (isset($matches[7]) and $matches[7] !== '') {
+			if (!$propertyType->isBasicType() or $propertyType->getType() === 'array') {
+				throw new InvalidAnnotationException("Invalid property annotation given: values of {$propertyType->getType()} property cannot be enumerated");
+			}
+			$propertyValuesEnum = new PropertyValuesEnum($matches[7], $reflection);
+		}
+
 		$propertyFilters = null;
-		if (isset($matches[9])) {
+		if (isset($matches[10])) {
 			if ($propertyType->isBasicType()) {
 				throw new InvalidAnnotationException("Invalid property annotation given: {$propertyType->getType()} property cannot be filtered");
 			}
-			$propertyFilters =  new PropertyFilters($matches[9], $aliases);
+			$propertyFilters =  new PropertyFilters($matches[10], $aliases);
 		}
 
 		$relationship = null;
-		if (isset($matches[7])) {
+		if (isset($matches[8])) {
 			$relationship = self::createRelationship(
 				$reflection->getName(),
 				$propertyType,
 				$containsCollection,
-				$matches[7],
-				isset($matches[8]) ? $matches[8] : null
+				$matches[8],
+				isset($matches[9]) ? $matches[9] : null
 			);
 		}
 		if ($relationship !== null and isset($matches[6]) and $matches[6] !== '') {
-			throw new InvalidAnnotationException("All special column and table names must be specified in relationship definition when property holds relationship: @property $annotation");
+			throw new InvalidAnnotationException("All special column and table names must be specified in relationship definition when property holds relationship: @$annotationType $annotation");
 		}
 
 		return new Property(
@@ -99,7 +112,8 @@ class PropertyFactory
 			$isNullable,
 			$containsCollection,
 			$relationship,
-			$propertyFilters
+			$propertyFilters,
+			$propertyValuesEnum
 		);
 	}
 

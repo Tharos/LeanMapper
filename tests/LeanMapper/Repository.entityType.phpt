@@ -24,7 +24,7 @@ class AuthorRepository extends Repository
 
 /**
  * @property int $id
- * @property int $name
+ * @property string $name
  */
 class Author extends Entity
 {
