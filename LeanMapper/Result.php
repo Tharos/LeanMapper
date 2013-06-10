@@ -372,7 +372,7 @@ class Result implements \Iterator
 	private function getReferencedResult($table, $viaColumn, Closure $filter = null)
 	{
 		$key = "$table($viaColumn)";
-		$statement = $this->connection->select('*')->from($table);
+		$statement = $this->connection->select('%n.*', $table)->from($table);
 
 		if ($filter === null) {
 			if (!isset($this->referenced[$key])) {
@@ -403,7 +403,7 @@ class Result implements \Iterator
 	private function getReferencingResult($table, $viaColumn, Closure $filter = null)
 	{
 		$key = "$table($viaColumn)";
-		$statement = $this->connection->select('*')->from($table);
+		$statement = $this->connection->select('%n.*', $table)->from($table);
 
 		if ($filter === null) {
 			if (!isset($this->referencing[$key])) {
