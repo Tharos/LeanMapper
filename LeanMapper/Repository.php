@@ -52,7 +52,7 @@ abstract class Repository
 	}
 
 	/**
-	 * Stored modified fields of entity into database and creates new row in database when entity is in detached state
+	 * Stores modified fields of entity into database or creates new row in database when entity is in detached state
 	 *
 	 * @param Entity $entity
 	 * @return int
@@ -63,16 +63,20 @@ abstract class Repository
 		if ($entity->isModified()) {
 			$values = $entity->getModifiedData();
 			if ($entity->isDetached()) {
+				$values = $this->beforeCreate($values);
 				$this->connection->insert($this->getTable(), $values)
 						->execute(); // dibi::IDENTIFIER would lead to exception when there is no column with AUTO_INCREMENT
 				$id = isset($values['id']) ? $values['id'] : $this->connection->getInsertId();
 				$entity->markAsCreated($id, $this->getTable(), $this->connection);
+
 				return $id;
 			} else {
+				$values = $this->beforeUpdate($values);
 				$result = $this->connection->update($this->getTable(), $values)
 						->where('[id] = %i', $entity->id)
 						->execute();
 				$entity->markAsUpdated();
+
 				return $result;
 			}
 		}
@@ -98,6 +102,39 @@ abstract class Repository
 		$this->connection->delete($this->getTable())
 				->where('[id] = %i', $id)
 				->execute();
+	}
+
+	/**
+	 * Adjusts prepared values before database insert call
+	 *
+	 * @param array $values
+	 * @return array
+	 */
+	protected function beforeCreate(array $values)
+	{
+		return $this->beforePersist($values);
+	}
+
+	/**
+	 * Adjusts prepared values before database update call
+	 *
+	 * @param array $values
+	 * @return array
+	 */
+	protected function beforeUpdate(array $values)
+	{
+		return $this->beforePersist($values);
+	}
+
+	/**
+	 * Adjusts prepared values before database insert or update call
+	 *
+	 * @param array $values
+	 * @return array
+	 */
+	protected function beforePersist(array $values)
+	{
+		return $values;
 	}
 
 	/**
