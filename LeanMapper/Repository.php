@@ -192,6 +192,18 @@ abstract class Repository
 		return $this->getFullyQualifiedClass($this->entityClass);
 	}
 
+	/**
+	 * @param Entity $entity
+	 * @throws InvalidArgumentException
+	 */
+	protected function checkEntityType(Entity $entity)
+	{
+		$entityClass = $this->getEntityClass();
+		if (!($entity instanceof $entityClass)) {
+			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
+		}
+	}
+
 	////////////////////
 	////////////////////
 
@@ -205,18 +217,6 @@ abstract class Repository
 			$this->docComment = $reflection->getDocComment();
 		}
 		return $this->docComment;
-	}
-
-	/**
-	 * @param Entity $entity
-	 * @throws InvalidArgumentException
-	 */
-	private function checkEntityType(Entity $entity)
-	{
-		$entityClass = $this->getEntityClass();
-		if (!($entity instanceof $entityClass)) {
-			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
-		}
 	}
 
 	/**
