@@ -219,6 +219,17 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Returns array of fields of requested row
+	 *
+	 * @param int $id
+	 * @return array
+	 */
+	public function getData($id)
+	{
+		return isset($this->data[$id]) ? $this->data[$id] : array();
+	}
+
+	/**
 	 * Returns array of modified fields of requested row with new values
 	 *
 	 * @param int $id

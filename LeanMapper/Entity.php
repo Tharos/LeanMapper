@@ -264,6 +264,16 @@ abstract class Entity
 	}
 
 	/**
+	 * Returns array of fields with values
+	 *
+	 * @return array
+	 */
+	public function getData()
+	{
+		return $this->row->getData();
+	}
+
+	/**
 	 * Returns array of modified fields with new values
 	 *
 	 * @return array
