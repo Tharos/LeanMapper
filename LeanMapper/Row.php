@@ -111,6 +111,16 @@ class Row
 	}
 
 	/**
+	 * Returns array of fields with values
+	 *
+	 * @return array
+	 */
+	public function getData()
+	{
+		return $this->result->getData($this->id);
+	}
+
+	/**
 	 * Returns array of modified fields with new values
 	 *
 	 * @return array
