@@ -88,16 +88,9 @@ abstract class Entity
 		} else {
 			if ($property->hasRelationship()) {
 
-				$filter = null;
-				$callbacks = $property->getFilters();
-				if (!empty($callbacks)) {
-					$args = func_get_args();
-					$filterArgs = isset($args[1]) ? $args[1] : array();
-					$filter = function (DibiFluent $statement) use ($callbacks, $filterArgs) {
-						foreach ($callbacks as $callback) {
-							call_user_func_array($callback, array_merge(array($statement), $filterArgs));
-						}
-					};
+				$filter = $property->getFilters();
+				if ($filter !== null) {
+					$filter = $this->getFilterCallback($filter, func_get_args());
 				}
 				$relationship = $property->getRelationship();
 
@@ -430,6 +423,20 @@ abstract class Entity
 			$value[] = new $class($row);
 		}
 		return $value;
+	}
+
+	private function getFilterCallback(array $propertyFilters, array $filterArgs)
+	{
+		$filterCallback = null;
+		if (!empty($propertyFilters)) {
+			$filterArgs = isset($filterArgs[1]) ? $filterArgs[1] : array();
+			$filterCallback = function (DibiFluent $statement) use ($propertyFilters, $filterArgs) {
+				foreach ($propertyFilters as $propertyFilter) {
+					call_user_func_array($propertyFilter, array_merge(array($statement), $filterArgs));
+				}
+			};
+		}
+		return $filterCallback;
 	}
 	
 }
