@@ -64,16 +64,22 @@ class Result implements \Iterator
 		$dataArray = array();
 		if ($data instanceof DibiRow) {
 			$dataArray = array(isset($data->id) ? $data->id : 0 => $data->toArray());
-		} elseif (is_array($data)) {
-			foreach ($data as $record) {
-				if (isset($record->id)) {
-					$dataArray[$record->id] = $record->toArray();
-				} else {
-					$dataArray[] = $record->toArray();
-				}
-			}
 		} else {
-			throw new InvalidArgumentException('Invalid type of data given, only DibiRow or array of DibiRow is supported at this moment.');
+			$e = new InvalidArgumentException('Invalid type of data given, only DibiRow or array of DibiRow is supported at this moment.');
+			if (is_array($data)) {
+				foreach ($data as $record) {
+					if (!($record instanceof DibiRow)) {
+						throw $e;
+					}
+					if (isset($record->id)) {
+						$dataArray[$record->id] = $record->toArray();
+					} else {
+						$dataArray[] = $record->toArray();
+					}
+				}
+			} else {
+				throw $e;
+			}
 		}
 		return new self($dataArray, $table, $connection);
 	}

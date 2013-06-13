@@ -14,6 +14,7 @@ namespace LeanMapper;
 use Closure;
 use DibiConnection;
 use DibiFluent;
+use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidValueException;
 use LeanMapper\Exception\MemberAccessException;
@@ -43,11 +44,22 @@ abstract class Entity
 
 
 	/**
-	 * @param Row|null $row
+	 * @param Row|array|null $arg
+	 * @throws InvalidArgumentException
 	 */
-	public function __construct(Row $row = null)
+	public function __construct($arg = null)
 	{
-		$this->row = $row !== null ? $row : Result::getDetachedInstance()->getRow();
+		if ($arg instanceof Row) {
+			$this->row = $arg;
+		} else {
+			$this->row = Result::getDetachedInstance()->getRow();
+			if ($arg !== null) {
+				if (!is_array($arg)) {
+					throw new InvalidArgumentException('$arg in entity constructor must be either null, array or instance of LeanMapper\Row, ' . gettype($arg) . ' given.');
+				}
+				$this->assign($arg);
+			}
+		}
 	}
 
 	/**
