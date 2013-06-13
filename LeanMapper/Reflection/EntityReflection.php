@@ -42,6 +42,17 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
+	 * Gets array of entity properties
+	 *
+	 * @return Property[]
+	 */
+	public function getEntityProperties()
+	{
+		$this->initProperties();
+		return $this->properties;
+	}
+
+	/**
 	 * Gets LeanMapper\Reflection\Aliases instance valid for current class
 	 *
 	 * @return Aliases

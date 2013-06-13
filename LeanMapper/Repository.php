@@ -61,7 +61,7 @@ abstract class Repository
 	{
 		$this->checkEntityType($entity);
 		if ($entity->isModified()) {
-			$values = $entity->getModifiedData();
+			$values = $entity->getModifiedRowData();
 			if ($entity->isDetached()) {
 				$values = $this->beforeCreate($values);
 				$this->connection->insert($this->getTable(), $values)
