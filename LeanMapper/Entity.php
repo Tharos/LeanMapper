@@ -22,6 +22,7 @@ use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
 use LeanMapper\Relationship;
 use LeanMapper\Row;
+use ReflectionMethod;
 
 /**
  * Base class for custom entities
@@ -36,6 +37,9 @@ abstract class Entity
 
 	/** @var EntityReflection[] */
 	protected static $reflections = array();
+
+	/** @var array */
+	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData');
 
 
 	/**
@@ -60,7 +64,8 @@ abstract class Entity
 		$property = $this->getReflection()->getEntityProperty($name);
 		if ($property === null) {
 			$method = 'get' . ucfirst($name);
-			if (method_exists($this, $method)) { // TODO: find better solution (using reflection)
+			$internalGetters = array_flip($this->internalGetters);
+			if (method_exists($this, $method) and !isset($internalGetters[$method])) {  // TODO: find better solution (using reflection)
 				return call_user_func(array($this, $method)); // $filterArgs are not relevant here
 			}
 			throw new MemberAccessException("Undefined property: $name");
@@ -83,16 +88,9 @@ abstract class Entity
 		} else {
 			if ($property->hasRelationship()) {
 
-				$filter = null;
-				$callbacks = $property->getFilters();
-				if (!empty($callbacks)) {
-					$args = func_get_args();
-					$filterArgs = isset($args[1]) ? $args[1] : array();
-					$filter = function (DibiFluent $statement) use ($callbacks, $filterArgs) {
-						foreach ($callbacks as $callback) {
-							call_user_func_array($callback, array_merge(array($statement), $filterArgs));
-						}
-					};
+				$filter = $property->getFilters();
+				if ($filter !== null) {
+					$filter = $this->getFilterCallback($filter, func_get_args());
 				}
 				$relationship = $property->getRelationship();
 
@@ -264,21 +262,44 @@ abstract class Entity
 	}
 
 	/**
-	 * Returns array of fields with values
+	 * Returns array of high-level fields with values
 	 *
 	 * @return array
 	 */
 	public function getData()
 	{
+		$data = array();
+		foreach ($this->getReflection()->getEntityProperties() as $property) {
+			$data[$property->getName()] = $this->__get($property->getName());
+		}
+		$internalGetters = array_flip($this->internalGetters);
+		foreach ($this->getReflection()->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+			$name = $method->getName();
+			if (substr($name, 0, 3) === 'get' and !isset($internalGetters[$name])) {
+				if ($method->getNumberOfRequiredParameters() === 0) {
+					$data[lcfirst(substr($name, 3))] = $method->invoke($this);
+				}
+			}
+		}
+		return $data;
+	}
+
+	/**
+	 * Returns array of low-level fields with values
+	 *
+	 * @return array
+	 */
+	public function getRowData()
+	{
 		return $this->row->getData();
 	}
 
 	/**
-	 * Returns array of modified fields with new values
+	 * Returns array of modified low-level fields with new values
 	 *
 	 * @return array
 	 */
-	public function getModifiedData()
+	public function getModifiedRowData()
 	{
 		return $this->row->getModifiedData();
 	}
@@ -402,6 +423,20 @@ abstract class Entity
 			$value[] = new $class($row);
 		}
 		return $value;
+	}
+
+	private function getFilterCallback(array $propertyFilters, array $filterArgs)
+	{
+		$filterCallback = null;
+		if (!empty($propertyFilters)) {
+			$filterArgs = isset($filterArgs[1]) ? $filterArgs[1] : array();
+			$filterCallback = function (DibiFluent $statement) use ($propertyFilters, $filterArgs) {
+				foreach ($propertyFilters as $propertyFilter) {
+					call_user_func_array($propertyFilter, array_merge(array($statement), $filterArgs));
+				}
+			};
+		}
+		return $filterCallback;
 	}
 	
 }
