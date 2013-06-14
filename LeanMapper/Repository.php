@@ -153,8 +153,8 @@ abstract class Repository
 		if ($table === null) {
 			$table = $this->getTable();
 		}
-		$collection = Result::getInstance($row, $table, $this->connection);
-		return new $entityClass($collection->getRow($row->id));
+		$result = Result::getInstance($row, $table, $this->connection);
+		return new $entityClass($result->getRow($row->id));
 	}
 
 	/**
