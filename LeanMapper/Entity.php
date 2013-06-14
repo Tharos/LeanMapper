@@ -350,12 +350,12 @@ abstract class Entity
 	}
 
 	/**
-	 * @param array $entites
+	 * @param array $entities
 	 * @return array
 	 */
-	protected function createCollection(array $entites)
+	protected function createCollection(array $entities)
 	{
-		return $entites;
+		return $entities;
 	}
 
 	////////////////////
