@@ -174,7 +174,7 @@ abstract class Entity
 				} else {
 					if ($property->hasRelationship()) {
 						if (!($value instanceof Entity)) {
-							throw new InvalidValueException("Only entites can be set via magic __set on field with relationships.");
+							throw new InvalidValueException("Only entities can be set via magic __set on field with relationships.");
 						}
 						$relationship = $property->getRelationship();
 						if (!($relationship instanceof Relationship\HasOne)) {
