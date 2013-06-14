@@ -153,12 +153,12 @@ abstract class Repository
 		if ($table === null) {
 			$table = $this->getTable();
 		}
-		$collection = Result::getInstance($row, $table, $this->connection);
-		return new $entityClass($collection->getRow($row->id));
+		$result = Result::getInstance($row, $table, $this->connection);
+		return new $entityClass($result->getRow($row->id));
 	}
 
 	/**
-	 * Helps to create array of entites from given array of DibiRow instances
+	 * Helps to create array of entities from given array of DibiRow instances
 	 *
 	 * @param array $rows
 	 * @param string|null $entityClass
@@ -178,7 +178,7 @@ abstract class Repository
 		foreach ($rows as $row) {
 			$entities[$row->id] = new $entityClass($collection->getRow($row->id));
 		}
-		return $entities;
+		return $this->createCollection($entities);
 	}
 
 	/**
@@ -239,6 +239,15 @@ abstract class Repository
 		if (!($entity instanceof $entityClass)) {
 			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
 		}
+	}
+
+	/**
+	 * @param array $entities
+	 * @return array
+	 */
+	protected function createCollection(array $entities)
+	{
+		return $entities;
 	}
 
 	////////////////////

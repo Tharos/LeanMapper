@@ -349,6 +349,15 @@ abstract class Entity
 		return static::$reflections[$class];
 	}
 
+	/**
+	 * @param array $entites
+	 * @return array
+	 */
+	protected function createCollection(array $entites)
+	{
+		return $entites;
+	}
+
 	////////////////////
 	////////////////////
 
@@ -391,7 +400,7 @@ abstract class Entity
 				$value[] = new $class($valueRow);
 			}
 		}
-		return $value;
+		return $this->createCollection($value);
 	}
 
 	/**
@@ -434,7 +443,7 @@ abstract class Entity
 		foreach ($rows as $row) {
 			$value[] = new $class($row);
 		}
-		return $value;
+		return $this->createCollection($value);
 	}
 
 	/**
