@@ -40,7 +40,7 @@ abstract class Entity
 	protected static $reflections = array();
 
 	/** @var array */
-	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData');
+	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getReflection');
 
 
 	/**
@@ -336,13 +336,10 @@ abstract class Entity
 		$this->row->markAsCreated($id, $table, $connection);
 	}
 
-	////////////////////
-	////////////////////
-
 	/**
 	 * @return EntityReflection
 	 */
-	private static function getReflection()
+	protected static function getReflection()
 	{
 		$class = get_called_class();
 		if (!isset(static::$reflections[$class])) {
@@ -351,6 +348,9 @@ abstract class Entity
 
 		return static::$reflections[$class];
 	}
+
+	////////////////////
+	////////////////////
 
 	/**
 	 * @param Property $property
@@ -437,6 +437,11 @@ abstract class Entity
 		return $value;
 	}
 
+	/**
+	 * @param array $propertyFilters
+	 * @param array $filterArgs
+	 * @return callable|null
+	 */
 	private function getFilterCallback(array $propertyFilters, array $filterArgs)
 	{
 		$filterCallback = null;
