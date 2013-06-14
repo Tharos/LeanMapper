@@ -9,9 +9,9 @@ require_once __DIR__ . '/../bootstrap.php';
 class BaseEntity extends LeanMapper\Entity
 {
 
-	protected function createCollection(array $values)
+	protected function createCollection(array $entites)
 	{
-		return new ArrayObject($values);
+		return new ArrayObject($entites);
 	}
 
 }
