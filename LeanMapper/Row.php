@@ -147,7 +147,7 @@ class Row
 	 * @param string $table
 	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
-	 * @return Row
+	 * @return Row|null
 	 */
 	public function referenced($table, Closure $filter = null, $viaColumn = null)
 	{

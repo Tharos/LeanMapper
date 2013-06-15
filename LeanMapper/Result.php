@@ -260,7 +260,7 @@ class Result implements \Iterator
 	 * @param callable|null $filter
 	 * @param string|null $viaColumn
 	 * @throws InvalidStateException
-	 * @return Row
+	 * @return Row|null
 	 */
 	public function getReferencedRow($id, $table, Closure $filter = null, $viaColumn = null)
 	{
