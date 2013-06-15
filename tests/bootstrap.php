@@ -5,8 +5,6 @@ if (@!include __DIR__ . '/../vendor/autoload.php') {
 	exit(1);
 }
 
-require_once __DIR__ . '/lib.inc.php';
-
 // configure environment
 Tester\Helpers::setup();
 class_alias('Tester\Assert', 'Assert');
