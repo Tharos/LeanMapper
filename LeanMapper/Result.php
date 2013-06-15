@@ -457,20 +457,9 @@ class Result implements \Iterator
 					if (count($ids) === 0) {
 						$data = array();
 					} else {
-						$statement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, array_shift($ids));
-						while ($id = array_shift($ids)) {
-							$tempStatement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, $id);
-							$statement->union($tempStatement);
-						}
-						$sql = (string) $statement;
-
-						$driver = $this->connection->getDriver();
-						if ($driver instanceof DibiSqliteDriver or $driver instanceof DibiSqlite3Driver) {
-							$sql = preg_replace('#(?<=UNION )\((SELECT.*?)\)(?= UNION|$)#', '$1', $sql); // fix of dibi SQLite drive bug
-						} else {
-							$sql = preg_replace('#^(SELECT.*?)(?= UNION)#', '($1)', $sql); // fix of missing leading (...)
-						}
-						$data = $this->connection->query($sql)->fetchAll();
+						$data = $this->connection->query(
+							$this->buildUnionStrategySql($ids, $table, $viaColumn, $filter)
+						)->fetchAll();
 					}
 					$this->referencing[$key] = self::getInstance($data, $table, $this->connection);
 				}
@@ -479,23 +468,8 @@ class Result implements \Iterator
 				if (count($ids) === 0) {
 					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection);
 				} else {
-					$statement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, array_shift($ids));
-					$filter($statement);
-					while ($id = array_shift($ids)) {
-						$tempStatement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, $id);
-						$filter($tempStatement);
-						$statement->union($tempStatement);
-					}
-					$sql = (string) $statement;
-
-					$driver = $this->connection->getDriver();
-					if ($driver instanceof DibiSqliteDriver or $driver instanceof DibiSqlite3Driver) {
-						$sql = preg_replace('#(?<=UNION )\((SELECT.*?)\)(?= UNION|$)#', '$1', $sql); // fix of dibi SQLite drive bug
-					} else {
-						$sql = preg_replace('#^(SELECT.*?)(?= UNION)#', '($1)', $sql); // fix of missing leading (...)
-					}
+					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filter);
 					$key .= '#' . md5($sql);
-
 					if (!isset($this->referencing[$key])) {
 						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
 					}
@@ -526,6 +500,37 @@ class Result implements \Iterator
 	private function createTableSelection($table)
 	{
 		return $this->connection->select('%n.*', $table)->from($table);
+	}
+
+	/**
+	 * @param array $ids
+	 * @param string $table
+	 * @param string $viaColumn
+	 * @param Closure|null $filter
+	 * @return string
+	 */
+	private function buildUnionStrategySql(array $ids, $table, $viaColumn, Closure $filter = null)
+	{
+		$statement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, array_shift($ids));
+		if ($filter !== null) {
+			$filter($statement);
+		}
+		while ($id = array_shift($ids)) {
+			$tempStatement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, $id);
+			if ($filter !== null) {
+				$filter($tempStatement);
+			}
+			$statement->union($tempStatement);
+		}
+		$sql = (string) $statement;
+
+		$driver = $this->connection->getDriver();
+		if ($driver instanceof DibiSqliteDriver or $driver instanceof DibiSqlite3Driver) {
+			$sql = preg_replace('#(?<=UNION )\((SELECT.*?)\)(?= UNION|$)#', '$1', $sql); // fix of dibi SQLite drive bug
+		} else {
+			$sql = preg_replace('#^(SELECT.*?)(?= UNION)#', '($1)', $sql); // fix of missing leading (...)
+		}
+		return $sql;
 	}
 
 }
