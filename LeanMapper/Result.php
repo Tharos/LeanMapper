@@ -450,7 +450,6 @@ class Result implements \Iterator
 				}
 			}
 		} else { // self::STRATEGY_UNION
-
 			if ($filter === null) {
 				if (!isset($this->referencing[$key])) {
 					$ids = $this->extractIds();
@@ -458,7 +457,7 @@ class Result implements \Iterator
 						$data = array();
 					} else {
 						$data = $this->connection->query(
-							$this->buildUnionStrategySql($ids, $table, $viaColumn, $filter)
+							$this->buildUnionStrategySql($ids, $table, $viaColumn)
 						)->fetchAll();
 					}
 					$this->referencing[$key] = self::getInstance($data, $table, $this->connection);
@@ -494,15 +493,6 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * @param string $table
-	 * @return DibiFluent
-	 */
-	private function createTableSelection($table)
-	{
-		return $this->connection->select('%n.*', $table)->from($table);
-	}
-
-	/**
 	 * @param array $ids
 	 * @param string $table
 	 * @param string $viaColumn
@@ -525,12 +515,22 @@ class Result implements \Iterator
 		$sql = (string) $statement;
 
 		$driver = $this->connection->getDriver();
+		// now we have to fix wrongly generated SQL by dibi...
 		if ($driver instanceof DibiSqliteDriver or $driver instanceof DibiSqlite3Driver) {
-			$sql = preg_replace('#(?<=UNION )\((SELECT.*?)\)(?= UNION|$)#', '$1', $sql); // fix of dibi SQLite drive bug
+			$sql = preg_replace('#(?<=UNION )\((SELECT.*?)\)(?= UNION|$)#', '$1', $sql); // (...) UNION (...) to ... UNION ...
 		} else {
-			$sql = preg_replace('#^(SELECT.*?)(?= UNION)#', '($1)', $sql); // fix of missing leading (...)
+			$sql = preg_replace('#^(SELECT.*?)(?= UNION)#', '($1)', $sql); // ... UNION (...) to (...) UNION (...)
 		}
 		return $sql;
+	}
+
+	/**
+	 * @param string $table
+	 * @return DibiFluent
+	 */
+	private function createTableSelection($table)
+	{
+		return $this->connection->select('%n.*', $table)->from($table);
 	}
 
 }
