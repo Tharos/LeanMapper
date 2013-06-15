@@ -112,7 +112,6 @@ abstract class Entity
 
 			} else {
 				$value = $this->row->$column;
-				$actualClass = get_class($value);
 				if ($value === null) {
 					if (!$property->isNullable()) {
 						throw new InvalidValueException("Property '$name' cannot be null.");
@@ -120,8 +119,9 @@ abstract class Entity
 					return null;
 				}
 				if (!$property->containsCollection()) {
-					if ($actualClass !== $property->getType()) {
-						throw new InvalidValueException("Property '$name' is expected to contain an instance of '{$property->getType()}', instance of '$actualClass' given.");
+					$type = $property->getType();
+					if (!($value instanceof $type)) {
+						throw new InvalidValueException("Property '$name' is expected to contain an instance of '{$property->getType()}', instance of '" . get_class($value) . "' given.");
 					}
 				} else {
 					if (!is_array($value)) {
@@ -192,7 +192,8 @@ abstract class Entity
 						if (!is_object($value)) {
 							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . gettype($value) . " given.");
 						}
-						if (get_class($value) !== $property->getType()) {
+						$type = $property->getType();
+						if (!($value instanceof $type)) {
 							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
 						}
 						$this->row->$column = $value;
