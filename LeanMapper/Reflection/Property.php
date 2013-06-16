@@ -170,11 +170,12 @@ class Property
 	/**
 	 * Returns property filters
 	 *
-	 * @return string[]
+	 * @param int|null $index
+	 * @return string[]|null
 	 */
-	public function getFilters()
+	public function getFilters($index = null)
 	{
-		return $this->filters !== null ? $this->filters->getFilters() : null;
+		return $this->filters !== null ? $this->filters->getFilters($index) : null;
 	}
 
 	/**

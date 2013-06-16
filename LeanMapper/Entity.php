@@ -100,15 +100,17 @@ abstract class Entity
 		} else {
 			if ($property->hasRelationship()) {
 
-				$filter = $property->getFilters();
-				if ($filter !== null) {
-					$filter = $this->getFilterCallback($filter, func_get_args());
-				}
+				$filter = ($set = $property->getFilters(0)) ? $this->getFilterCallback($set, func_get_args()) : null;
 				$relationship = $property->getRelationship();
 
 				$method = explode('\\', get_class($relationship));
 				$method = 'get' . array_pop($method) . 'Value';
-				$value = $this->$method($property, $filter);
+				$args = array($property, $filter);
+
+				if ($method === 'getHasManyValue') {
+					$args[] = ($set = $property->getFilters(1)) ? $this->getFilterCallback($set, func_get_args()) : null;
+				}
+				$value = call_user_func_array(array($this, $method), $args);
 
 			} else {
 				$value = $this->row->$column;
@@ -386,17 +388,18 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param Closure|null $filter
+	 * @param Closure|null $relTableFilter
+	 * @param Closure|null $targetTableFilter
 	 * @return array
 	 */
-	private function getHasManyValue(Property $property, Closure $filter = null)
+	private function getHasManyValue(Property $property, Closure $relTableFilter = null, Closure $targetTableFilter = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
+		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relTableFilter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {
-			$valueRow = $row->referenced($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingTargetTable());
+			$valueRow = $row->referenced($relationship->getTargetTable(), $targetTableFilter, $relationship->getColumnReferencingTargetTable());
 			if ($valueRow !== null) {
 				$value[] = new $class($valueRow);
 			}
