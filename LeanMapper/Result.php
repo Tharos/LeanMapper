@@ -295,8 +295,12 @@ class Result implements \Iterator
 	 */
 	public function getReferencingRows($id, $table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
 	{
-		if ($strategy !== self::STRATEGY_IN and $strategy !== self::STRATEGY_UNION) {
-			throw new InvalidArgumentException("Unsupported SQL strategy given: $strategy.");
+		if ($strategy === null) {
+			$strategy = self::STRATEGY_IN;
+		} else {
+			if ($strategy !== self::STRATEGY_IN and $strategy !== self::STRATEGY_UNION) {
+				throw new InvalidArgumentException("Unsupported SQL strategy given: $strategy.");
+			}
 		}
 		if ($this->connection === null or $this->table === null) {
 			throw new InvalidStateException('Cannot get referencing rows for detached result.');
