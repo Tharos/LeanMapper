@@ -145,10 +145,12 @@ class PropertyFactory
 				throw new InvalidAnnotationException("Invalid property annotation given: property with '$relationshipType' relationship type must not contain collection.");
 			}
 		}
-		$strategy = Result::STRATEGY_IN; // default strategy
-		if ($definition !== null and substr($definition, -6) === '#union') {
-			$strategy = Result::STRATEGY_UNION;
-			$definition = substr($strategy, 0, strlen($definition) - 6);
+		if ($relationshipType !== 'hasOne') {
+			$strategy = Result::STRATEGY_IN; // default strategy
+			if ($definition !== null and substr($definition, -6) === '#union') {
+				$strategy = Result::STRATEGY_UNION;
+				$definition = substr($strategy, 0, strlen($definition) - 6);
+			}
 		}
 		$pieces = array_replace(array_fill(0, 6, ''), $definition !== null ? explode(':', $definition) : array());
 
