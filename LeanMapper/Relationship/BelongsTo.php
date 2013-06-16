@@ -25,15 +25,20 @@ abstract class BelongsTo
 	/** @var string */
 	private $targetTable;
 
+	/** @var string */
+	private $strategy;
+
 
 	/**
 	 * @param string $columnReferencingSourceTable
 	 * @param string $targetTable
+	 * @param string $strategy
 	 */
-	public function __construct($columnReferencingSourceTable, $targetTable)
+	public function __construct($columnReferencingSourceTable, $targetTable, $strategy)
 	{
 		$this->columnReferencingSourceTable = $columnReferencingSourceTable;
 		$this->targetTable = $targetTable;
+		$this->strategy = $strategy;
 	}
 
 	/**
@@ -54,6 +59,16 @@ abstract class BelongsTo
 	public function getTargetTable()
 	{
 		return $this->targetTable;
+	}
+
+	/**
+	 * Returns strategy used to get referencing result
+	 *
+	 * @return string strategy
+	 */
+	public function getStrategy()
+	{
+		return $this->strategy;
 	}
 
 }

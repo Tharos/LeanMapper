@@ -392,7 +392,7 @@ abstract class Entity
 	private function getHasManyValue(Property $property, Closure $filter = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable());
+		$rows = $this->row->referencing($relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {
@@ -413,7 +413,7 @@ abstract class Entity
 	private function getBelongsToOneValue(Property $property, Closure $filter = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable());
+		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 		$count = count($rows);
 		if ($count > 1) {
 			throw new InvalidValueException('There cannot be more than one entity referencing to entity with m:belongToOne relationship.');
@@ -438,7 +438,7 @@ abstract class Entity
 	private function getBelongsToManyValue(Property $property, Closure $filter = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable());
+		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {
