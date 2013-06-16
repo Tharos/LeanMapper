@@ -47,7 +47,7 @@ class Property
 	private $relationship;
 
 	/** @var PropertyFilters|null */
-	private $filters;
+	private $propertyFilters;
 
 	/** @var PropertyValuesEnum|null */
 	private $propertyValuesEnum;
@@ -61,10 +61,10 @@ class Property
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
-	 * @param PropertyFilters|null $filters
+	 * @param PropertyFilters|null $propertyFilters
 	 * @param PropertyValuesEnum|null $propertyValuesEnum
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $filters = null, PropertyValuesEnum $propertyValuesEnum = null)
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, PropertyValuesEnum $propertyValuesEnum = null)
 	{
 		$this->name = $name;
 		$this->column = $column;
@@ -73,7 +73,7 @@ class Property
 		$this->isNullable = $isNullable;
 		$this->containsCollection = $containsCollection;
 		$this->relationship = $relationship;
-		$this->filters = $filters;
+		$this->propertyFilters = $propertyFilters;
 		$this->propertyValuesEnum = $propertyValuesEnum;
 	}
 
@@ -175,7 +175,7 @@ class Property
 	 */
 	public function getFilters($index = null)
 	{
-		return $this->filters !== null ? $this->filters->getFilters($index) : null;
+		return $this->propertyFilters !== null ? $this->propertyFilters->getFilters($index) : null;
 	}
 
 	/**
