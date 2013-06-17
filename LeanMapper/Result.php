@@ -144,9 +144,6 @@ class Result implements \Iterator
 		if (!isset($this->data[$id])) {
 			throw new InvalidArgumentException("Missing row with ID $id.");
 		}
-		if (!$this->isDetached($id) and !array_key_exists($key, $this->data[$id])) {
-			throw new InvalidArgumentException("Missing field '$key' in row.");
-		}
 		if ($key === 'id' and !$this->isDetached($id)) {
 			throw new InvalidArgumentException("ID can only be set in detached rows.");
 		}
