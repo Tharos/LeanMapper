@@ -13,6 +13,9 @@ namespace LeanMapper;
 
 use Closure;
 use DibiConnection;
+use DibiFluent;
+use DibiSqliteDriver;
+use DibiSqlite3Driver;
 use DibiRow;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidStateException;
@@ -24,6 +27,10 @@ use LeanMapper\Exception\InvalidStateException;
  */
 class Result implements \Iterator
 {
+
+	const STRATEGY_IN = 'in';
+
+	const STRATEGY_UNION = 'union';
 
 	/** @var array */
 	private $data;
@@ -281,18 +288,27 @@ class Result implements \Iterator
 	 * @param string $table
 	 * @param callable|null $filter
 	 * @param string|null $viaColumn
+	 * @param string $strategy
+	 * @throws InvalidArgumentException
 	 * @throws InvalidStateException
 	 * @return Row[]
 	 */
-	public function getReferencingRows($id, $table, Closure $filter = null, $viaColumn = null)
+	public function getReferencingRows($id, $table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
 	{
+		if ($strategy === null) {
+			$strategy = self::STRATEGY_IN;
+		} else {
+			if ($strategy !== self::STRATEGY_IN and $strategy !== self::STRATEGY_UNION) {
+				throw new InvalidArgumentException("Unsupported SQL strategy given: $strategy.");
+			}
+		}
 		if ($this->connection === null or $this->table === null) {
 			throw new InvalidStateException('Cannot get referencing rows for detached result.');
 		}
 		if ($viaColumn === null) {
 			$viaColumn = $this->table . '_id';
 		}
-		$collection = $this->getReferencingResult($table, $viaColumn, $filter);
+		$collection = $this->getReferencingResult($table, $viaColumn, $filter, $strategy);
 		$rows = array();
 		foreach ($collection as $key => $row) {
 			if ($row[$viaColumn] === $id) {
@@ -389,16 +405,14 @@ class Result implements \Iterator
 	private function getReferencedResult($table, $viaColumn, Closure $filter = null)
 	{
 		$key = "$table($viaColumn)";
-		$statement = $this->connection->select('%n.*', $table)->from($table);
-
 		if ($filter === null) {
 			if (!isset($this->referenced[$key])) {
-				$data = $statement->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn))
+				$data = $this->createTableSelection($table)->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn))
 						->fetchAll();
 				$this->referenced[$key] = self::getInstance($data, $table, $this->connection);
 			}
 		} else {
-			$statement->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn));
+			$statement = $this->createTableSelection($table)->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn));
 			$filter($statement);
 
 			$sql = (string) $statement;
@@ -415,28 +429,54 @@ class Result implements \Iterator
 	 * @param string $table
 	 * @param string $viaColumn
 	 * @param Closure|null $filter
+	 * @param string $strategy
 	 * @return self
 	 */
-	private function getReferencingResult($table, $viaColumn, Closure $filter = null)
+	private function getReferencingResult($table, $viaColumn, Closure $filter = null, $strategy)
 	{
-		$key = "$table($viaColumn)";
-		$statement = $this->connection->select('%n.*', $table)->from($table);
+		$key = "$table($viaColumn)$strategy";
 
-		if ($filter === null) {
-			if (!isset($this->referencing[$key])) {
-				$data = $statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds())
-						->fetchAll();
-				$this->referencing[$key] = self::getInstance($data, $table, $this->connection);
+		if ($strategy === self::STRATEGY_IN) {
+			if ($filter === null) {
+				if (!isset($this->referencing[$key])) {
+					$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds());
+					$this->referencing[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection);
+				}
+			} else {
+				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds());
+				$filter($statement);
+
+				$sql = (string) $statement;
+				$key .= '#' . md5($sql);
+
+				if (!isset($this->referencing[$key])) {
+					$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+				}
 			}
-		} else {
-			$statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds());
-			$filter($statement);
-
-			$sql = (string)$statement;
-			$key .= '#' . md5($sql);
-
-			if (!isset($this->referencing[$key])) {
-				$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+		} else { // self::STRATEGY_UNION
+			if ($filter === null) {
+				if (!isset($this->referencing[$key])) {
+					$ids = $this->extractIds();
+					if (count($ids) === 0) {
+						$data = array();
+					} else {
+						$data = $this->connection->query(
+							$this->buildUnionStrategySql($ids, $table, $viaColumn)
+						)->fetchAll();
+					}
+					$this->referencing[$key] = self::getInstance($data, $table, $this->connection);
+				}
+			} else {
+				$ids = $this->extractIds();
+				if (count($ids) === 0) {
+					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection);
+				} else {
+					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filter);
+					$key .= '#' . md5($sql);
+					if (!isset($this->referencing[$key])) {
+						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+					}
+				}
 			}
 		}
 		return $this->referencing[$key];
@@ -454,6 +494,47 @@ class Result implements \Iterator
 			$ids[$data[$column]] = true;
 		}
 		return array_keys($ids);
+	}
+
+	/**
+	 * @param array $ids
+	 * @param string $table
+	 * @param string $viaColumn
+	 * @param Closure|null $filter
+	 * @return string
+	 */
+	private function buildUnionStrategySql(array $ids, $table, $viaColumn, Closure $filter = null)
+	{
+		$statement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, array_shift($ids));
+		if ($filter !== null) {
+			$filter($statement);
+		}
+		while ($id = array_shift($ids)) {
+			$tempStatement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, $id);
+			if ($filter !== null) {
+				$filter($tempStatement);
+			}
+			$statement->union($tempStatement);
+		}
+		$sql = (string) $statement;
+
+		$driver = $this->connection->getDriver();
+		// now we have to fix wrongly generated SQL by dibi...
+		if ($driver instanceof DibiSqliteDriver or $driver instanceof DibiSqlite3Driver) {
+			$sql = preg_replace('#(?<=UNION )\((SELECT.*?)\)(?= UNION|$)#', '$1', $sql); // (...) UNION (...) to ... UNION ...
+		} else {
+			$sql = preg_replace('#^(SELECT.*?)(?= UNION)#', '($1)', $sql); // ... UNION (...) to (...) UNION (...)
+		}
+		return $sql;
+	}
+
+	/**
+	 * @param string $table
+	 * @return DibiFluent
+	 */
+	private function createTableSelection($table)
+	{
+		return $this->connection->select('%n.*', $table)->from($table);
 	}
 
 }

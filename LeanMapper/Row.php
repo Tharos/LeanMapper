@@ -160,11 +160,12 @@ class Row
 	 * @param string $table
 	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
+	 * @param string|null $strategy
 	 * @return Row[]
 	 */
-	public function referencing($table, Closure $filter = null, $viaColumn = null)
+	public function referencing($table, Closure $filter = null, $viaColumn = null, $strategy = null)
 	{
-		return $this->result->getReferencingRows($this->id, $table, $filter, $viaColumn);
+		return $this->result->getReferencingRows($this->id, $table, $filter, $viaColumn, $strategy);
 	}
 
 }

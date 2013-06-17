@@ -14,6 +14,7 @@ namespace LeanMapper\Reflection;
 use LeanMapper\Exception\InvalidAnnotationException;
 use LeanMapper\Exception\UtilityClassException;
 use LeanMapper\Relationship;
+use LeanMapper\Result;
 
 /**
  * Property factory
@@ -125,8 +126,8 @@ class PropertyFactory
 	 * @param PropertyType $propertyType
 	 * @param bool $containsCollection
 	 * @param string $relationshipType
-	 * @param string $definition
-	 * @return Relationship\BelongsToMany|Relationship\BelongsToOne|Relationship\HasMany|Relationship\HasOne|null
+	 * @param string|null $definition
+	 * @return mixed
 	 * @throws InvalidAnnotationException
 	 */
 	private static function createRelationship($sourceClass, PropertyType $propertyType, $containsCollection, $relationshipType, $definition = null)
@@ -144,7 +145,13 @@ class PropertyFactory
 				throw new InvalidAnnotationException("Invalid property annotation given: property with '$relationshipType' relationship type must not contain collection.");
 			}
 		}
-
+		if ($relationshipType !== 'hasOne') {
+			$strategy = Result::STRATEGY_IN; // default strategy
+			if ($definition !== null and substr($definition, -6) === '#union') {
+				$strategy = Result::STRATEGY_UNION;
+				$definition = substr($strategy, 0, strlen($definition) - 6);
+			}
+		}
 		$pieces = array_replace(array_fill(0, 6, ''), $definition !== null ? explode(':', $definition) : array());
 
 		$sourceTable = strtolower(self::trimNamespace($sourceClass));
@@ -155,15 +162,16 @@ class PropertyFactory
 				return new Relationship\HasOne($pieces[0] ? : $targetTable . '_id', $pieces[1] ? : $targetTable);
 			case 'hasMany':
 				return new Relationship\HasMany(
-					$pieces[0] ? : $sourceTable . '_id',
-					$pieces[1] ? : $sourceTable . '_' . $targetTable,
-					$pieces[2] ? : $targetTable . '_id',
-					$pieces[3] ? : $targetTable
+					$pieces[0] ?: $sourceTable . '_id',
+					$pieces[1] ?: $sourceTable . '_' . $targetTable,
+					$pieces[2] ?: $targetTable . '_id',
+					$pieces[3] ?: $targetTable,
+					$strategy
 				);
 			case 'belongsToOne':
-				return new Relationship\BelongsToOne($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable);
+				return new Relationship\BelongsToOne($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable, $strategy);
 			case 'belongsToMany':
-				return new Relationship\BelongsToMany($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable);
+				return new Relationship\BelongsToMany($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable, $strategy);
 		}
 		return null;
 	}
