@@ -57,10 +57,17 @@ Assert::equal($data, $book->getData());
 
 //////////
 
+$book = new Book(new ArrayObject($data));
+
+Assert::type('Book', $book);
+Assert::equal($data, $book->getData());
+
+//////////
+
 Assert::exception(function () {
 	new Book(false);
-}, 'LeanMapper\Exception\InvalidArgumentException', '$arg in entity constructor must be either null, array or instance of LeanMapper\Row, boolean given.');
+}, 'LeanMapper\Exception\InvalidArgumentException', '$arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, boolean given.');
 
 Assert::exception(function () {
 	new Book('hello');
-}, 'LeanMapper\Exception\InvalidArgumentException', '$arg in entity constructor must be either null, array or instance of LeanMapper\Row, string given.');
+}, 'LeanMapper\Exception\InvalidArgumentException', '$arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, string given.');

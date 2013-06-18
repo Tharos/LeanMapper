@@ -24,6 +24,7 @@ use LeanMapper\Reflection\Property;
 use LeanMapper\Relationship;
 use LeanMapper\Row;
 use ReflectionMethod;
+use Traversable;
 
 /**
  * Base class for custom entities
@@ -44,7 +45,7 @@ abstract class Entity
 
 
 	/**
-	 * @param Row|array|null $arg
+	 * @param Row|Traversable|array|null $arg
 	 * @throws InvalidArgumentException
 	 */
 	public function __construct($arg = null)
@@ -54,10 +55,13 @@ abstract class Entity
 		} else {
 			$this->row = Result::getDetachedInstance()->getRow();
 			if ($arg !== null) {
-				if (!is_array($arg)) {
-					throw new InvalidArgumentException('$arg in entity constructor must be either null, array or instance of LeanMapper\Row, ' . gettype($arg) . ' given.');
+				if (is_array($arg)) {
+					$this->assign($arg);
+				} elseif ($arg instanceof Traversable) {
+					$this->assign(iterator_to_array($arg));
+				} else {
+					throw new InvalidArgumentException('$arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, ' . gettype($arg) . ' given.');
 				}
-				$this->assign($arg);
 			}
 		}
 	}
