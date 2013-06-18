@@ -55,13 +55,10 @@ abstract class Entity
 		} else {
 			$this->row = Result::getDetachedInstance()->getRow();
 			if ($arg !== null) {
-				if (is_array($arg)) {
-					$this->assign($arg);
-				} elseif ($arg instanceof Traversable) {
-					$this->assign(iterator_to_array($arg));
-				} else {
-					throw new InvalidArgumentException('$arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, ' . gettype($arg) . ' given.');
+				if (!is_array($arg) and !($arg instanceof Traversable)) {
+					throw new InvalidArgumentException('Argument $arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, ' . gettype($arg) . ' given.');
 				}
+				$this->assign($arg);
 			}
 		}
 	}
@@ -237,13 +234,17 @@ abstract class Entity
 	/**
 	 * Performs a mass value assignment (using setters)
 	 *
-	 * @param array $values
+	 * @param array|Traversable $values
 	 * @param array|null $whitelist
+	 * @throws InvalidArgumentException
 	 */
-	public function assign(array $values, array $whitelist = null)
+	public function assign($values, array $whitelist = null)
 	{
 		if ($whitelist !== null) {
 			$whitelist = array_flip($whitelist);
+		}
+		if (!is_array($values) and !($values instanceof Traversable)) {
+			throw new InvalidArgumentException('Argument $values must be either array or instance of Traversable, ' . gettype($values) . ' given.');
 		}
 		foreach ($values as $field => $value) {
 			if ($whitelist === null or isset($whitelist[$field])) {
