@@ -101,8 +101,14 @@ class PropertyFactory
 				isset($matches[9]) ? $matches[9] : null
 			);
 		}
-		if ($relationship !== null and isset($matches[6]) and $matches[6] !== '') {
-			throw new InvalidAnnotationException("All special column and table names must be specified in relationship definition when property holds relationship: @$annotationType $annotation");
+		if ($relationship !== null) {
+			if (isset($matches[6]) and $matches[6] !== '') {
+				throw new InvalidAnnotationException("All special column and table names must be specified in relationship definition when property holds relationship: @$annotationType $annotation");
+			}
+			$column = null;
+			if ($relationship instanceof Relationship\HasOne) {
+				$column = $relationship->getColumnReferencingTargetTable();
+			}
 		}
 
 		return new Property(

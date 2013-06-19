@@ -28,7 +28,7 @@ class Property
 	/** @var string */
 	private $name;
 
-	/** @var string */
+	/** @var string|null */
 	private $column;
 
 	/** @var PropertyType */
@@ -55,7 +55,7 @@ class Property
 
 	/**
 	 * @param string $name
-	 * @param string $column
+	 * @param string|null $column
 	 * @param PropertyType $type
 	 * @param bool $isWritable
 	 * @param bool $isNullable
@@ -90,7 +90,7 @@ class Property
 	/**
 	 * Returns property column
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getColumn()
 	{
