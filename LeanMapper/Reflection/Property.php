@@ -52,6 +52,9 @@ class Property
 	/** @var PropertyValuesEnum|null */
 	private $propertyValuesEnum;
 
+	/** @var string|null */
+	private $extra;
+
 
 	/**
 	 * @param string $name
@@ -63,8 +66,9 @@ class Property
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
 	 * @param PropertyFilters|null $propertyFilters
 	 * @param PropertyValuesEnum|null $propertyValuesEnum
+	 * @param string|null $extra
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, PropertyValuesEnum $propertyValuesEnum = null)
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, PropertyValuesEnum $propertyValuesEnum = null, $extra = null)
 	{
 		$this->name = $name;
 		$this->column = $column;
@@ -75,6 +79,7 @@ class Property
 		$this->relationship = $relationship;
 		$this->propertyFilters = $propertyFilters;
 		$this->propertyValuesEnum = $propertyValuesEnum;
+		$this->extra = $extra;
 	}
 
 	/**
@@ -201,6 +206,16 @@ class Property
 			throw new InvalidMethodCallException("It doesn't make sense to call this method on property that doesn't contain enumeration");
 		}
 		return $this->propertyValuesEnum->isValueFromEnum($value);
+	}
+
+	/**
+	 * Returns value of m:extra flag (if given)
+	 *
+	 * @return string|null
+	 */
+	public function getExtra()
+	{
+		return $this->extra;
 	}
 
 }

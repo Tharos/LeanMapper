@@ -56,6 +56,7 @@ class PropertyFactory
 			(?:\s+m:enum\(([^)]+)\))?
 			(?:\s+m:(?:(hasOne|hasMany|belongsToOne|belongsToMany)(?:\(([^)]+)\))?))?
 			(?:\s+m:filter\(([^)]+)\))?
+			(?:\s+m:extra\(([^)]+)\))?
 		~xi', $annotation, $matches);
 
 		if (!$matched) {
@@ -84,7 +85,7 @@ class PropertyFactory
 		}
 
 		$propertyFilters = null;
-		if (isset($matches[10])) {
+		if (isset($matches[10]) and $matches[10] !== '') {
 			if ($propertyType->isBasicType()) {
 				throw new InvalidAnnotationException("Invalid property annotation given: {$propertyType->getType()} property cannot be filtered");
 			}
@@ -92,13 +93,13 @@ class PropertyFactory
 		}
 
 		$relationship = null;
-		if (isset($matches[8])) {
+		if (isset($matches[8]) and $matches[8] !== '') {
 			$relationship = self::createRelationship(
 				$reflection->getName(),
 				$propertyType,
 				$containsCollection,
 				$matches[8],
-				isset($matches[9]) ? $matches[9] : null
+				(isset($matches[9]) and $matches[9] !== null) ? $matches[9] : null
 			);
 		}
 		if ($relationship !== null) {
@@ -110,6 +111,7 @@ class PropertyFactory
 				$column = $relationship->getColumnReferencingTargetTable();
 			}
 		}
+		$extra = isset($matches[11]) ? $matches[11] : null;
 
 		return new Property(
 			$name,
@@ -120,7 +122,8 @@ class PropertyFactory
 			$containsCollection,
 			$relationship,
 			$propertyFilters,
-			$propertyValuesEnum
+			$propertyValuesEnum,
+			$extra
 		);
 	}
 
