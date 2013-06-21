@@ -71,3 +71,13 @@ Assert::exception(function () {
 Assert::exception(function () {
 	new Book('hello');
 }, 'LeanMapper\Exception\InvalidArgumentException', 'Argument $arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, string given.');
+
+//////////
+
+$dibiRow = new DibiRow($data);
+$row = new Row(Result::getInstance($dibiRow, 'book', $connection), 1);
+$row->detach();
+
+Assert::exception(function () use ($row) {
+	new Book($row);
+}, 'LeanMapper\Exception\InvalidArgumentException', 'It is not allowed to create entity from detached instance of LeanMapper\Row.');
