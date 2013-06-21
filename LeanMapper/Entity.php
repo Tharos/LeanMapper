@@ -14,6 +14,7 @@ namespace LeanMapper;
 use Closure;
 use DibiConnection;
 use DibiFluent;
+use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidValueException;
 use LeanMapper\Exception\MemberAccessException;
@@ -22,6 +23,8 @@ use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
 use LeanMapper\Relationship;
 use LeanMapper\Row;
+use ReflectionMethod;
+use Traversable;
 
 /**
  * Base class for custom entities
@@ -37,13 +40,30 @@ abstract class Entity
 	/** @var EntityReflection[] */
 	protected static $reflections = array();
 
+	/** @var array */
+	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getReflection');
+
 
 	/**
-	 * @param Row|null $row
+	 * @param Row|Traversable|array|null $arg
+	 * @throws InvalidArgumentException
 	 */
-	public function __construct(Row $row = null)
+	public function __construct($arg = null)
 	{
-		$this->row = $row !== null ? $row : Result::getDetachedInstance()->getRow();
+		if ($arg instanceof Row) {
+			if ($arg->isDetached()) {
+				throw new InvalidArgumentException('It is not allowed to create entity from detached instance of LeanMapper\Row.');
+			}
+			$this->row = $arg;
+		} else {
+			$this->row = Result::getDetachedInstance()->getRow();
+			if ($arg !== null) {
+				if (!is_array($arg) and !($arg instanceof Traversable)) {
+					throw new InvalidArgumentException('Argument $arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, ' . gettype($arg) . ' given.');
+				}
+				$this->assign($arg);
+			}
+		}
 	}
 
 	/**
@@ -60,7 +80,8 @@ abstract class Entity
 		$property = $this->getReflection()->getEntityProperty($name);
 		if ($property === null) {
 			$method = 'get' . ucfirst($name);
-			if (method_exists($this, $method)) { // TODO: find better solution (using reflection)
+			$internalGetters = array_flip($this->internalGetters);
+			if (method_exists($this, $method) and !isset($internalGetters[$method])) {  // TODO: find better solution (using reflection)
 				return call_user_func(array($this, $method)); // $filterArgs are not relevant here
 			}
 			throw new MemberAccessException("Undefined property: $name");
@@ -77,29 +98,26 @@ abstract class Entity
 			if (!settype($value, $property->getType())) {
 				throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
 			}
+			if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
+				throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
+			}
 		} else {
 			if ($property->hasRelationship()) {
 
-				$filter = null;
-				$callbacks = $property->getFilters();
-				if (!empty($callbacks)) {
-					$args = func_get_args();
-					$filterArgs = isset($args[1]) ? $args[1] : array();
-					$filter = function (DibiFluent $statement) use ($callbacks, $filterArgs) {
-						foreach ($callbacks as $callback) {
-							call_user_func_array($callback, array_merge(array($statement), $filterArgs));
-						}
-					};
-				}
+				$filter = ($set = $property->getFilters(0)) ? $this->getFilterCallback($set, func_get_args()) : null;
 				$relationship = $property->getRelationship();
 
 				$method = explode('\\', get_class($relationship));
 				$method = 'get' . array_pop($method) . 'Value';
-				$value = $this->$method($property, $filter);
+				$args = array($property, $filter);
+
+				if ($method === 'getHasManyValue') {
+					$args[] = ($set = $property->getFilters(1)) ? $this->getFilterCallback($set, func_get_args()) : null;
+				}
+				$value = call_user_func_array(array($this, $method), $args);
 
 			} else {
 				$value = $this->row->$column;
-				$actualClass = get_class($value);
 				if ($value === null) {
 					if (!$property->isNullable()) {
 						throw new InvalidValueException("Property '$name' cannot be null.");
@@ -107,8 +125,9 @@ abstract class Entity
 					return null;
 				}
 				if (!$property->containsCollection()) {
-					if ($actualClass !== $property->getType()) {
-						throw new InvalidValueException("Property '$name' is expected to contain an instance of '{$property->getType()}', instance of '$actualClass' given.");
+					$type = $property->getType();
+					if (!($value instanceof $type)) {
+						throw new InvalidValueException("Property '$name' is expected to contain an instance of '{$property->getType()}', instance of '" . get_class($value) . "' given.");
 					}
 				} else {
 					if (!is_array($value)) {
@@ -154,11 +173,14 @@ abstract class Entity
 					if (!settype($value, $property->getType())) {
 						throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
 					}
+					if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
+						throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
+					}
 					$this->row->$column = $value;
 				} else {
 					if ($property->hasRelationship()) {
 						if (!($value instanceof Entity)) {
-							throw new InvalidValueException("Only entites can be set via magic __set on field with relationships.");
+							throw new InvalidValueException("Only entities can be set via magic __set on field with relationships.");
 						}
 						$relationship = $property->getRelationship();
 						if (!($relationship instanceof Relationship\HasOne)) {
@@ -176,7 +198,8 @@ abstract class Entity
 						if (!is_object($value)) {
 							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . gettype($value) . " given.");
 						}
-						if (get_class($value) !== $property->getType()) {
+						$type = $property->getType();
+						if (!($value instanceof $type)) {
 							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
 						}
 						$this->row->$column = $value;
@@ -214,13 +237,17 @@ abstract class Entity
 	/**
 	 * Performs a mass value assignment (using setters)
 	 *
-	 * @param array $values
+	 * @param array|Traversable $values
 	 * @param array|null $whitelist
+	 * @throws InvalidArgumentException
 	 */
-	public function assign(array $values, array $whitelist = null)
+	public function assign($values, array $whitelist = null)
 	{
 		if ($whitelist !== null) {
 			$whitelist = array_flip($whitelist);
+		}
+		if (!is_array($values) and !($values instanceof Traversable)) {
+			throw new InvalidArgumentException('Argument $values must be either array or instance of Traversable, ' . gettype($values) . ' given.');
 		}
 		foreach ($values as $field => $value) {
 			if ($whitelist === null or isset($whitelist[$field])) {
@@ -258,11 +285,44 @@ abstract class Entity
 	}
 
 	/**
-	 * Returns array of modified fields with new values
+	 * Returns array of high-level fields with values
 	 *
 	 * @return array
 	 */
-	public function getModifiedData()
+	public function getData()
+	{
+		$data = array();
+		foreach ($this->getReflection()->getEntityProperties() as $property) {
+			$data[$property->getName()] = $this->__get($property->getName());
+		}
+		$internalGetters = array_flip($this->internalGetters);
+		foreach ($this->getReflection()->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+			$name = $method->getName();
+			if (substr($name, 0, 3) === 'get' and !isset($internalGetters[$name])) {
+				if ($method->getNumberOfRequiredParameters() === 0) {
+					$data[lcfirst(substr($name, 3))] = $method->invoke($this);
+				}
+			}
+		}
+		return $data;
+	}
+
+	/**
+	 * Returns array of low-level fields with values
+	 *
+	 * @return array
+	 */
+	public function getRowData()
+	{
+		return $this->row->getData();
+	}
+
+	/**
+	 * Returns array of modified low-level fields with new values
+	 *
+	 * @return array
+	 */
+	public function getModifiedRowData()
 	{
 		return $this->row->getModifiedData();
 	}
@@ -287,13 +347,10 @@ abstract class Entity
 		$this->row->markAsCreated($id, $table, $connection);
 	}
 
-	////////////////////
-	////////////////////
-
 	/**
 	 * @return EntityReflection
 	 */
-	private static function getReflection()
+	protected static function getReflection()
 	{
 		$class = get_called_class();
 		if (!isset(static::$reflections[$class])) {
@@ -302,6 +359,18 @@ abstract class Entity
 
 		return static::$reflections[$class];
 	}
+
+	/**
+	 * @param array $entities
+	 * @return array
+	 */
+	protected function createCollection(array $entities)
+	{
+		return $entities;
+	}
+
+	////////////////////
+	////////////////////
 
 	/**
 	 * @param Property $property
@@ -327,22 +396,23 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param Closure|null $filter
+	 * @param Closure|null $relTableFilter
+	 * @param Closure|null $targetTableFilter
 	 * @return array
 	 */
-	private function getHasManyValue(Property $property, Closure $filter = null)
+	private function getHasManyValue(Property $property, Closure $relTableFilter = null, Closure $targetTableFilter = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable());
+		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relTableFilter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {
-			$valueRow = $row->referenced($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingTargetTable());
+			$valueRow = $row->referenced($relationship->getTargetTable(), $targetTableFilter, $relationship->getColumnReferencingTargetTable());
 			if ($valueRow !== null) {
 				$value[] = new $class($valueRow);
 			}
 		}
-		return $value;
+		return $this->createCollection($value);
 	}
 
 	/**
@@ -354,7 +424,7 @@ abstract class Entity
 	private function getBelongsToOneValue(Property $property, Closure $filter = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable());
+		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 		$count = count($rows);
 		if ($count > 1) {
 			throw new InvalidValueException('There cannot be more than one entity referencing to entity with m:belongToOne relationship.');
@@ -379,13 +449,32 @@ abstract class Entity
 	private function getBelongsToManyValue(Property $property, Closure $filter = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable());
+		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {
 			$value[] = new $class($row);
 		}
-		return $value;
+		return $this->createCollection($value);
+	}
+
+	/**
+	 * @param array $propertyFilters
+	 * @param array $filterArgs
+	 * @return callable|null
+	 */
+	private function getFilterCallback(array $propertyFilters, array $filterArgs)
+	{
+		$filterCallback = null;
+		if (!empty($propertyFilters)) {
+			$filterArgs = isset($filterArgs[1]) ? $filterArgs[1] : array();
+			$filterCallback = function (DibiFluent $statement) use ($propertyFilters, $filterArgs) {
+				foreach ($propertyFilters as $propertyFilter) {
+					call_user_func_array($propertyFilter, array_merge(array($statement), $filterArgs));
+				}
+			};
+		}
+		return $filterCallback;
 	}
 	
 }

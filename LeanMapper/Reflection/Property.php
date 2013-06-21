@@ -11,6 +11,7 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Relationship\BelongsToMany;
 use LeanMapper\Relationship\BelongsToOne;
 use LeanMapper\Relationship\HasMany;
@@ -27,7 +28,7 @@ class Property
 	/** @var string */
 	private $name;
 
-	/** @var string */
+	/** @var string|null */
 	private $column;
 
 	/** @var PropertyType */
@@ -46,20 +47,28 @@ class Property
 	private $relationship;
 
 	/** @var PropertyFilters|null */
-	private $filters;
+	private $propertyFilters;
+
+	/** @var PropertyValuesEnum|null */
+	private $propertyValuesEnum;
+
+	/** @var string|null */
+	private $extra;
 
 
 	/**
 	 * @param string $name
-	 * @param string $column
+	 * @param string|null $column
 	 * @param PropertyType $type
 	 * @param bool $isWritable
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
-	 * @param PropertyFilters|null $filters
+	 * @param PropertyFilters|null $propertyFilters
+	 * @param PropertyValuesEnum|null $propertyValuesEnum
+	 * @param string|null $extra
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $filters = null)
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, PropertyValuesEnum $propertyValuesEnum = null, $extra = null)
 	{
 		$this->name = $name;
 		$this->column = $column;
@@ -68,7 +77,9 @@ class Property
 		$this->isNullable = $isNullable;
 		$this->containsCollection = $containsCollection;
 		$this->relationship = $relationship;
-		$this->filters = $filters;
+		$this->propertyFilters = $propertyFilters;
+		$this->propertyValuesEnum = $propertyValuesEnum;
+		$this->extra = $extra;
 	}
 
 	/**
@@ -84,7 +95,7 @@ class Property
 	/**
 	 * Returns property column
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getColumn()
 	{
@@ -164,11 +175,47 @@ class Property
 	/**
 	 * Returns property filters
 	 *
-	 * @return string[]
+	 * @param int|null $index
+	 * @return string[]|null
 	 */
-	public function getFilters()
+	public function getFilters($index = null)
 	{
-		return $this->filters !== null ? $this->filters->getFilters() : null;
+		return $this->propertyFilters !== null ? $this->propertyFilters->getFilters($index) : null;
+	}
+
+	/**
+	 * Tells whether property contains enumeration
+	 *
+	 * @return bool
+	 */
+	public function containsEnumeration()
+	{
+		return $this->propertyValuesEnum !== null;
+	}
+
+	/**
+	 * Tells wheter given value is from enumeration of possible values
+	 *
+	 * @param mixed $value
+	 * @return bool
+	 * @throws InvalidMethodCallException
+	 */
+	public function isValueFromEnum($value)
+	{
+		if (!$this->containsEnumeration()) {
+			throw new InvalidMethodCallException("It doesn't make sense to call this method on property that doesn't contain enumeration");
+		}
+		return $this->propertyValuesEnum->isValueFromEnum($value);
+	}
+
+	/**
+	 * Returns value of m:extra flag (if given)
+	 *
+	 * @return string|null
+	 */
+	public function getExtra()
+	{
+		return $this->extra;
 	}
 
 }

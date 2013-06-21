@@ -47,6 +47,10 @@ class AliasesParser
 	 */
 	public static function parseSource($source, $namespace = '')
 	{
+		$matches = array();
+		preg_match_all('#use[^;()]+?;#im', $source, $matches);
+		$source = '<?php ' . implode('', $matches[0]);
+
 		$builder = new AliasesBuilder;
 
 		$states = array(

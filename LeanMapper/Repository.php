@@ -27,8 +27,8 @@ use ReflectionClass;
 abstract class Repository
 {
 
-	/** @varstring */
-	public static $defaultEntityNamespace = 'Model\Entity';
+	/** @var string */
+	protected $defaultEntityNamespace = 'Model\Entity';
 
 	/** @var DibiConnection */
 	protected $connection;
@@ -52,7 +52,7 @@ abstract class Repository
 	}
 
 	/**
-	 * Stored modified fields of entity into database and creates new row in database when entity is in detached state
+	 * Stores modified fields of entity into database or creates new row in database when entity is in detached state
 	 *
 	 * @param Entity $entity
 	 * @return int
@@ -61,18 +61,22 @@ abstract class Repository
 	{
 		$this->checkEntityType($entity);
 		if ($entity->isModified()) {
-			$values = $entity->getModifiedData();
+			$values = $entity->getModifiedRowData();
 			if ($entity->isDetached()) {
+				$values = $this->beforeCreate($values);
 				$this->connection->insert($this->getTable(), $values)
 						->execute(); // dibi::IDENTIFIER would lead to exception when there is no column with AUTO_INCREMENT
 				$id = isset($values['id']) ? $values['id'] : $this->connection->getInsertId();
 				$entity->markAsCreated($id, $this->getTable(), $this->connection);
+
 				return $id;
 			} else {
+				$values = $this->beforeUpdate($values);
 				$result = $this->connection->update($this->getTable(), $values)
 						->where('[id] = %i', $entity->id)
 						->execute();
 				$entity->markAsUpdated();
+
 				return $result;
 			}
 		}
@@ -101,6 +105,39 @@ abstract class Repository
 	}
 
 	/**
+	 * Adjusts prepared values before database insert call
+	 *
+	 * @param array $values
+	 * @return array
+	 */
+	protected function beforeCreate(array $values)
+	{
+		return $this->beforePersist($values);
+	}
+
+	/**
+	 * Adjusts prepared values before database update call
+	 *
+	 * @param array $values
+	 * @return array
+	 */
+	protected function beforeUpdate(array $values)
+	{
+		return $this->beforePersist($values);
+	}
+
+	/**
+	 * Adjusts prepared values before database insert or update call
+	 *
+	 * @param array $values
+	 * @return array
+	 */
+	protected function beforePersist(array $values)
+	{
+		return $values;
+	}
+
+	/**
 	 * Helps to create entity instance from given DibiRow instance
 	 *
 	 * @param DibiRow $row
@@ -116,12 +153,12 @@ abstract class Repository
 		if ($table === null) {
 			$table = $this->getTable();
 		}
-		$collection = Result::getInstance($row, $table, $this->connection);
-		return new $entityClass($collection->getRow($row->id));
+		$result = Result::getInstance($row, $table, $this->connection);
+		return new $entityClass($result->getRow($row->id));
 	}
 
 	/**
-	 * Helps to create array of entites from given array of DibiRow instances
+	 * Helps to create array of entities from given array of DibiRow instances
 	 *
 	 * @param array $rows
 	 * @param string|null $entityClass
@@ -141,7 +178,7 @@ abstract class Repository
 		foreach ($rows as $row) {
 			$entities[$row->id] = new $entityClass($collection->getRow($row->id));
 		}
-		return $entities;
+		return $this->createCollection($entities);
 	}
 
 	/**
@@ -177,19 +214,40 @@ abstract class Repository
 	protected function getEntityClass()
 	{
 		if ($this->entityClass === null) {
-			$name = AnnotationsParser::parseSimpleAnnotationValue('entity', $this->getDocComment());
-			if ($name !== null) {
-				$this->entityClass = $name;
+			$entityClass = AnnotationsParser::parseSimpleAnnotationValue('entity', $this->getDocComment());
+			if ($entityClass !== null) {
+				$this->entityClass = $entityClass;
 			} else {
 				$matches = array();
 				if (preg_match('#([a-z0-9]+)repository$#i', get_called_class(), $matches)) {
-					$this->entityClass = self::$defaultEntityNamespace . '\\' . $matches[1];
+					$this->entityClass = $matches[1];
 				} else {
 					throw new InvalidStateException('Cannot determine entity class name.');
 				}
 			}
 		}
-		return $this->entityClass;
+		return $this->getFullyQualifiedClass($this->entityClass);
+	}
+
+	/**
+	 * @param Entity $entity
+	 * @throws InvalidArgumentException
+	 */
+	protected function checkEntityType(Entity $entity)
+	{
+		$entityClass = $this->getEntityClass();
+		if (!($entity instanceof $entityClass)) {
+			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
+		}
+	}
+
+	/**
+	 * @param array $entities
+	 * @return array
+	 */
+	protected function createCollection(array $entities)
+	{
+		return $entities;
 	}
 
 	////////////////////
@@ -208,15 +266,18 @@ abstract class Repository
 	}
 
 	/**
-	 * @param Entity $entity
-	 * @throws InvalidArgumentException
+	 * @param string $entityClass
+	 * @return string
 	 */
-	private function checkEntityType(Entity $entity)
+	private function getFullyQualifiedClass($entityClass)
 	{
-		$entityClass = $this->getEntityClass();
-		if (!($entity instanceof $entityClass)) {
-			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
+		if (substr($entityClass, 0, 1) === '\\') {
+			return substr($entityClass, 1);
 		}
+		if ($this->defaultEntityNamespace === null) {
+			return $entityClass;
+		}
+		return $this->defaultEntityNamespace . '\\' . $entityClass;
 	}
 	
 }

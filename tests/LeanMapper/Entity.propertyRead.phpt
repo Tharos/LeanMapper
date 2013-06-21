@@ -4,7 +4,7 @@ use Tester\Assert;
 use LeanMapper\Repository;
 use LeanMapper\Entity;
 
-require_once __DIR__ . '/../../bootstrap.php';
+require_once __DIR__ . '/../bootstrap.php';
 
 //////////
 
@@ -21,6 +21,9 @@ class Author extends Entity
  */
 class AuthorRepository extends \LeanMapper\Repository
 {
+
+	protected $defaultEntityNamespace = null;
+
 
 	public function find($id)
 	{

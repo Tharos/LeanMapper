@@ -31,19 +31,24 @@ class HasMany
 	/** @var string */
 	private $targetTable;
 
+	/** @var strategy */
+	private $strategy;
+
 
 	/**
 	 * @param string $columnReferencingSourceTable
 	 * @param string $relationshipTable
 	 * @param string $columnReferencingTargetTable
 	 * @param string $targetTable
+	 * @param string $strategy
 	 */
-	public function __construct($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable, $targetTable)
+	public function __construct($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable, $targetTable, $strategy)
 	{
 		$this->columnReferencingSourceTable = $columnReferencingSourceTable;
 		$this->relationshipTable = $relationshipTable;
 		$this->columnReferencingTargetTable = $columnReferencingTargetTable;
 		$this->targetTable = $targetTable;
+		$this->strategy = $strategy;
 	}
 
 	/**
@@ -84,6 +89,16 @@ class HasMany
 	public function getTargetTable()
 	{
 		return $this->targetTable;
+	}
+
+	/**
+	 * Returns strategy used to get referencing result
+	 *
+	 * @return string strategy
+	 */
+	public function getStrategy()
+	{
+		return $this->strategy;
 	}
 
 }
