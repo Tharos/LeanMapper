@@ -51,6 +51,9 @@ abstract class Entity
 	public function __construct($arg = null)
 	{
 		if ($arg instanceof Row) {
+			if ($arg->isDetached()) {
+				throw new InvalidArgumentException('It is not allowed to create entity from detached instance of LeanMapper\Row.');
+			}
 			$this->row = $arg;
 		} else {
 			$this->row = Result::getDetachedInstance()->getRow();
