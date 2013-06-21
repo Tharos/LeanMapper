@@ -64,6 +64,7 @@ class PropertyFactory
 		}
 		$propertyType = new PropertyType($matches[2], $aliases);
 
+		// TODO: move some validations to Property __construct
 		$containsCollection = $matches[3] !== '';
 		if ($propertyType->isBasicType() and $containsCollection) {
 			throw new InvalidAnnotationException("Unsupported property annotation given: @$annotationType $annotation");

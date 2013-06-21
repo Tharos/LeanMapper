@@ -57,6 +57,8 @@ abstract class Entity
 			$this->row = $arg;
 		} else {
 			$this->row = Result::getDetachedInstance()->getRow();
+			// TODO: call fields initialization that would use default values from annotations
+			$this->initDefaults();
 			if ($arg !== null) {
 				if (!is_array($arg) and !($arg instanceof Traversable)) {
 					throw new InvalidArgumentException('Argument $arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, ' . gettype($arg) . ' given.');
@@ -296,7 +298,7 @@ abstract class Entity
 			$data[$property->getName()] = $this->__get($property->getName());
 		}
 		$internalGetters = array_flip($this->internalGetters);
-		foreach ($this->getReflection()->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+		foreach ($this->getReflection()->getMethods(ReflectionMethod::IS_PUBLIC) as $method) { // TODO: better support from EntityReflection
 			$name = $method->getName();
 			if (substr($name, 0, 3) === 'get' and !isset($internalGetters[$name])) {
 				if ($method->getNumberOfRequiredParameters() === 0) {
@@ -367,6 +369,10 @@ abstract class Entity
 	protected function createCollection(array $entities)
 	{
 		return $entities;
+	}
+
+	protected function initDefaults()
+	{
 	}
 
 	////////////////////
