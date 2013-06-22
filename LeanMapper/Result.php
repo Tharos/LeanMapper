@@ -41,20 +41,17 @@ class Result implements \Iterator
 	/** @var string */
 	private $table;
 
-	/** @var array */
-	private $keys;
-
 	/** @var DibiConnection */
 	private $connection;
+
+	/** @var array */
+	private $keys;
 
 	/** @var array */
 	private $referenced = array();
 
 	/** @var array */
 	private $referencing = array();
-
-	/** @var array */
-	private $detached = array();
 
 
 	/**
@@ -163,34 +160,13 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Tells whether requested row is in detached state (like newly created row)
+	 * Tells whether result in detached state (in means non-persisted)
 	 *
-	 * @param int $id
 	 * @return bool
 	 */
-	public function isDetached($id)
+	public function isDetached()
 	{
-		return !isset($this->data[$id]) or isset($this->detached[$id]);
-	}
-
-	/**
-	 * Marks requested row as detached (it means non-persisted)
-	 *
-	 * @param int $id
-	 * @throws InvalidArgumentException
-	 */
-	public function detach($id)
-	{
-		if (!isset($this->data[$id])) {
-			throw new InvalidArgumentException("Missing row with ID $id.");
-		}
-		if ($this->isDetached($id)) {
-			throw new InvalidArgumentException("Row with ID $id is already detached.");
-		}
-		$this->detached[$id] = true;
-		foreach ($this->data[$id] as $field => $value) {
-			$this->modified[$id][$field] = true;
-		}
+		return $this->connection === null or $this->table === null;
 	}
 
 	/**
@@ -216,14 +192,14 @@ class Result implements \Iterator
 	 */
 	public function markAsCreated($newId, $oldId, $table, DibiConnection $connection)
 	{
-		if (!$this->isDetached($oldId)) {
+		if (!$this->isDetached()) {
 			throw new InvalidStateException('Result is not in detached state.');
 		}
-		// TODO: check following assignment - should't fit unset($this->data[$oldId]) with $this->data[$newId] = ... better here?
-		$this->data = array($newId => array('id' => $newId) + $this->getModifiedData($oldId)); // TODO: mapper ~ getPrimaryKey($table)
+		$modifiedData = $this->getModifiedData($oldId);
+		unset($this->data[$oldId]);
+		$this->data[$newId] = array('id' => $newId) + $modifiedData; // TODO: mapper ~ getPrimaryKey($table)
 		foreach (array($newId, $oldId) as $key) {
 			unset($this->modified[$key]);
-			unset($this->detached[$key]);
 		}
 		$this->table = $table;
 		$this->connection = $connection;
@@ -269,8 +245,8 @@ class Result implements \Iterator
 	 */
 	public function getReferencedRow($id, $table, Closure $filter = null, $viaColumn = null)
 	{
-		if ($this->connection === null) {
-			throw new InvalidStateException('Cannot get referenced row for result without DibiConnection instance.');
+		if ($this->isDetached()) {
+			throw new InvalidStateException('Cannot get referenced rows for detached result.');
 		}
 		if ($viaColumn === null) {
 			$viaColumn = $table . '_id'; // TODO: mapper ~ getRelationshipColumn($this->table, $table)
@@ -300,7 +276,7 @@ class Result implements \Iterator
 				throw new InvalidArgumentException("Unsupported SQL strategy given: $strategy.");
 			}
 		}
-		if ($this->connection === null or $this->table === null) {
+		if ($this->isDetached()) {
 			throw new InvalidStateException('Cannot get referencing rows for detached result.');
 		}
 		if ($viaColumn === null) {
@@ -389,9 +365,6 @@ class Result implements \Iterator
 		$this->data = $data;
 		$this->table = $table;
 		$this->connection = $connection;
-		if (func_num_args() === 0) {
-			$this->detached[0] = true;
-		}
 	}
 
 	/**

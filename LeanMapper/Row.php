@@ -78,15 +78,20 @@ class Row
 	 */
 	public function isDetached()
 	{
-		return $this->result->isDetached($this->id);
+		return $this->result->isDetached();
 	}
 
 	/**
-	 * Marks row as detached (it means non-persisted)
+	 * Detach row (it means mark it as non-persisted)
 	 */
 	public function detach()
 	{
-		$this->result->detach($this->id);
+		$data = $this->result->getData($this->id);
+		$this->result = Result::getDetachedInstance();
+		foreach ($data as $key => $value) {
+			$this->result->setDataEntry(0, $key, $value);
+		}
+		$this->id = 0;
 	}
 
 	/**
