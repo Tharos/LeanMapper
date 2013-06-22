@@ -113,7 +113,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Returns data of given field from row with given id
+	 * Returns value of given field from row with given id
 	 *
 	 * @param int $id
 	 * @param string $key
@@ -129,7 +129,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Sets data of given field in row with given id
+	 * Sets value of given field in row with given id
 	 *
 	 * @param int $id
 	 * @param string $key
@@ -149,7 +149,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Tells whether requested row is modified state
+	 * Tells whether requested row is in modified state
 	 *
 	 * @param int $id
 	 * @return bool
@@ -206,7 +206,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Returns array of fields of requested row
+	 * Returns array of fields and values of requested row
 	 *
 	 * @param int $id
 	 * @return array
@@ -217,7 +217,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Returns array of modified fields of requested row with new values
+	 * Returns array of modified fields and values of requested row
 	 *
 	 * @param int $id
 	 * @return array
