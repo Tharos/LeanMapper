@@ -66,14 +66,14 @@ abstract class Repository
 				$values = $this->beforeCreate($values);
 				$this->connection->insert($this->getTable(), $values)
 						->execute(); // dibi::IDENTIFIER would lead to exception when there is no column with AUTO_INCREMENT
-				$id = isset($values['id']) ? $values['id'] : $this->connection->getInsertId();
+				$id = isset($values['id']) ? $values['id'] : $this->connection->getInsertId(); // TODO: mapper ~ getPrimaryKey($table), getEntityField($table, getPrimaryKey($table))
 				$entity->markAsCreated($id, $this->getTable(), $this->connection);
 
 				return $id;
 			} else {
 				$values = $this->beforeUpdate($values);
 				$result = $this->connection->update($this->getTable(), $values)
-						->where('[id] = %i', $entity->id)
+						->where('[id] = %i', $entity->id) // TODO: mapper ~ getPrimaryKey($table), getEntityField($table, getPrimaryKey($table))
 						->execute();
 				$entity->markAsUpdated();
 
@@ -96,11 +96,11 @@ abstract class Repository
 			if ($arg->isDetached()) {
 				throw new InvalidStateException('Cannot delete detached entity.');
 			}
-			$id = $arg->id;
+			$id = $arg->id; // TODO: mapper ~ getEntityField($table, getPrimaryKey($table))
 			$arg->detach();
 		}
 		$this->connection->delete($this->getTable())
-				->where('[id] = %i', $id)
+				->where('[id] = %i', $id) // TODO: mapper ~ getPrimaryKey($table)
 				->execute();
 	}
 
@@ -154,7 +154,7 @@ abstract class Repository
 			$table = $this->getTable();
 		}
 		$result = Result::getInstance($row, $table, $this->connection);
-		return new $entityClass($result->getRow($row->id));
+		return new $entityClass($result->getRow($row->id)); // TODO: mapper ~ getPrimaryKey($table)
 	}
 
 	/**
@@ -176,7 +176,7 @@ abstract class Repository
 		$entities = array();
 		$collection = Result::getInstance($rows, $table, $this->connection);
 		foreach ($rows as $row) {
-			$entities[$row->id] = new $entityClass($collection->getRow($row->id));
+			$entities[$row->id] = new $entityClass($collection->getRow($row->id)); // TODO: mapper ~ getPrimaryKey($table)
 		}
 		return $this->createCollection($entities);
 	}
@@ -194,7 +194,7 @@ abstract class Repository
 			if ($name !== null) {
 				$this->table = $name;
 			} else {
-				$matches = array();
+				$matches = array(); // TODO: mapper ~ getTableByRepositoryClass(get_called_class())
 				if (preg_match('#([a-z0-9]+)repository$#i', get_called_class(), $matches)) {
 					$this->table = strtolower($matches[1]);
 				} else {
@@ -218,7 +218,7 @@ abstract class Repository
 			if ($entityClass !== null) {
 				$this->entityClass = $entityClass;
 			} else {
-				$matches = array();
+				$matches = array(); // TODO: mapper ~ getEntityClass(getTableByRepositoryClass(get_called_class()))
 				if (preg_match('#([a-z0-9]+)repository$#i', get_called_class(), $matches)) {
 					$this->entityClass = $matches[1];
 				} else {

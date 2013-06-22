@@ -18,6 +18,7 @@ require_once __DIR__ . '/Exception/InvalidValueException.php';
 require_once __DIR__ . '/Exception/MemberAccessException.php';
 require_once __DIR__ . '/Exception/RuntimeException.php';
 require_once __DIR__ . '/Exception/UtilityClassException.php';
+require_once __DIR__ . '/IMapper.php';
 require_once __DIR__ . '/Relationship/BelongsTo.php';
 require_once __DIR__ . '/Relationship/BelongsToMany.php';
 require_once __DIR__ . '/Relationship/BelongsToOne.php';

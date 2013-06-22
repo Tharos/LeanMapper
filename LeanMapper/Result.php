@@ -70,7 +70,7 @@ class Result implements \Iterator
 	{
 		$dataArray = array();
 		if ($data instanceof DibiRow) {
-			$dataArray = array(isset($data->id) ? $data->id : 0 => $data->toArray());
+			$dataArray = array(isset($data->id) ? $data->id : 0 => $data->toArray()); // TODO: mapper ~ getPrimaryKey($table)
 		} else {
 			$e = new InvalidArgumentException('Invalid type of data given, only DibiRow or array of DibiRow is supported at this moment.');
 			if (is_array($data)) {
@@ -78,8 +78,8 @@ class Result implements \Iterator
 					if (!($record instanceof DibiRow)) {
 						throw $e;
 					}
-					if (isset($record->id)) {
-						$dataArray[$record->id] = $record->toArray();
+					if (isset($record->id)) { // TODO: mapper ~ getPrimaryKey($table)
+						$dataArray[$record->id] = $record->toArray(); // TODO: mapper ~ getPrimaryKey($table)
 					} else {
 						$dataArray[] = $record->toArray();
 					}
@@ -144,7 +144,7 @@ class Result implements \Iterator
 		if (!isset($this->data[$id])) {
 			throw new InvalidArgumentException("Missing row with ID $id.");
 		}
-		if ($key === 'id' and !$this->isDetached($id)) {
+		if ($key === 'id' and !$this->isDetached($id)) { // TODO: mapper ~ getPrimaryKey($table) - only the first part of condition!
 			throw new InvalidArgumentException("ID can only be set in detached rows.");
 		}
 		$this->modified[$id][$key] = true;
@@ -219,7 +219,8 @@ class Result implements \Iterator
 		if (!$this->isDetached($oldId)) {
 			throw new InvalidStateException('Result is not in detached state.');
 		}
-		$this->data = array($newId => array('id' => $newId) + $this->getModifiedData($oldId));
+		// TODO: check following assignment - should't fit unset($this->data[$oldId]) with $this->data[$newId] = ... better here?
+		$this->data = array($newId => array('id' => $newId) + $this->getModifiedData($oldId)); // TODO: mapper ~ getPrimaryKey($table)
 		foreach (array($newId, $oldId) as $key) {
 			unset($this->modified[$key]);
 			unset($this->detached[$key]);
@@ -272,7 +273,7 @@ class Result implements \Iterator
 			throw new InvalidStateException('Cannot get referenced row for result without DibiConnection instance.');
 		}
 		if ($viaColumn === null) {
-			$viaColumn = $table . '_id';
+			$viaColumn = $table . '_id'; // TODO: mapper ~ getRelationshipColumn($this->table, $table)
 		}
 		return $this->getReferencedResult($table, $viaColumn, $filter)
 				->getRow($this->getDataEntry($id, $viaColumn));
@@ -303,7 +304,7 @@ class Result implements \Iterator
 			throw new InvalidStateException('Cannot get referencing rows for detached result.');
 		}
 		if ($viaColumn === null) {
-			$viaColumn = $this->table . '_id';
+			$viaColumn = $this->table . '_id'; // TODO: mapper ~ getRelationshipColumn($table, $this->table)
 		}
 		$collection = $this->getReferencingResult($table, $viaColumn, $filter, $strategy);
 		$rows = array();
@@ -404,12 +405,12 @@ class Result implements \Iterator
 		$key = "$table($viaColumn)";
 		if ($filter === null) {
 			if (!isset($this->referenced[$key])) {
-				$data = $this->createTableSelection($table)->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn))
+				$data = $this->createTableSelection($table)->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn)) // TODO: mapper ~ getPrimaryKey($table)
 						->fetchAll();
 				$this->referenced[$key] = self::getInstance($data, $table, $this->connection);
 			}
 		} else {
-			$statement = $this->createTableSelection($table)->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn));
+			$statement = $this->createTableSelection($table)->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn)); // TODO: mapper ~ getPrimaryKey($table)
 			$filter($statement);
 
 			$sql = (string) $statement;
@@ -436,11 +437,11 @@ class Result implements \Iterator
 		if ($strategy === self::STRATEGY_IN) {
 			if ($filter === null) {
 				if (!isset($this->referencing[$key])) {
-					$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds());
-					$this->referencing[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection);
+					$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds()); // TODO: mapper ~ getPrimaryKey($table)
+					$this->referencing[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection); // TODO: mapper ~ getPrimaryKey($table)
 				}
 			} else {
-				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds());
+				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds()); // TODO: mapper ~ getPrimaryKey($table)
 				$filter($statement);
 
 				$sql = (string) $statement;
@@ -453,7 +454,7 @@ class Result implements \Iterator
 		} else { // self::STRATEGY_UNION
 			if ($filter === null) {
 				if (!isset($this->referencing[$key])) {
-					$ids = $this->extractIds();
+					$ids = $this->extractIds(); // TODO: mapper ~ getPrimaryKey($table)
 					if (count($ids) === 0) {
 						$data = array();
 					} else {
@@ -464,7 +465,7 @@ class Result implements \Iterator
 					$this->referencing[$key] = self::getInstance($data, $table, $this->connection);
 				}
 			} else {
-				$ids = $this->extractIds();
+				$ids = $this->extractIds(); // TODO: mapper ~ getPrimaryKey($table)
 				if (count($ids) === 0) {
 					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection);
 				} else {
@@ -483,7 +484,7 @@ class Result implements \Iterator
 	 * @param string $column
 	 * @return array
 	 */
-	private function extractIds($column = 'id')
+	private function extractIds($column = 'id') // TODO: mapper ~ make argument required
 	{
 		$ids = array();
 		foreach ($this->data as $data) {
