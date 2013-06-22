@@ -9,6 +9,7 @@
  * license-mit.txt that was distributed with this source code.
  */
 
+require_once __DIR__ . '/DefaultMapper.php';
 require_once __DIR__ . '/Entity.php';
 require_once __DIR__ . '/Exception/InvalidAnnotationException.php';
 require_once __DIR__ . '/Exception/InvalidArgumentException.php';
