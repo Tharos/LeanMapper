@@ -169,19 +169,19 @@ class PropertyFactory
 
 		switch ($relationshipType) {
 			case 'hasOne':
-				return new Relationship\HasOne($pieces[0] ? : $targetTable . '_id', $pieces[1] ? : $targetTable);
+				return new Relationship\HasOne($pieces[0] ? : $targetTable . '_id', $pieces[1] ? : $targetTable); // TODO: mapper ~ getRelationshipColumn($sourceTable, $targetTable)
 			case 'hasMany':
 				return new Relationship\HasMany(
-					$pieces[0] ?: $sourceTable . '_id',
-					$pieces[1] ?: $sourceTable . '_' . $targetTable,
-					$pieces[2] ?: $targetTable . '_id',
+					$pieces[0] ?: $sourceTable . '_id', // TODO: mapper ~ getRelationshipColumn(getRelationshipTable($sourceTable, $targetTable), $sourceTable)
+					$pieces[1] ?: $sourceTable . '_' . $targetTable, // TODO: mapper ~ getRelationshipTable($sourceTable, $targetTable)
+					$pieces[2] ?: $targetTable . '_id', // TODO: mapper ~ getRelationshipColumn(getRelationshipTable($sourceTable, $targetTable), $targetTable)
 					$pieces[3] ?: $targetTable,
 					$strategy
 				);
 			case 'belongsToOne':
-				return new Relationship\BelongsToOne($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable, $strategy);
+				return new Relationship\BelongsToOne($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable, $strategy); // TODO: mapper ~ getRelationshipColumn($targetTable, $sourceTable)
 			case 'belongsToMany':
-				return new Relationship\BelongsToMany($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable, $strategy);
+				return new Relationship\BelongsToMany($pieces[0] ? : $sourceTable . '_id', $pieces[1] ? : $targetTable, $strategy); // TODO: mapper ~ getRelationshipColumn($targetTable, $sourceTable)
 		}
 		return null;
 	}
