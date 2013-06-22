@@ -160,7 +160,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Tells whether result in detached state (in means non-persisted)
+	 * Tells whether result is in detached state (in means non-persisted)
 	 *
 	 * @return bool
 	 */
