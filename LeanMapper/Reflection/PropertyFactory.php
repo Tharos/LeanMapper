@@ -75,7 +75,7 @@ class PropertyFactory
 			throw new InvalidAnnotationException("It doesn't make sense to have a property containing collection nullable: @$annotationType $annotation");
 		}
 		$name = substr($matches[5], 1);
-		$column = (isset($matches[6]) and $matches[6] !== '') ? $matches[6] : $name;
+		$column = (isset($matches[6]) and $matches[6] !== '') ? $matches[6] : $name; // TODO: mapper ~ getColumn($reflection->getName(), $name)
 
 		$propertyValuesEnum = null;
 		if (isset($matches[7]) and $matches[7] !== '') {
@@ -164,8 +164,8 @@ class PropertyFactory
 		}
 		$pieces = array_replace(array_fill(0, 6, ''), $definition !== null ? explode(':', $definition) : array());
 
-		$sourceTable = strtolower(self::trimNamespace($sourceClass));
-		$targetTable = strtolower(self::trimNamespace($propertyType->getType()));
+		$sourceTable = strtolower(self::trimNamespace($sourceClass)); // TODO: mapper ~ getTable($sourceClass)
+		$targetTable = strtolower(self::trimNamespace($propertyType->getType())); // TODO: mapper ~ getTable($propertyType->getType())
 
 		switch ($relationshipType) {
 			case 'hasOne':

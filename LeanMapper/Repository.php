@@ -194,7 +194,7 @@ abstract class Repository
 			if ($name !== null) {
 				$this->table = $name;
 			} else {
-				$matches = array();
+				$matches = array(); // TODO: mapper ~ getTableByRepositoryClass(get_called_class())
 				if (preg_match('#([a-z0-9]+)repository$#i', get_called_class(), $matches)) {
 					$this->table = strtolower($matches[1]);
 				} else {
@@ -218,7 +218,7 @@ abstract class Repository
 			if ($entityClass !== null) {
 				$this->entityClass = $entityClass;
 			} else {
-				$matches = array();
+				$matches = array(); // TODO: mapper ~ getEntityClass(getTableByRepositoryClass(get_called_class()))
 				if (preg_match('#([a-z0-9]+)repository$#i', get_called_class(), $matches)) {
 					$this->entityClass = $matches[1];
 				} else {
