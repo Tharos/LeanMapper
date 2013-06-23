@@ -66,17 +66,17 @@ abstract class Repository
 
 		$this->checkEntityType($entity);
 		if ($entity->isModified()) {
-			$values = $entity->getModifiedRowData();
 			if ($entity->isDetached()) {
-				$values = $this->beforeCreate($values);
+				$entity->useMapper($this->mapper);
+				$values = $this->beforeCreate($entity->getModifiedRowData());
 				$this->connection->insert($this->getTable(), $values)
 						->execute(); // dibi::IDENTIFIER leads to exception when there is no column with AUTO_INCREMENT
 				$id = isset($values[$idField]) ? $values[$idField] : $this->connection->getInsertId();
-				$entity->markAsCreated($id, $this->getTable(), $this->connection, $this->mapper);
+				$entity->markAsCreated($id, $this->getTable(), $this->connection);
 
 				return $id;
 			} else {
-				$values = $this->beforeUpdate($values);
+				$values = $this->beforeUpdate($entity->getModifiedRowData());
 				$result = $this->connection->update($this->getTable(), $values)
 						->where('%n = ?', $primaryKey, $entity->$idField)
 						->execute();

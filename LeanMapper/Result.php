@@ -18,6 +18,7 @@ use DibiSqliteDriver;
 use DibiSqlite3Driver;
 use DibiRow;
 use LeanMapper\Exception\InvalidArgumentException;
+use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidStateException;
 
 /**
@@ -146,11 +147,38 @@ class Result implements \Iterator
 		if (!isset($this->data[$id])) {
 			throw new InvalidArgumentException("Missing row with ID $id.");
 		}
-		if (!$this->isDetached() and $key === $this->mapper->getPrimaryKey($this->table)) {
+		if (!$this->isDetached() and $key === $this->mapper->getPrimaryKey($this->table)) { // mapper is always set when Result is not detached
 			throw new InvalidArgumentException("ID can only be set in detached rows.");
 		}
 		$this->modified[$id][$key] = true;
 		$this->data[$id][$key] = $value;
+	}
+
+	/**
+	 * Tells whether row with given id has given field
+	 *
+	 * @param mixed $id
+	 * @param string $key
+	 * @return bool
+	 */
+	public function hasDataEntry($id, $key)
+	{
+		return isset($this->data[$id]) and array_key_exists($key, $this->data[$id]);
+	}
+
+	/**
+	 * Unset given field in row with given id
+	 *
+	 * @param mixed $id
+	 * @param string $key
+	 * @throws InvalidArgumentException
+	 */
+	public function unsetDataEntry($id, $key)
+	{
+		if (!isset($this->data[$id])) {
+			throw new InvalidArgumentException("Missing row with ID $id.");
+		}
+		unset($this->data[$id][$key], $this->modified[$id][$key]);
 	}
 
 	/**
@@ -171,16 +199,28 @@ class Result implements \Iterator
 	 */
 	public function isDetached()
 	{
-		return $this->connection === null or $this->table === null;
+		return $this->connection === null or $this->table === null or $this->mapper === null;
+	}
+
+	/**
+	 * @param IMapper $mapper
+	 */
+	public function setMapper(IMapper $mapper)
+	{
+		$this->mapper = $mapper;
 	}
 
 	/**
 	 * Marks requested row as non-updated (isModified($id) returns false right after this method call)
 	 *
 	 * @param int $id
+	 * @throws InvalidMethodCallException
 	 */
 	public function markAsUpdated($id)
 	{
+		if ($this->isDetached()) {
+			throw new InvalidMethodCallException('Detached result cannot be marked as updated.');
+		}
 		if (isset($this->modified[$id])) {
 			unset($this->modified[$id]);
 		}
@@ -193,24 +233,24 @@ class Result implements \Iterator
 	 * @param mixed $oldId
 	 * @param string $table
 	 * @param DibiConnection $connection
-	 * @param IMapper $mapper
 	 * @throws InvalidStateException
 	 */
-	public function markAsCreated($newId, $oldId, $table, DibiConnection $connection, IMapper $mapper)
+	public function markAsCreated($newId, $oldId, $table, DibiConnection $connection)
 	{
 		if (!$this->isDetached()) {
 			throw new InvalidStateException('Result is not in detached state.');
 		}
+		if ($this->mapper === null) {
+			throw new InvalidStateException('Missing mapper.');
+		}
 		$modifiedData = $this->getModifiedData($oldId);
-		// TODO: mapper ~ translate columns!
 		unset($this->data[$oldId]);
-		$this->data[$newId] = array($mapper->getPrimaryKey($table) => $newId) + $modifiedData;
+		$this->data[$newId] = array($this->mapper->getPrimaryKey($table) => $newId) + $modifiedData;
 		foreach (array($newId, $oldId) as $key) {
 			unset($this->modified[$key]);
 		}
 		$this->table = $table;
 		$this->connection = $connection;
-		$this->mapper = $mapper;
 	}
 
 	/**
