@@ -163,7 +163,7 @@ abstract class Repository
 		}
 		$result = Result::getInstance($row, $table, $this->connection, $this->mapper);
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		return new $entityClass($result->getRow($row->$primaryKey));
+		return new $entityClass($result->getRow($row->$primaryKey), $this->mapper);
 	}
 
 	/**
@@ -186,7 +186,7 @@ abstract class Repository
 		$collection = Result::getInstance($rows, $table, $this->connection, $this->mapper);
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 		foreach ($rows as $row) {
-			$entities[$row->$primaryKey] = new $entityClass($collection->getRow($row->$primaryKey));
+			$entities[$row->$primaryKey] = new $entityClass($collection->getRow($row->$primaryKey), $this->mapper);
 		}
 		return $this->createCollection($entities);
 	}

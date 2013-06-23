@@ -456,7 +456,7 @@ class Result implements \Iterator
 					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filter);
 					$key .= '#' . md5($sql);
 					if (!isset($this->referencing[$key])) {
-						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper);
 					}
 				}
 			}
