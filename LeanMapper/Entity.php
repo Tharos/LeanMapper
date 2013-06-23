@@ -37,6 +37,9 @@ abstract class Entity
 	/** @var Row */
 	protected $row;
 
+	/** @var IMapper */
+	protected $mapper;
+
 	/** @var EntityReflection[] */
 	protected static $reflections = array();
 
@@ -343,10 +346,12 @@ abstract class Entity
 	 * @param int $id
 	 * @param string $table
 	 * @param DibiConnection $connection
+	 * @param IMapper $mapper
 	 */
-	public function markAsCreated($id, $table, DibiConnection $connection)
+	public function markAsCreated($id, $table, DibiConnection $connection, IMapper $mapper)
 	{
-		$this->row->markAsCreated($id, $table, $connection);
+		$this->mapper = $mapper;
+		$this->row->markAsCreated($id, $table, $connection, $mapper);
 	}
 
 	/**

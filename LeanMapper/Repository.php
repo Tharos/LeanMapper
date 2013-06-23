@@ -27,11 +27,11 @@ use ReflectionClass;
 abstract class Repository
 {
 
-	/** @var string */
-	protected $defaultEntityNamespace = 'Model\Entity';
-
 	/** @var DibiConnection */
 	protected $connection;
+
+	/** @var IMapper */
+	protected $mapper;
 
 	/** @var string */
 	protected $table;
@@ -45,10 +45,12 @@ abstract class Repository
 
 	/**
 	 * @param DibiConnection $connection
+	 * @param IMapper $mapper
 	 */
-	public function __construct(DibiConnection $connection)
+	public function __construct(DibiConnection $connection, IMapper $mapper)
 	{
 		$this->connection = $connection;
+		$this->mapper = $mapper;
 	}
 
 	/**
@@ -59,21 +61,24 @@ abstract class Repository
 	 */
 	public function persist(Entity $entity)
 	{
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+
 		$this->checkEntityType($entity);
 		if ($entity->isModified()) {
 			$values = $entity->getModifiedRowData();
 			if ($entity->isDetached()) {
 				$values = $this->beforeCreate($values);
 				$this->connection->insert($this->getTable(), $values)
-						->execute(); // dibi::IDENTIFIER would lead to exception when there is no column with AUTO_INCREMENT
-				$id = isset($values['id']) ? $values['id'] : $this->connection->getInsertId(); // TODO: mapper ~ getPrimaryKey($table), getEntityField($table, getPrimaryKey($table))
-				$entity->markAsCreated($id, $this->getTable(), $this->connection);
+						->execute(); // dibi::IDENTIFIER leads to exception when there is no column with AUTO_INCREMENT
+				$id = isset($values[$idField]) ? $values[$idField] : $this->connection->getInsertId();
+				$entity->markAsCreated($id, $this->getTable(), $this->connection, $this->mapper);
 
 				return $id;
 			} else {
 				$values = $this->beforeUpdate($values);
 				$result = $this->connection->update($this->getTable(), $values)
-						->where('[id] = %i', $entity->id) // TODO: mapper ~ getPrimaryKey($table), getEntityField($table, getPrimaryKey($table))
+						->where('%n = ?', $primaryKey, $entity->$idField)
 						->execute();
 				$entity->markAsUpdated();
 
@@ -90,17 +95,20 @@ abstract class Repository
 	 */
 	public function delete($arg)
 	{
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+
 		$id = $arg;
 		if ($arg instanceof Entity) {
 			$this->checkEntityType($arg);
 			if ($arg->isDetached()) {
 				throw new InvalidStateException('Cannot delete detached entity.');
 			}
-			$id = $arg->id; // TODO: mapper ~ getEntityField($table, getPrimaryKey($table))
+			$id = $arg->$idField;
 			$arg->detach();
 		}
 		$this->connection->delete($this->getTable())
-				->where('[id] = %i', $id) // TODO: mapper ~ getPrimaryKey($table)
+				->where('%n = ?', $primaryKey, $id)
 				->execute();
 	}
 
@@ -153,8 +161,9 @@ abstract class Repository
 		if ($table === null) {
 			$table = $this->getTable();
 		}
-		$result = Result::getInstance($row, $table, $this->connection);
-		return new $entityClass($result->getRow($row->id)); // TODO: mapper ~ getPrimaryKey($table)
+		$result = Result::getInstance($row, $table, $this->connection, $this->mapper);
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		return new $entityClass($result->getRow($row->$primaryKey));
 	}
 
 	/**
@@ -174,9 +183,10 @@ abstract class Repository
 			$table = $this->getTable();
 		}
 		$entities = array();
-		$collection = Result::getInstance($rows, $table, $this->connection);
+		$collection = Result::getInstance($rows, $table, $this->connection, $this->mapper);
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 		foreach ($rows as $row) {
-			$entities[$row->id] = new $entityClass($collection->getRow($row->id)); // TODO: mapper ~ getPrimaryKey($table)
+			$entities[$row->$primaryKey] = new $entityClass($collection->getRow($row->$primaryKey));
 		}
 		return $this->createCollection($entities);
 	}
@@ -191,16 +201,7 @@ abstract class Repository
 	{
 		if ($this->table === null) {
 			$name = AnnotationsParser::parseSimpleAnnotationValue('table', $this->getDocComment());
-			if ($name !== null) {
-				$this->table = $name;
-			} else {
-				$matches = array(); // TODO: mapper ~ getTableByRepositoryClass(get_called_class())
-				if (preg_match('#([a-z0-9]+)repository$#i', get_called_class(), $matches)) {
-					$this->table = strtolower($matches[1]);
-				} else {
-					throw new InvalidStateException('Cannot determine table name.');
-				}
-			}
+			$this->table = $name !== null ? $name : $this->mapper->getTableByRepositoryClass(get_called_class());
 		}
 		return $this->table;
 	}
@@ -218,15 +219,10 @@ abstract class Repository
 			if ($entityClass !== null) {
 				$this->entityClass = $entityClass;
 			} else {
-				$matches = array(); // TODO: mapper ~ getEntityClass(getTableByRepositoryClass(get_called_class()))
-				if (preg_match('#([a-z0-9]+)repository$#i', get_called_class(), $matches)) {
-					$this->entityClass = $matches[1];
-				} else {
-					throw new InvalidStateException('Cannot determine entity class name.');
-				}
+				$this->entityClass = $this->mapper->getEntityClass($this->mapper->getTableByRepositoryClass(get_called_class()));
 			}
 		}
-		return $this->getFullyQualifiedClass($this->entityClass);
+		return $this->entityClass;
 	}
 
 	/**
@@ -263,21 +259,6 @@ abstract class Repository
 			$this->docComment = $reflection->getDocComment();
 		}
 		return $this->docComment;
-	}
-
-	/**
-	 * @param string $entityClass
-	 * @return string
-	 */
-	private function getFullyQualifiedClass($entityClass)
-	{
-		if (substr($entityClass, 0, 1) === '\\') {
-			return substr($entityClass, 1);
-		}
-		if ($this->defaultEntityNamespace === null) {
-			return $entityClass;
-		}
-		return $this->defaultEntityNamespace . '\\' . $entityClass;
 	}
 	
 }
