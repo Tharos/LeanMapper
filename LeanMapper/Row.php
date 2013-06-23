@@ -89,6 +89,7 @@ class Row
 		$data = $this->result->getData($this->id);
 		$this->result = Result::getDetachedInstance();
 		foreach ($data as $key => $value) {
+			// TODO: mapper ~ de-translate columns?
 			$this->result->setDataEntry(0, $key, $value);
 		}
 		$this->id = 0;
@@ -108,10 +109,11 @@ class Row
 	 * @param int $id
 	 * @param string $table
 	 * @param DibiConnection $connection
+	 * @param IMapper $mapper
 	 */
-	public function markAsCreated($id, $table, DibiConnection $connection)
+	public function markAsCreated($id, $table, DibiConnection $connection, IMapper $mapper)
 	{
-		$this->result->markAsCreated($id, $this->id, $table, $connection);
+		$this->result->markAsCreated($id, $this->id, $table, $connection, $mapper);
 		$this->id = $id;
 	}
 

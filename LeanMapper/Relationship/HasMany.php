@@ -31,7 +31,7 @@ class HasMany
 	/** @var string */
 	private $targetTable;
 
-	/** @var strategy */
+	/** @var string */
 	private $strategy;
 
 

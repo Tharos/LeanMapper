@@ -37,6 +37,9 @@ abstract class Entity
 	/** @var Row */
 	protected $row;
 
+	/** @var IMapper */
+	protected $mapper;
+
 	/** @var EntityReflection[] */
 	protected static $reflections = array();
 
@@ -46,15 +49,20 @@ abstract class Entity
 
 	/**
 	 * @param Row|Traversable|array|null $arg
+	 * @param IMapper|null $mapper
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct($arg = null)
+	public function __construct($arg = null, IMapper $mapper = null)
 	{
 		if ($arg instanceof Row) {
 			if ($arg->isDetached()) {
 				throw new InvalidArgumentException('It is not allowed to create entity from detached instance of LeanMapper\Row.');
 			}
+			if ($mapper === null) {
+				throw new InvalidArgumentException('Mapper must be provided when creating entity from instance of LeanMapper\Row.');
+			}
 			$this->row = $arg;
+			$this->mapper = $mapper;
 		} else {
 			$this->row = Result::getDetachedInstance()->getRow();
 			// TODO: call fields initialization that would use default values from annotations
@@ -79,7 +87,7 @@ abstract class Entity
 	 */
 	public function __get($name/*, array $filterArgs*/)
 	{
-		$property = $this->getReflection()->getEntityProperty($name);
+		$property = $this->getReflection($this->mapper)->getEntityProperty($name);
 		if ($property === null) {
 			$method = 'get' . ucfirst($name);
 			$internalGetters = array_flip($this->internalGetters);
@@ -152,7 +160,7 @@ abstract class Entity
 	 */
 	function __set($name, $value)
 	{
-		$property = $this->getReflection()->getEntityProperty($name);
+		$property = $this->getReflection($this->mapper)->getEntityProperty($name);
 		if ($property === null) {
 			$method = 'set' . ucfirst($name);
 			if (method_exists($this, $method)) { // TODO: find better solution (using reflection)
@@ -294,11 +302,11 @@ abstract class Entity
 	public function getData()
 	{
 		$data = array();
-		foreach ($this->getReflection()->getEntityProperties() as $property) {
+		foreach ($this->getReflection($this->mapper)->getEntityProperties() as $property) {
 			$data[$property->getName()] = $this->__get($property->getName());
 		}
 		$internalGetters = array_flip($this->internalGetters);
-		foreach ($this->getReflection()->getMethods(ReflectionMethod::IS_PUBLIC) as $method) { // TODO: better support from EntityReflection
+		foreach ($this->getReflection($this->mapper)->getMethods(ReflectionMethod::IS_PUBLIC) as $method) { // TODO: better support from EntityReflection
 			$name = $method->getName();
 			if (substr($name, 0, 3) === 'get' and !isset($internalGetters[$name])) {
 				if ($method->getNumberOfRequiredParameters() === 0) {
@@ -343,23 +351,27 @@ abstract class Entity
 	 * @param int $id
 	 * @param string $table
 	 * @param DibiConnection $connection
+	 * @param IMapper $mapper
 	 */
-	public function markAsCreated($id, $table, DibiConnection $connection)
+	public function markAsCreated($id, $table, DibiConnection $connection, IMapper $mapper)
 	{
-		$this->row->markAsCreated($id, $table, $connection);
+		$this->mapper = $mapper;
+		$this->row->markAsCreated($id, $table, $connection, $mapper);
 	}
 
 	/**
+	 * @param IMapper|null $mapper
 	 * @return EntityReflection
 	 */
-	protected static function getReflection()
+	protected static function getReflection(IMapper $mapper = null)
 	{
 		$class = get_called_class();
-		if (!isset(static::$reflections[$class])) {
-			static::$reflections[$class] = new EntityReflection($class);
+		$mapperClass = $mapper !== null ? get_class($mapper) : '';
+		if (!isset(static::$reflections[$class][$mapperClass])) {
+			static::$reflections[$class][$mapperClass] = new EntityReflection($class, $mapper);
 		}
 
-		return static::$reflections[$class];
+		return static::$reflections[$class][$mapperClass];
 	}
 
 	/**
@@ -396,7 +408,7 @@ abstract class Entity
 			return null;
 		} else {
 			$class = $property->getType();
-			return new $class($row);
+			return new $class($row, $this->mapper);
 		}
 	}
 
@@ -415,7 +427,7 @@ abstract class Entity
 		foreach ($rows as $row) {
 			$valueRow = $row->referenced($relationship->getTargetTable(), $targetTableFilter, $relationship->getColumnReferencingTargetTable());
 			if ($valueRow !== null) {
-				$value[] = new $class($valueRow);
+				$value[] = new $class($valueRow, $this->mapper);
 			}
 		}
 		return $this->createCollection($value);
@@ -443,7 +455,7 @@ abstract class Entity
 		} else {
 			$row = reset($rows);
 			$class = $property->getType();
-			return new $class($row);
+			return new $class($row, $this->mapper);
 		}
 	}
 
@@ -459,7 +471,7 @@ abstract class Entity
 		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {
-			$value[] = new $class($row);
+			$value[] = new $class($row, $this->mapper);
 		}
 		return $this->createCollection($value);
 	}

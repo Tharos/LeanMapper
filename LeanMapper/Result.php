@@ -44,6 +44,9 @@ class Result implements \Iterator
 	/** @var DibiConnection */
 	private $connection;
 
+	/** @var IMapper */
+	protected $mapper;
+
 	/** @var array */
 	private $keys;
 
@@ -60,14 +63,16 @@ class Result implements \Iterator
 	 * @param DibiRow|DibiRow[] $data
 	 * @param string $table
 	 * @param DibiConnection $connection
+	 * @param IMapper $mapper
 	 * @return self
 	 * @throws InvalidArgumentException
 	 */
-	public static function getInstance($data, $table, DibiConnection $connection)
+	public static function getInstance($data, $table, DibiConnection $connection, IMapper $mapper)
 	{
 		$dataArray = array();
+		$primaryKey = $mapper->getPrimaryKey($table);
 		if ($data instanceof DibiRow) {
-			$dataArray = array(isset($data->id) ? $data->id : 0 => $data->toArray()); // TODO: mapper ~ getPrimaryKey($table)
+			$dataArray = array(isset($data->$primaryKey) ? $data->$primaryKey : 0 => $data->toArray());
 		} else {
 			$e = new InvalidArgumentException('Invalid type of data given, only DibiRow or array of DibiRow is supported at this moment.');
 			if (is_array($data)) {
@@ -75,8 +80,8 @@ class Result implements \Iterator
 					if (!($record instanceof DibiRow)) {
 						throw $e;
 					}
-					if (isset($record->id)) { // TODO: mapper ~ getPrimaryKey($table)
-						$dataArray[$record->id] = $record->toArray(); // TODO: mapper ~ getPrimaryKey($table)
+					if (isset($record->$primaryKey)) {
+						$dataArray[$record->$primaryKey] = $record->toArray();
 					} else {
 						$dataArray[] = $record->toArray();
 					}
@@ -85,7 +90,7 @@ class Result implements \Iterator
 				throw $e;
 			}
 		}
-		return new self($dataArray, $table, $connection);
+		return new self($dataArray, $table, $connection, $mapper);
 	}
 
 	/**
@@ -115,7 +120,7 @@ class Result implements \Iterator
 	/**
 	 * Returns value of given field from row with given id
 	 *
-	 * @param int $id
+	 * @param mixed $id
 	 * @param string $key
 	 * @return mixed
 	 * @throws InvalidArgumentException
@@ -131,7 +136,7 @@ class Result implements \Iterator
 	/**
 	 * Sets value of given field in row with given id
 	 *
-	 * @param int $id
+	 * @param mixed $id
 	 * @param string $key
 	 * @param mixed $value
 	 * @throws InvalidArgumentException
@@ -141,7 +146,7 @@ class Result implements \Iterator
 		if (!isset($this->data[$id])) {
 			throw new InvalidArgumentException("Missing row with ID $id.");
 		}
-		if ($key === 'id' and !$this->isDetached($id)) { // TODO: mapper ~ getPrimaryKey($table) - only the first part of condition!
+		if (!$this->isDetached() and $key === $this->mapper->getPrimaryKey($this->table)) {
 			throw new InvalidArgumentException("ID can only be set in detached rows.");
 		}
 		$this->modified[$id][$key] = true;
@@ -184,25 +189,28 @@ class Result implements \Iterator
 	/**
 	 * Marks requested row as persisted
 	 *
-	 * @param int $newId
-	 * @param int $oldId
+	 * @param mixed $newId
+	 * @param mixed $oldId
 	 * @param string $table
 	 * @param DibiConnection $connection
+	 * @param IMapper $mapper
 	 * @throws InvalidStateException
 	 */
-	public function markAsCreated($newId, $oldId, $table, DibiConnection $connection)
+	public function markAsCreated($newId, $oldId, $table, DibiConnection $connection, IMapper $mapper)
 	{
 		if (!$this->isDetached()) {
 			throw new InvalidStateException('Result is not in detached state.');
 		}
 		$modifiedData = $this->getModifiedData($oldId);
+		// TODO: mapper ~ translate columns!
 		unset($this->data[$oldId]);
-		$this->data[$newId] = array('id' => $newId) + $modifiedData; // TODO: mapper ~ getPrimaryKey($table)
+		$this->data[$newId] = array($mapper->getPrimaryKey($table) => $newId) + $modifiedData;
 		foreach (array($newId, $oldId) as $key) {
 			unset($this->modified[$key]);
 		}
 		$this->table = $table;
 		$this->connection = $connection;
+		$this->mapper = $mapper;
 	}
 
 	/**
@@ -249,7 +257,7 @@ class Result implements \Iterator
 			throw new InvalidStateException('Cannot get referenced rows for detached result.');
 		}
 		if ($viaColumn === null) {
-			$viaColumn = $table . '_id'; // TODO: mapper ~ getRelationshipColumn($this->table, $table)
+			$viaColumn = $this->mapper->getRelationshipColumn($this->table, $table);
 		}
 		return $this->getReferencedResult($table, $viaColumn, $filter)
 				->getRow($this->getDataEntry($id, $viaColumn));
@@ -280,7 +288,7 @@ class Result implements \Iterator
 			throw new InvalidStateException('Cannot get referencing rows for detached result.');
 		}
 		if ($viaColumn === null) {
-			$viaColumn = $this->table . '_id'; // TODO: mapper ~ getRelationshipColumn($table, $this->table)
+			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
 		$collection = $this->getReferencingResult($table, $viaColumn, $filter, $strategy);
 		$rows = array();
@@ -356,8 +364,9 @@ class Result implements \Iterator
 	 * @param array|null $data
 	 * @param string|null $table
 	 * @param DibiConnection|null $connection
+	 * @param IMapper|null $mapper
 	 */
-	private function __construct(array $data = null, $table = null, DibiConnection $connection = null)
+	private function __construct(array $data = null, $table = null, DibiConnection $connection = null, IMapper $mapper = null)
 	{
 		if ($data === null) {
 			$data = array(array());
@@ -365,6 +374,7 @@ class Result implements \Iterator
 		$this->data = $data;
 		$this->table = $table;
 		$this->connection = $connection;
+		$this->mapper = $mapper;
 	}
 
 	/**
@@ -376,21 +386,22 @@ class Result implements \Iterator
 	private function getReferencedResult($table, $viaColumn, Closure $filter = null)
 	{
 		$key = "$table($viaColumn)";
+		$primaryKey = $this->mapper->getPrimaryKey($this->table);
 		if ($filter === null) {
 			if (!isset($this->referenced[$key])) {
-				$data = $this->createTableSelection($table)->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn)) // TODO: mapper ~ getPrimaryKey($table)
+				$data = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn))
 						->fetchAll();
-				$this->referenced[$key] = self::getInstance($data, $table, $this->connection);
+				$this->referenced[$key] = self::getInstance($data, $table, $this->connection, $this->mapper);
 			}
 		} else {
-			$statement = $this->createTableSelection($table)->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn)); // TODO: mapper ~ getPrimaryKey($table)
+			$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn));
 			$filter($statement);
 
 			$sql = (string) $statement;
 			$key .= '#' . md5($sql);
 
 			if (!isset($this->referenced[$key])) {
-				$this->referenced[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+				$this->referenced[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper);
 			}
 		}
 		return $this->referenced[$key];
@@ -406,28 +417,28 @@ class Result implements \Iterator
 	private function getReferencingResult($table, $viaColumn, Closure $filter = null, $strategy)
 	{
 		$key = "$table($viaColumn)$strategy";
-
+		$primaryKey = $this->mapper->getPrimaryKey($this->table);
 		if ($strategy === self::STRATEGY_IN) {
 			if ($filter === null) {
 				if (!isset($this->referencing[$key])) {
-					$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds()); // TODO: mapper ~ getPrimaryKey($table)
-					$this->referencing[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection); // TODO: mapper ~ getPrimaryKey($table)
+					$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
+					$this->referencing[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection, $this->mapper);
 				}
 			} else {
-				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds()); // TODO: mapper ~ getPrimaryKey($table)
+				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
 				$filter($statement);
 
 				$sql = (string) $statement;
 				$key .= '#' . md5($sql);
 
 				if (!isset($this->referencing[$key])) {
-					$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+					$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper);
 				}
 			}
 		} else { // self::STRATEGY_UNION
 			if ($filter === null) {
 				if (!isset($this->referencing[$key])) {
-					$ids = $this->extractIds(); // TODO: mapper ~ getPrimaryKey($table)
+					$ids = $this->extractIds($primaryKey);
 					if (count($ids) === 0) {
 						$data = array();
 					} else {
@@ -435,17 +446,17 @@ class Result implements \Iterator
 							$this->buildUnionStrategySql($ids, $table, $viaColumn)
 						)->fetchAll();
 					}
-					$this->referencing[$key] = self::getInstance($data, $table, $this->connection);
+					$this->referencing[$key] = self::getInstance($data, $table, $this->connection, $this->mapper);
 				}
 			} else {
-				$ids = $this->extractIds(); // TODO: mapper ~ getPrimaryKey($table)
+				$ids = $this->extractIds($primaryKey);
 				if (count($ids) === 0) {
-					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection);
+					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection, $this->mapper);
 				} else {
 					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filter);
 					$key .= '#' . md5($sql);
 					if (!isset($this->referencing[$key])) {
-						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper);
 					}
 				}
 			}
@@ -457,7 +468,7 @@ class Result implements \Iterator
 	 * @param string $column
 	 * @return array
 	 */
-	private function extractIds($column = 'id') // TODO: mapper ~ make argument required
+	private function extractIds($column)
 	{
 		$ids = array();
 		foreach ($this->data as $data) {

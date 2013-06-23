@@ -11,6 +11,8 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\IMapper;
+
 /**
  * Entity reflection
  *
@@ -18,6 +20,9 @@ namespace LeanMapper\Reflection;
  */
 class EntityReflection extends \ReflectionClass
 {
+
+	/** @var IMapper */
+	private $mapper;
 
 	/** @var Property[] */
 	private $properties;
@@ -28,6 +33,16 @@ class EntityReflection extends \ReflectionClass
 	/** @var string */
 	private $docComment;
 
+
+	/**
+	 * @param mixed $argument
+	 * @param IMapper|null $mapper
+	 */
+	public function __construct($argument, IMapper $mapper = null)
+	{
+		parent::__construct($argument);
+		$this->mapper = $mapper;
+	}
 
 	/**
 	 * Gets requested entity property
@@ -105,7 +120,7 @@ class EntityReflection extends \ReflectionClass
 		foreach ($this->getFamilyLine() as $member) {
 			foreach ($annotationTypes as $annotationType) {
 				foreach (AnnotationsParser::parseAnnotationValues($annotationType, $member->getDocComment()) as $definition) {
-					$property = PropertyFactory::createFromAnnotation($annotationType, $definition, $this);
+					$property = PropertyFactory::createFromAnnotation($annotationType, $definition, $this, $this->mapper);
 					$this->properties[$property->getName()] = $property;
 				}
 			}
