@@ -62,6 +62,27 @@ class Row
 	}
 
 	/**
+	 * Tells whether Row has given field
+	 *
+	 * @param string $name
+	 * @return bool
+	 */
+	public function __isset($name)
+	{
+		return $this->result->hasDataEntry($this->id, $name);
+	}
+
+	/**
+	 * Unsets given field
+	 *
+	 * @param string $name
+	 */
+	public function __unset($name)
+	{
+		$this->result->unsetDataEntry($this->id, $name);
+	}
+
+	/**
 	 * Tells whether row is in modified state
 	 *
 	 * @return bool
@@ -89,10 +110,17 @@ class Row
 		$data = $this->result->getData($this->id);
 		$this->result = Result::getDetachedInstance();
 		foreach ($data as $key => $value) {
-			// TODO: mapper ~ de-translate columns?
 			$this->result->setDataEntry(0, $key, $value);
 		}
 		$this->id = 0;
+	}
+
+	/**
+	 * @param IMapper $mapper
+	 */
+	public function setMapper(IMapper $mapper)
+	{
+		$this->result->setMapper($mapper);
 	}
 
 	/**
@@ -109,11 +137,10 @@ class Row
 	 * @param int $id
 	 * @param string $table
 	 * @param DibiConnection $connection
-	 * @param IMapper $mapper
 	 */
-	public function markAsCreated($id, $table, DibiConnection $connection, IMapper $mapper)
+	public function markAsCreated($id, $table, DibiConnection $connection)
 	{
-		$this->result->markAsCreated($id, $this->id, $table, $connection, $mapper);
+		$this->result->markAsCreated($id, $this->id, $table, $connection);
 		$this->id = $id;
 	}
 

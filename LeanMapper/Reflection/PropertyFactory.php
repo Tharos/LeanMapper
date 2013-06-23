@@ -77,12 +77,13 @@ class PropertyFactory
 			throw new InvalidAnnotationException("It doesn't make sense to have a property containing collection nullable: @$annotationType $annotation");
 		}
 
-		// column name
 		$name = substr($matches[5], 1);
-		if ($mapper !== null) {
-			$name = $mapper->getColumn($reflection->getName(), $name);
+
+		// column name
+		$column = $mapper !== null ? $mapper->getColumn($reflection->getName(), $name) : $name;
+		if (isset($matches[6]) and $matches[6] !== '') {
+			$column = $matches[6];
 		}
-		$column = (isset($matches[6]) and $matches[6] !== '') ? $matches[6] : $name;
 
 		$propertyValuesEnum = null;
 		if (isset($matches[7]) and $matches[7] !== '') {

@@ -16,6 +16,7 @@ use DibiConnection;
 use DibiFluent;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
+use LeanMapper\Exception\InvalidStateException;
 use LeanMapper\Exception\InvalidValueException;
 use LeanMapper\Exception\MemberAccessException;
 use LeanMapper\Exception\RuntimeException;
@@ -338,11 +339,37 @@ abstract class Entity
 	}
 
 	/**
-	 * Marks entity as non-updated (isModified() returns false right after this method call)
+	 * Provides an mapper for entity
+	 *
+	 * @param IMapper $mapper
+	 * @throws InvalidMethodCallException
+	 * @throws InvalidStateException
 	 */
-	public function markAsUpdated()
+	public function useMapper(IMapper $mapper)
 	{
-		$this->row->markAsUpdated();
+		if (!$this->isDetached()) {
+			throw new InvalidMethodCallException('Mapper can only be provided to detached entity.');
+		}
+		$newProperties = $this->getReflection($mapper)->getEntityProperties();
+		foreach ($this->getReflection($this->mapper)->getEntityProperties() as $oldProperty) {
+			if ($oldProperty->getColumn() !== null) {
+				$name = $oldProperty->getName();
+				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
+					throw new InvalidStateException('Inconsistent sets of properties.');
+				}
+				if (isset($this->row->$name)) {
+					$newName = $newProperties[$name]->getColumn();
+					if (isset($this->row->$newName)) {
+						throw new InvalidStateException("Mapping collision on field '$newName'.");
+					}
+					$value = $this->row->$name;
+					unset($this->row->$name);
+					$this->row->$newName = $value;
+				}
+			}
+		}
+		$this->mapper = $mapper;
+		$this->row->setMapper($mapper);
 	}
 
 	/**
@@ -351,12 +378,18 @@ abstract class Entity
 	 * @param int $id
 	 * @param string $table
 	 * @param DibiConnection $connection
-	 * @param IMapper $mapper
 	 */
-	public function markAsCreated($id, $table, DibiConnection $connection, IMapper $mapper)
+	public function markAsCreated($id, $table, DibiConnection $connection)
 	{
-		$this->mapper = $mapper;
-		$this->row->markAsCreated($id, $table, $connection, $mapper);
+		$this->row->markAsCreated($id, $table, $connection);
+	}
+
+	/**
+	 * Marks entity as non-updated (isModified() returns false right after this method call)
+	 */
+	public function markAsUpdated()
+	{
+		$this->row->markAsUpdated();
 	}
 
 	/**
