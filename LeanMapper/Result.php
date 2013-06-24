@@ -211,6 +211,14 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * @return IMapper|null
+	 */
+	public function getMapper()
+	{
+		return $this->mapper;
+	}
+
+	/**
 	 * Marks requested row as non-updated (isModified($id) returns false right after this method call)
 	 *
 	 * @param int $id

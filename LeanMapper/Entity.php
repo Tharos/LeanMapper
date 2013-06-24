@@ -50,20 +50,16 @@ abstract class Entity
 
 	/**
 	 * @param Row|Traversable|array|null $arg
-	 * @param IMapper|null $mapper
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct($arg = null, IMapper $mapper = null)
+	public function __construct($arg = null)
 	{
 		if ($arg instanceof Row) {
 			if ($arg->isDetached()) {
 				throw new InvalidArgumentException('It is not allowed to create entity from detached instance of LeanMapper\Row.');
 			}
-			if ($mapper === null) {
-				throw new InvalidArgumentException('Mapper must be provided when creating entity from instance of LeanMapper\Row.');
-			}
 			$this->row = $arg;
-			$this->mapper = $mapper;
+			$this->mapper = $arg->getMapper();
 		} else {
 			$this->row = Result::getDetachedInstance()->getRow();
 			// TODO: call fields initialization that would use default values from annotations

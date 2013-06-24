@@ -117,9 +117,6 @@ class PropertyFactory
 				throw new InvalidAnnotationException("All special column and table names must be specified in relationship definition when property holds relationship: @$annotationType $annotation");
 			}
 			$column = null;
-			if ($relationship instanceof Relationship\HasOne) {
-				$column = $relationship->getColumnReferencingTargetTable();
-			}
 		}
 		$extra = isset($matches[11]) ? $matches[11] : null;
 

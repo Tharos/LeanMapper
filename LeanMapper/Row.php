@@ -124,6 +124,14 @@ class Row
 	}
 
 	/**
+	 * @return IMapper|null
+	 */
+	public function getMapper()
+	{
+		return $this->result->getMapper();
+	}
+
+	/**
 	 * Marks row as non-updated (isModified() returns false right after this method call)
 	 */
 	public function markAsUpdated()

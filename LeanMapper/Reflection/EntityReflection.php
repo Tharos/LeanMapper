@@ -11,6 +11,7 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\Exception\InvalidStateException;
 use LeanMapper\IMapper;
 
 /**
@@ -117,10 +118,19 @@ class EntityReflection extends \ReflectionClass
 	{
 		$this->properties = array();
 		$annotationTypes = array('property', 'property-read');
+		$columns = array();
 		foreach ($this->getFamilyLine() as $member) {
 			foreach ($annotationTypes as $annotationType) {
 				foreach (AnnotationsParser::parseAnnotationValues($annotationType, $member->getDocComment()) as $definition) {
 					$property = PropertyFactory::createFromAnnotation($annotationType, $definition, $this, $this->mapper);
+					// collision check
+					$column = $property->getColumn();
+					if ($column !== null) {
+						if (isset($columns[$column])) {
+							throw new InvalidStateException("Mapping collision on field '{$property->getName()}' (column $column).");
+						}
+						$columns[$column] = true;
+					}
 					$this->properties[$property->getName()] = $property;
 				}
 			}
