@@ -38,7 +38,7 @@ class AuthorRepository extends Repository
 
 //////////
 
-$authorRepository = new AuthorRepository($connection);
+$authorRepository = new AuthorRepository($connection, $mapper);
 
 $authors = $authorRepository->findAll();
 

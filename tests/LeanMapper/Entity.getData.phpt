@@ -58,7 +58,7 @@ class AuthorRepository extends \LeanMapper\Repository
 
 }
 
-$authorRepository = new AuthorRepository($connection);
+$authorRepository = new AuthorRepository($connection, $mapper);
 
 //////////
 

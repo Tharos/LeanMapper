@@ -32,7 +32,7 @@ $dibiRow = new DibiRow(array(
 	'published' => new ArrayObject
 ));
 
-$book = new Book(Result::getInstance($dibiRow, 'book', $connection)->getRow());
+$book = new Book(Result::getInstance($dibiRow, 'book', $connection, $mapper)->getRow(), $mapper);
 
 Assert::exception(function () use ($book) {
 	$book->published;
@@ -44,7 +44,7 @@ $dibiRow = new DibiRow(array(
 	'published' => new DibiDateTime
 ));
 
-$book = new Book(Result::getInstance($dibiRow, 'book', $connection)->getRow());
+$book = new Book(Result::getInstance($dibiRow, 'book', $connection, $mapper)->getRow(), $mapper);
 
 Assert::type('DibiDateTime', $book->published);
 Assert::type('DateTime', $book->published);

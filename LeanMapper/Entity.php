@@ -359,9 +359,6 @@ abstract class Entity
 				}
 				if (isset($this->row->$name)) {
 					$newName = $newProperties[$name]->getColumn();
-					if (isset($this->row->$newName)) {
-						throw new InvalidStateException("Mapping collision on field '$newName'.");
-					}
 					$value = $this->row->$name;
 					unset($this->row->$name);
 					$this->row->$newName = $value;

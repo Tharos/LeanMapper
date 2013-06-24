@@ -39,9 +39,6 @@ class Author extends BaseEntity
 class AuthorRepository extends LeanMapper\Repository
 {
 
-	protected $defaultEntityNamespace = null;
-
-
 	public function find($id)
 	{
 		return $this->createEntity(
@@ -53,7 +50,7 @@ class AuthorRepository extends LeanMapper\Repository
 
 //////////
 
-$authorRepository = new AuthorRepository($connection);
+$authorRepository = new AuthorRepository($connection, $mapper);
 
 $author = $authorRepository->find(1);
 
