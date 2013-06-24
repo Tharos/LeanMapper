@@ -39,6 +39,12 @@ class Result implements \Iterator
 	/** @var array */
 	private $modified = array();
 
+	/** @var array */
+	private $added = array();
+
+	/** @var array */
+	private $removed = array();
+
 	/** @var string */
 	private $table;
 
@@ -152,6 +158,37 @@ class Result implements \Iterator
 		}
 		$this->modified[$id][$key] = true;
 		$this->data[$id][$key] = $value;
+	}
+
+	/**
+	 * @param array $values
+	 */
+	public function addDataEntry(array $values)
+	{
+		$this->data[] = $values;
+		$this->added[] = $values;
+	}
+
+	/**
+	 * @param array $values
+	 */
+	public function removeDataEntry(array $values)
+	{
+		foreach ($this->data as $key => $entry) {
+			if ($entry === $values) {
+				$this->removed[] = $entry;
+				unset($this->data[$key], $this->modified[$key]);
+				break;
+			}
+		}
+	}
+
+	/**
+	 * @return DataDifference
+	 */
+	public function createDataDifference()
+	{
+		return new DataDifference($this->added, $this->removed);
 	}
 
 	/**
