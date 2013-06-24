@@ -426,7 +426,7 @@ class Result implements \Iterator
 	private function getReferencedResult($table, $viaColumn, Closure $filter = null)
 	{
 		$key = "$table($viaColumn)";
-		$primaryKey = $this->mapper->getPrimaryKey($this->table);
+		$primaryKey = $this->mapper->getPrimaryKey($table);
 		if ($filter === null) {
 			if (!isset($this->referenced[$key])) {
 				$data = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn))
