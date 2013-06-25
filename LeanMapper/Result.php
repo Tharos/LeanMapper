@@ -346,8 +346,11 @@ class Result implements \Iterator
 	 */
 	public function getReferencedRow($id, $table, Closure $filter = null, $viaColumn = null)
 	{
-		return $this->getReferencedResult($table, $filter, $viaColumn)
-				->getRow($this->getDataEntry($id, $viaColumn));
+		$result = $this->getReferencedResult($table, $filter, $viaColumn);
+		if ($viaColumn === null) {
+			$viaColumn = $this->mapper->getRelationshipColumn($this->table, $table);
+		}
+		return $result->getRow($this->getDataEntry($id, $viaColumn));
 	}
 
 	/**
