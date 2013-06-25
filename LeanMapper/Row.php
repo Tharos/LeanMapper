@@ -234,4 +234,27 @@ class Row
 		$this->result->removeFromReferencing($values, $table, $filter, $viaColumn, $strategy);
 	}
 
+	/**
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 * @return DataDifference
+	 */
+	public function createReferencingDataDifference($table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	{
+		return $this->result->createReferencingDataDifference($table, $filter, $viaColumn, $strategy);
+	}
+
+	/**
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 */
+	public function cleanReferencingAddedAndRemovedMeta($table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	{
+		$this->result->cleanReferencingAddedAndRemovedMeta($table, $filter, $viaColumn, $strategy);
+	}
+
 }

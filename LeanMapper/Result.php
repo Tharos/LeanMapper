@@ -171,11 +171,12 @@ class Result implements \Iterator
 
 	/**
 	 * @param array $values
+	 * @throws InvalidArgumentException
 	 */
 	public function removeDataEntry(array $values)
 	{
 		foreach ($this->data as $key => $entry) {
-			if ($entry === $values) {
+			if ($values === array_intersect_assoc($entry, $values)) {
 				$this->removed[] = $entry;
 				unset($this->data[$key], $this->modified[$key]);
 				break;
@@ -417,6 +418,31 @@ class Result implements \Iterator
 	{
 		$this->getReferencingResult($table, $filter, $viaColumn, $strategy)
 				->removeDataEntry($values);
+	}
+
+	/**
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 * @return DataDifference
+	 */
+	public function createReferencingDataDifference($table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	{
+		return $this->getReferencingResult($table, $filter, $viaColumn, $strategy)
+				->createDataDifference();
+	}
+
+	/**
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 */
+	public function cleanReferencingAddedAndRemovedMeta($table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	{
+		$this->getReferencingResult($table, $filter, $viaColumn, $strategy)
+				->cleanAddedAndRemovedMeta();
 	}
 
 	//========== interface \Iterator ====================
