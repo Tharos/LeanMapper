@@ -57,10 +57,10 @@ class Result implements \Iterator
 	/** @var array */
 	private $keys;
 
-	/** @var array */
+	/** @var self[] */
 	private $referenced = array();
 
-	/** @var array */
+	/** @var self[] */
 	private $referencing = array();
 
 

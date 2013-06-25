@@ -37,6 +37,14 @@ class DataDifference
 	}
 
 	/**
+	 * @return bool
+	 */
+	public function mayHaveAny()
+	{
+		return !empty($this->added) or !empty($this->removed);
+	}
+
+	/**
 	 * @param mixed $pivot
 	 * @return array
 	 * @throws InvalidArgumentException
