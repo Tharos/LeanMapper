@@ -305,34 +305,6 @@ abstract class Entity
 	}
 
 	/**
-	 * Tells whether entity is in modified state
-	 *
-	 * @return bool
-	 */
-	public function isModified()
-	{
-		return $this->row->isModified();
-	}
-
-	/**
-	 * Tells whether entity is in detached state (like newly created entity)
-	 *
-	 * @return bool
-	 */
-	public function isDetached()
-	{
-		return $this->row->isDetached();
-	}
-
-	/**
-	 * Marks entity as detached (it means non-persisted)
-	 */
-	public function detach()
-	{
-		$this->row->detach();
-	}
-
-	/**
 	 * Returns array of high-level fields with values
 	 *
 	 * @return array
@@ -373,6 +345,34 @@ abstract class Entity
 	public function getModifiedRowData()
 	{
 		return $this->row->getModifiedData();
+	}
+
+	/**
+	 * Tells whether entity is in modified state
+	 *
+	 * @return bool
+	 */
+	public function isModified()
+	{
+		return $this->row->isModified();
+	}
+
+	/**
+	 * Tells whether entity is in detached state (like newly created entity)
+	 *
+	 * @return bool
+	 */
+	public function isDetached()
+	{
+		return $this->row->isDetached();
+	}
+
+	/**
+	 * Marks entity as detached (it means non-persisted)
+	 */
+	public function detach()
+	{
+		$this->row->detach();
 	}
 
 	/**

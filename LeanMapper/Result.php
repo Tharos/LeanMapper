@@ -111,6 +111,22 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * @param IMapper $mapper
+	 */
+	public function setMapper(IMapper $mapper)
+	{
+		$this->mapper = $mapper;
+	}
+
+	/**
+	 * @return IMapper|null
+	 */
+	public function getMapper()
+	{
+		return $this->mapper;
+	}
+
+	/**
 	 * Creates new LeanMapper\Row instance pointing to requested row in LeanMapper\Result
 	 *
 	 * @param int $id
@@ -161,39 +177,6 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * @param array $values
-	 */
-	public function addDataEntry(array $values)
-	{
-		$this->data[] = $values;
-		$this->added[] = $values;
-		$this->cleanReferencedResultsCache();
-	}
-
-	/**
-	 * @param array $values
-	 * @throws InvalidArgumentException
-	 */
-	public function removeDataEntry(array $values)
-	{
-		foreach ($this->data as $key => $entry) {
-			if ($values === array_intersect_assoc($entry, $values)) {
-				$this->removed[] = $entry;
-				unset($this->data[$key], $this->modified[$key]);
-				break;
-			}
-		}
-	}
-
-	/**
-	 * @return DataDifference
-	 */
-	public function createDataDifference()
-	{
-		return new DataDifference($this->added, $this->removed);
-	}
-
-	/**
 	 * Tells whether row with given id has given field
 	 *
 	 * @param mixed $id
@@ -221,6 +204,67 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * @param array $values
+	 */
+	public function addDataEntry(array $values)
+	{
+		$this->data[] = $values;
+		$this->added[] = $values;
+		$this->cleanReferencedResultsCache();
+	}
+
+	/**
+	 * @param array $values
+	 * @throws InvalidArgumentException
+	 */
+	public function removeDataEntry(array $values)
+	{
+		foreach ($this->data as $key => $entry) {
+			if ($values === array_intersect_assoc($entry, $values)) {
+				$this->removed[] = $entry;
+				unset($this->data[$key], $this->modified[$key]);
+				break;
+			}
+		}
+	}
+
+	/**
+	 * Returns array of fields and values of requested row
+	 *
+	 * @param int $id
+	 * @return array
+	 */
+	public function getData($id)
+	{
+		return isset($this->data[$id]) ? $this->data[$id] : array();
+	}
+
+	/**
+	 * Returns array of modified fields and values of requested row
+	 *
+	 * @param int $id
+	 * @return array
+	 */
+	public function getModifiedData($id)
+	{
+		$result = array();
+		if (isset($this->modified[$id])) {
+			foreach (array_keys($this->modified[$id]) as $field) {
+				$result[$field] = $this->data[$id][$field];
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * @return DataDifference
+	 */
+	public function createDataDifference()
+	{
+		return new DataDifference($this->added, $this->removed);
+	}
+
+	/**
 	 * Tells whether requested row is in modified state
 	 *
 	 * @param int $id
@@ -239,22 +283,6 @@ class Result implements \Iterator
 	public function isDetached()
 	{
 		return $this->connection === null or $this->table === null or $this->mapper === null;
-	}
-
-	/**
-	 * @param IMapper $mapper
-	 */
-	public function setMapper(IMapper $mapper)
-	{
-		$this->mapper = $mapper;
-	}
-
-	/**
-	 * @return IMapper|null
-	 */
-	public function getMapper()
-	{
-		return $this->mapper;
 	}
 
 	/**
@@ -307,34 +335,6 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Returns array of fields and values of requested row
-	 *
-	 * @param int $id
-	 * @return array
-	 */
-	public function getData($id)
-	{
-		return isset($this->data[$id]) ? $this->data[$id] : array();
-	}
-
-	/**
-	 * Returns array of modified fields and values of requested row
-	 *
-	 * @param int $id
-	 * @return array
-	 */
-	public function getModifiedData($id)
-	{
-		$result = array();
-		if (isset($this->modified[$id])) {
-			foreach (array_keys($this->modified[$id]) as $field) {
-				$result[$field] = $this->data[$id][$field];
-			}
-		}
-		return $result;
-	}
-
-	/**
 	 * Creates new LeanMapper\Row instance pointing to requested row in referenced result
 	 *
 	 * @param int $id
@@ -380,25 +380,6 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Clean in-memory cache of referenced results
-	 *
-	 * @param string|null $table
-	 * @param string|null $column
-	 */
-	public function cleanReferencedResultsCache($table = null, $column = null)
-	{
-		if ($table === null or $column === null) {
-			$this->referenced = array();
-		} else {
-			foreach ($this->referenced as $key => $value) {
-				if (preg_match("~^$table\\($column\\)(#.*)?$~", $key)) {
-					unset($this->referenced[$key]);
-				}
-			}
-		}
-	}
-
-	/**
 	 * @param array $values
 	 * @param string $table
 	 * @param Closure|null $filter
@@ -435,6 +416,25 @@ class Result implements \Iterator
 	{
 		return $this->getReferencingResult($table, $filter, $viaColumn, $strategy)
 				->createDataDifference();
+	}
+
+	/**
+	 * Clean in-memory cache of referenced results
+	 *
+	 * @param string|null $table
+	 * @param string|null $column
+	 */
+	public function cleanReferencedResultsCache($table = null, $column = null)
+	{
+		if ($table === null or $column === null) {
+			$this->referenced = array();
+		} else {
+			foreach ($this->referenced as $key => $value) {
+				if (preg_match("~^$table\\($column\\)(#.*)?$~", $key)) {
+					unset($this->referenced[$key]);
+				}
+			}
+		}
 	}
 
 	/**
