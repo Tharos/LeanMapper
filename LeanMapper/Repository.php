@@ -71,7 +71,7 @@ abstract class Repository
 				$values = $this->beforeCreate($entity->getModifiedRowData());
 				$this->connection->insert($this->getTable(), $values)
 						->execute(); // dibi::IDENTIFIER leads to exception when there is no column with AUTO_INCREMENT
-				$id = isset($values[$idField]) ? $values[$idField] : $this->connection->getInsertId();
+				$id = isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
 				$entity->markAsCreated($id, $this->getTable(), $this->connection);
 
 				return $id;
@@ -85,6 +85,7 @@ abstract class Repository
 				return $result;
 			}
 		}
+		$this->persistHasManyChanges($entity);
 	}
 
 	/**
@@ -110,6 +111,36 @@ abstract class Repository
 		$this->connection->delete($this->getTable())
 				->where('%n = ?', $primaryKey, $id)
 				->execute();
+	}
+
+	/**
+	 * @param Entity $entity
+	 */
+	protected function persistHasManyChanges(Entity $entity)
+	{
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+
+		$multiInsert = array();
+		foreach ($entity->getHasManyRowDifferences() as $key => $difference) {
+			list($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable) = explode(':', $key);
+			foreach ($difference as $value => $count) {
+				if ($count > 0) {
+					for ($i = 0; $i < $count; $i++) {
+						$multiInsert[] = array(
+							$columnReferencingSourceTable => $entity->$idField,
+							$columnReferencingTargetTable => $value,
+						);
+					}
+				} else {
+					$this->connection->delete($relationshipTable)->where('%n = ?', $columnReferencingTargetTable, $value)
+							->limit(- $count)->execute();
+				}
+			}
+		}
+		if (!empty($multiInsert)) {
+			$this->connection->query('INSERT INTO %n %ex', $relationshipTable, $multiInsert);
+		}
 	}
 
 	/**

@@ -368,7 +368,7 @@ abstract class Entity
 					$relationship->getStrategy()
 				);
 				if ($difference->mayHaveAny()) {
-					$differences[$relationship->getColumnReferencingSourceTable() . ':' . $relationship->getRelationshipTable()][$relationship->getColumnReferencingTargetTable()] = $difference->getByPivot($relationship->getColumnReferencingTargetTable());
+					$differences[$relationship->getColumnReferencingSourceTable() . ':' . $relationship->getRelationshipTable() . ':' . $relationship->getColumnReferencingTargetTable()] = $difference->getByPivot($relationship->getColumnReferencingTargetTable());
 				}
 			}
 		}
