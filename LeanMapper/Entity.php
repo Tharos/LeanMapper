@@ -49,7 +49,7 @@ abstract class Entity
 	protected static $reflections = array();
 
 	/** @var array */
-	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getReflection', 'getRowHasManyDifferences');
+	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getReflection', 'getHasManyRowDifferences');
 
 
 	/**
@@ -361,10 +361,9 @@ abstract class Entity
 		foreach ($this->getReflection($this->mapper)->getEntityProperties() as $property) {
 			if ($property->hasRelationship() and ($property->getRelationship() instanceof Relationship\HasMany)) {
 				$relationship = $property->getRelationship();
-				$filters = $property->getFilters(0);
 				$difference = $this->row->createReferencingDataDifference(
 					$relationship->getRelationshipTable(),
-					$filters !== null ? $this->getFilterCallback($property->getFilters(0), array()) : null,
+					null,
 					$relationship->getColumnReferencingSourceTable(),
 					$relationship->getStrategy()
 				);
