@@ -167,6 +167,7 @@ class Result implements \Iterator
 	{
 		$this->data[] = $values;
 		$this->added[] = $values;
+		$this->cleanReferencedResultsCache();
 	}
 
 	/**

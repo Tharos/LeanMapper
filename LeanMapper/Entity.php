@@ -185,6 +185,10 @@ abstract class Entity
 					}
 					$this->row->$column = $value;
 				} else {
+					$type = $property->getType();
+					if (!($value instanceof $type)) {
+						throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
+					}
 					if ($property->hasRelationship()) {
 						if (!($value instanceof Entity)) {
 							throw new InvalidValueException("Only entities can be set via magic __set on field with relationships.");
@@ -204,10 +208,6 @@ abstract class Entity
 					} else {
 						if (!is_object($value)) {
 							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . gettype($value) . " given.");
-						}
-						$type = $property->getType();
-						if (!($value instanceof $type)) {
-							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
 						}
 						$this->row->$column = $value;
 					}
@@ -231,11 +231,14 @@ abstract class Entity
 		if (strlen($name) < 4) {
 			throw $e;
 		}
-		$prefix = substr($name, 0, 3);
-		if ($prefix === 'get') {
+		if (substr($name, 0, 3) === 'get') {
 			return $this->__get(lcfirst(substr($name, 3)), $arguments);
-		} elseif ($prefix === 'set') {
+		} elseif (substr($name, 0, 3) === 'set') {
 			$this->__set(lcfirst(substr($name, 3)), $arguments);
+		} elseif (substr($name, 0, 5) === 'addTo') {
+			$this->addTo(lcfirst(substr($name, 5)), $arguments);
+		} elseif (substr($name, 0, 5) === 'removeFrom') {
+			$this->removeFrom(lcfirst(substr($name, 5)), $arguments);
 		} else {
 			throw $e;
 		}
@@ -261,6 +264,44 @@ abstract class Entity
 				$this->__set($field, $value);
 			}
 		}
+	}
+
+	/**
+	 * @param string $name
+	 * @param array $arguments
+	 * @throws InvalidMethodCallException
+	 * @throws InvalidArgumentException
+	 * @throws InvalidValueException
+	 */
+	public function addTo($name, array $arguments)
+	{
+		$value = array_shift($arguments);
+		if ($value === null) {
+			throw new InvalidArgumentException("Invalid argument given.");
+		}
+		$property = $this->getReflection($this->mapper)->getEntityProperty($name);
+		if ($property === null or !$property->hasRelationship() or !($property->getRelationship() instanceof Relationship\HasMany)) {
+			throw new InvalidMethodCallException("Cannot call addTo method with $name property. Only properties with m:hasMany relationship can be managed this way.");
+		}
+		$relationship = $property->getRelationship();
+		if ($value instanceof Entity) {
+			if ($value->isDetached()) {
+				throw new InvalidArgumentException('Cannot add detached entity ' . get_class($value) . '.');
+			}
+			$type = $property->getType();
+			if (!($value instanceof $type)) {
+				throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
+			}
+			$data = $value->getRowData();
+			$value = $data[$this->mapper->getPrimaryKey($relationship->getTargetTable())];
+		}
+		$table = $this->mapper->getTable($this->getReflection($this->mapper)->getName());
+		$values = array(
+			$relationship->getColumnReferencingSourceTable() => $this->row->{$this->mapper->getPrimaryKey($table)},
+			$relationship->getColumnReferencingTargetTable() => $value,
+		);
+		$filter = ($set = $property->getFilters(0)) ? $this->getFilterCallback($set, $arguments) : null;
+		$this->row->addToReferencing($values, $relationship->getRelationshipTable(), $filter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 	}
 
 	/**
