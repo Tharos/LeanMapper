@@ -210,4 +210,28 @@ class Row
 		return $this->result->getReferencingRows($this->id, $table, $filter, $viaColumn, $strategy);
 	}
 
+	/**
+	 * @param array $values
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 */
+	public function addToReferencing(array $values, $table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	{
+		$this->result->addToReferencing($values, $table, $filter, $viaColumn, $strategy);
+	}
+
+	/**
+	 * @param array $values
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 */
+	public function removeFromReferencing(array $values, $table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	{
+		$this->result->removeFromReferencing($values, $table, $filter, $viaColumn, $strategy);
+	}
+
 }

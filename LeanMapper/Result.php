@@ -298,6 +298,12 @@ class Result implements \Iterator
 		$this->connection = $connection;
 	}
 
+	public function cleanAddedAndRemovedMeta()
+	{
+		$this->added = array();
+		$this->removed = array();
+	}
+
 	/**
 	 * Returns array of fields and values of requested row
 	 *
@@ -338,13 +344,7 @@ class Result implements \Iterator
 	 */
 	public function getReferencedRow($id, $table, Closure $filter = null, $viaColumn = null)
 	{
-		if ($this->isDetached()) {
-			throw new InvalidStateException('Cannot get referenced rows for detached result.');
-		}
-		if ($viaColumn === null) {
-			$viaColumn = $this->mapper->getRelationshipColumn($this->table, $table);
-		}
-		return $this->getReferencedResult($table, $viaColumn, $filter)
+		return $this->getReferencedResult($table, $filter, $viaColumn)
 				->getRow($this->getDataEntry($id, $viaColumn));
 	}
 
@@ -356,26 +356,15 @@ class Result implements \Iterator
 	 * @param callable|null $filter
 	 * @param string|null $viaColumn
 	 * @param string $strategy
-	 * @throws InvalidArgumentException
 	 * @throws InvalidStateException
 	 * @return Row[]
 	 */
-	public function getReferencingRows($id, $table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	public function getReferencingRows($id, $table, Closure $filter = null, $viaColumn = null, $strategy = null)
 	{
-		if ($strategy === null) {
-			$strategy = self::STRATEGY_IN;
-		} else {
-			if ($strategy !== self::STRATEGY_IN and $strategy !== self::STRATEGY_UNION) {
-				throw new InvalidArgumentException("Unsupported SQL strategy given: $strategy.");
-			}
-		}
-		if ($this->isDetached()) {
-			throw new InvalidStateException('Cannot get referencing rows for detached result.');
-		}
+		$collection = $this->getReferencingResult($table, $filter, $viaColumn, $strategy);
 		if ($viaColumn === null) {
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
-		$collection = $this->getReferencingResult($table, $viaColumn, $filter, $strategy);
 		$rows = array();
 		foreach ($collection as $key => $row) {
 			if ($row[$viaColumn] === $id) {
@@ -402,6 +391,32 @@ class Result implements \Iterator
 				}
 			}
 		}
+	}
+
+	/**
+	 * @param array $values
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 */
+	public function addToReferencing(array $values, $table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	{
+		$this->getReferencingResult($table, $filter, $viaColumn, $strategy)
+				->addDataEntry($values);
+	}
+
+	/**
+	 * @param array $values
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 */
+	public function removeFromReferencing(array $values, $table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	{
+		$this->getReferencingResult($table, $filter, $viaColumn, $strategy)
+				->removeDataEntry($values);
 	}
 
 	//========== interface \Iterator ====================
@@ -464,12 +479,19 @@ class Result implements \Iterator
 
 	/**
 	 * @param string $table
-	 * @param string $viaColumn
 	 * @param Closure|null $filter
+	 * @param string $viaColumn
+	 * @throws InvalidStateException
 	 * @return self
 	 */
-	private function getReferencedResult($table, $viaColumn, Closure $filter = null)
+	private function getReferencedResult($table, Closure $filter = null, $viaColumn = null)
 	{
+		if ($this->isDetached()) {
+			throw new InvalidStateException('Cannot get referenced result for detached result.');
+		}
+		if ($viaColumn === null) {
+			$viaColumn = $this->mapper->getRelationshipColumn($this->table, $table);
+		}
 		$key = "$table($viaColumn)";
 		$primaryKey = $this->mapper->getPrimaryKey($table);
 		if ($filter === null) {
@@ -494,13 +516,21 @@ class Result implements \Iterator
 
 	/**
 	 * @param string $table
-	 * @param string $viaColumn
 	 * @param Closure|null $filter
+	 * @param string $viaColumn
 	 * @param string $strategy
+	 * @throws InvalidStateException
 	 * @return self
 	 */
-	private function getReferencingResult($table, $viaColumn, Closure $filter = null, $strategy)
+	private function getReferencingResult($table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
 	{
+		$strategy = $this->translateStrategy($strategy);
+		if ($this->isDetached()) {
+			throw new InvalidStateException('Cannot get referencing rows for detached result.');
+		}
+		if ($viaColumn === null) {
+			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
+		}
 		$key = "$table($viaColumn)$strategy";
 		$primaryKey = $this->mapper->getPrimaryKey($this->table);
 		if ($strategy === self::STRATEGY_IN) {
@@ -602,6 +632,23 @@ class Result implements \Iterator
 	private function createTableSelection($table)
 	{
 		return $this->connection->select('%n.*', $table)->from($table);
+	}
+
+	/**
+	 * @param string|null $strategy
+	 * @throws InvalidArgumentException
+	 * @return string
+	 */
+	private function translateStrategy($strategy)
+	{
+		if ($strategy === null) {
+			$strategy = self::STRATEGY_IN;
+		} else {
+			if ($strategy !== self::STRATEGY_IN and $strategy !== self::STRATEGY_UNION) {
+				throw new InvalidArgumentException("Unsupported SQL strategy given: $strategy.");
+			}
+		}
+		return $strategy;
 	}
 
 }
