@@ -81,11 +81,12 @@ abstract class Repository
 						->where('%n = ?', $primaryKey, $entity->$idField)
 						->execute();
 				$entity->markAsUpdated();
-
-				return $result;
 			}
 		}
 		$this->persistHasManyChanges($entity);
+		if (isset($result)) {
+			return $result;
+		}
 	}
 
 	/**
