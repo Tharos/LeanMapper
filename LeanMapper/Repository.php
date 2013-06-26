@@ -57,10 +57,11 @@ abstract class Repository
 	 * Stores modified fields of entity into database or creates new row in database when entity is in detached state
 	 *
 	 * @param Entity $entity
-	 * @return int
+	 * @return mixed
 	 */
 	public function persist(Entity $entity)
 	{
+		$result = null;
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
 
@@ -68,25 +69,25 @@ abstract class Repository
 		if ($entity->isModified()) {
 			if ($entity->isDetached()) {
 				$entity->useMapper($this->mapper);
+
 				$values = $this->beforeCreate($entity->getModifiedRowData());
-				$this->connection->insert($this->getTable(), $values)
-						->execute(); // dibi::IDENTIFIER leads to exception when there is no column with AUTO_INCREMENT
+				$this->connection->query(
+					'INSERT INTO %n %v', $this->getTable(), $values
+				);
 				$id = isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
 				$entity->markAsCreated($id, $this->getTable(), $this->connection);
 
 				return $id;
 			} else {
 				$values = $this->beforeUpdate($entity->getModifiedRowData());
-				$result = $this->connection->update($this->getTable(), $values)
-						->where('%n = ?', $primaryKey, $entity->$idField)
-						->execute();
+				$result = $this->connection->query(
+					'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $entity->$idField
+				);
 				$entity->markAsUpdated();
 			}
 		}
 		$this->persistHasManyChanges($entity);
-		if (isset($result)) {
-			return $result;
-		}
+		return $result;
 	}
 
 	/**
@@ -109,9 +110,9 @@ abstract class Repository
 			$id = $arg->$idField;
 			$arg->detach();
 		}
-		$this->connection->delete($this->getTable())
-				->where('%n = ?', $primaryKey, $id)
-				->execute();
+		$this->connection->query(
+			'DELETE FROM %n WHERE %n = ?', $this->getTable(), $primaryKey, $id
+		);
 	}
 
 	/**
@@ -134,13 +135,16 @@ abstract class Repository
 						);
 					}
 				} else {
-					$this->connection->delete($relationshipTable)->where('%n = ?', $columnReferencingTargetTable, $value)
-							->limit(- $count)->execute();
+					$this->connection->query(
+						'DELETE FROM %n WHERE %n = ? %lmt', $relationshipTable, $columnReferencingTargetTable, $value, - $count
+					);
 				}
 			}
 		}
 		if (!empty($multiInsert)) {
-			$this->connection->query('INSERT INTO %n %ex', $relationshipTable, $multiInsert);
+			$this->connection->query(
+				'INSERT INTO %n %ex', $relationshipTable, $multiInsert
+			);
 		}
 	}
 
