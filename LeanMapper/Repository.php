@@ -57,10 +57,11 @@ abstract class Repository
 	 * Stores modified fields of entity into database or creates new row in database when entity is in detached state
 	 *
 	 * @param Entity $entity
-	 * @return int
+	 * @return mixed
 	 */
 	public function persist(Entity $entity)
 	{
+		$result = null;
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
 
@@ -68,23 +69,25 @@ abstract class Repository
 		if ($entity->isModified()) {
 			if ($entity->isDetached()) {
 				$entity->useMapper($this->mapper);
+
 				$values = $this->beforeCreate($entity->getModifiedRowData());
-				$this->connection->insert($this->getTable(), $values)
-						->execute(); // dibi::IDENTIFIER leads to exception when there is no column with AUTO_INCREMENT
-				$id = isset($values[$idField]) ? $values[$idField] : $this->connection->getInsertId();
+				$this->connection->query(
+					'INSERT INTO %n %v', $this->getTable(), $values
+				);
+				$id = isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
 				$entity->markAsCreated($id, $this->getTable(), $this->connection);
 
 				return $id;
 			} else {
 				$values = $this->beforeUpdate($entity->getModifiedRowData());
-				$result = $this->connection->update($this->getTable(), $values)
-						->where('%n = ?', $primaryKey, $entity->$idField)
-						->execute();
+				$result = $this->connection->query(
+					'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $entity->$idField
+				);
 				$entity->markAsUpdated();
-
-				return $result;
 			}
 		}
+		$this->persistHasManyChanges($entity);
+		return $result;
 	}
 
 	/**
@@ -107,9 +110,42 @@ abstract class Repository
 			$id = $arg->$idField;
 			$arg->detach();
 		}
-		$this->connection->delete($this->getTable())
-				->where('%n = ?', $primaryKey, $id)
-				->execute();
+		$this->connection->query(
+			'DELETE FROM %n WHERE %n = ?', $this->getTable(), $primaryKey, $id
+		);
+	}
+
+	/**
+	 * @param Entity $entity
+	 */
+	protected function persistHasManyChanges(Entity $entity)
+	{
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+
+		$multiInsert = array();
+		foreach ($entity->getHasManyRowDifferences() as $key => $difference) {
+			list($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable) = explode(':', $key);
+			foreach ($difference as $value => $count) {
+				if ($count > 0) {
+					for ($i = 0; $i < $count; $i++) {
+						$multiInsert[] = array(
+							$columnReferencingSourceTable => $entity->$idField,
+							$columnReferencingTargetTable => $value,
+						);
+					}
+				} else {
+					$this->connection->query(
+						'DELETE FROM %n WHERE %n = ? %lmt', $relationshipTable, $columnReferencingTargetTable, $value, - $count
+					);
+				}
+			}
+		}
+		if (!empty($multiInsert)) {
+			$this->connection->query(
+				'INSERT INTO %n %ex', $relationshipTable, $multiInsert
+			);
+		}
 	}
 
 	/**

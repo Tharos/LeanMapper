@@ -83,6 +83,42 @@ class Row
 	}
 
 	/**
+	 * @param IMapper $mapper
+	 */
+	public function setMapper(IMapper $mapper)
+	{
+		$this->result->setMapper($mapper);
+	}
+
+	/**
+	 * @return IMapper|null
+	 */
+	public function getMapper()
+	{
+		return $this->result->getMapper();
+	}
+
+	/**
+	 * Returns array of fields with values
+	 *
+	 * @return array
+	 */
+	public function getData()
+	{
+		return $this->result->getData($this->id);
+	}
+
+	/**
+	 * Returns array of modified fields with new values
+	 *
+	 * @return array
+	 */
+	public function getModifiedData()
+	{
+		return $this->result->getModifiedData($this->id);
+	}
+
+	/**
 	 * Tells whether row is in modified state
 	 *
 	 * @return bool
@@ -116,22 +152,6 @@ class Row
 	}
 
 	/**
-	 * @param IMapper $mapper
-	 */
-	public function setMapper(IMapper $mapper)
-	{
-		$this->result->setMapper($mapper);
-	}
-
-	/**
-	 * @return IMapper|null
-	 */
-	public function getMapper()
-	{
-		return $this->result->getMapper();
-	}
-
-	/**
 	 * Marks row as non-updated (isModified() returns false right after this method call)
 	 */
 	public function markAsUpdated()
@@ -150,37 +170,6 @@ class Row
 	{
 		$this->result->markAsCreated($id, $this->id, $table, $connection);
 		$this->id = $id;
-	}
-
-	/**
-	 * Returns array of fields with values
-	 *
-	 * @return array
-	 */
-	public function getData()
-	{
-		return $this->result->getData($this->id);
-	}
-
-	/**
-	 * Returns array of modified fields with new values
-	 *
-	 * @return array
-	 */
-	public function getModifiedData()
-	{
-		return $this->result->getModifiedData($this->id);
-	}
-
-	/**
-	 * Clean in-memory cache of referenced rows
-	 *
-	 * @param string|null $table
-	 * @param string|null $column
-	 */
-	public function cleanReferencedRowsCache($table = null, $column = null)
-	{
-		$this->result->cleanReferencedResultsCache($table, $column);
 	}
 
 	/**
@@ -208,6 +197,64 @@ class Row
 	public function referencing($table, Closure $filter = null, $viaColumn = null, $strategy = null)
 	{
 		return $this->result->getReferencingRows($this->id, $table, $filter, $viaColumn, $strategy);
+	}
+
+	/**
+	 * @param array $values
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 */
+	public function addToReferencing(array $values, $table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	{
+		$this->result->addToReferencing($values, $table, $filter, $viaColumn, $strategy);
+	}
+
+	/**
+	 * @param array $values
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 */
+	public function removeFromReferencing(array $values, $table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	{
+		$this->result->removeFromReferencing($values, $table, $filter, $viaColumn, $strategy);
+	}
+
+	/**
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 * @return DataDifference
+	 */
+	public function createReferencingDataDifference($table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	{
+		return $this->result->createReferencingDataDifference($table, $filter, $viaColumn, $strategy);
+	}
+
+	/**
+	 * Clean in-memory cache of referenced rows
+	 *
+	 * @param string|null $table
+	 * @param string|null $column
+	 */
+	public function cleanReferencedRowsCache($table = null, $column = null)
+	{
+		$this->result->cleanReferencedResultsCache($table, $column);
+	}
+
+	/**
+	 * @param string $table
+	 * @param Closure|null $filter
+	 * @param string|null $viaColumn
+	 * @param string|null $strategy
+	 */
+	public function cleanReferencingAddedAndRemovedMeta($table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	{
+		$this->result->cleanReferencingAddedAndRemovedMeta($table, $filter, $viaColumn, $strategy);
 	}
 
 }

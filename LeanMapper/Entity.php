@@ -35,6 +35,10 @@ use Traversable;
 abstract class Entity
 {
 
+	const ACTION_ADD = 'add';
+
+	const ACTION_REMOVE = 'remove';
+
 	/** @var Row */
 	protected $row;
 
@@ -45,7 +49,7 @@ abstract class Entity
 	protected static $reflections = array();
 
 	/** @var array */
-	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getReflection');
+	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getReflection', 'getHasManyRowDifferences');
 
 
 	/**
@@ -185,6 +189,10 @@ abstract class Entity
 					}
 					$this->row->$column = $value;
 				} else {
+					$type = $property->getType();
+					if (!($value instanceof $type)) {
+						throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
+					}
 					if ($property->hasRelationship()) {
 						if (!($value instanceof Entity)) {
 							throw new InvalidValueException("Only entities can be set via magic __set on field with relationships.");
@@ -204,10 +212,6 @@ abstract class Entity
 					} else {
 						if (!is_object($value)) {
 							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . gettype($value) . " given.");
-						}
-						$type = $property->getType();
-						if (!($value instanceof $type)) {
-							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
 						}
 						$this->row->$column = $value;
 					}
@@ -231,11 +235,14 @@ abstract class Entity
 		if (strlen($name) < 4) {
 			throw $e;
 		}
-		$prefix = substr($name, 0, 3);
-		if ($prefix === 'get') {
+		if (substr($name, 0, 3) === 'get') {
 			return $this->__get(lcfirst(substr($name, 3)), $arguments);
-		} elseif ($prefix === 'set') {
+		} elseif (substr($name, 0, 3) === 'set') {
 			$this->__set(lcfirst(substr($name, 3)), $arguments);
+		} elseif (substr($name, 0, 5) === 'addTo' and strlen($name) > 5) {
+			$this->addToOrRemoveFrom(self::ACTION_ADD, lcfirst(substr($name, 5)), array_shift($arguments));
+		} elseif (substr($name, 0, 10) === 'removeFrom' and strlen($name) > 10) {
+			$this->addToOrRemoveFrom(self::ACTION_REMOVE, lcfirst(substr($name, 10)), array_shift($arguments));
 		} else {
 			throw $e;
 		}
@@ -264,31 +271,42 @@ abstract class Entity
 	}
 
 	/**
-	 * Tells whether entity is in modified state
-	 *
-	 * @return bool
+	 * @param string $name
+	 * @param mixed $arg
+	 * @throws InvalidMethodCallException
+	 * @throws InvalidArgumentException
+	 * @throws InvalidValueException
 	 */
-	public function isModified()
+	public function removeFrom($name, $arg)
 	{
-		return $this->row->isModified();
-	}
-
-	/**
-	 * Tells whether entity is in detached state (like newly created entity)
-	 *
-	 * @return bool
-	 */
-	public function isDetached()
-	{
-		return $this->row->isDetached();
-	}
-
-	/**
-	 * Marks entity as detached (it means non-persisted)
-	 */
-	public function detach()
-	{
-		$this->row->detach();
+		if ($arg === null) {
+			throw new InvalidArgumentException("Invalid argument given.");
+		}
+		$property = $this->getReflection($this->mapper)->getEntityProperty($name);
+		if ($property === null or !$property->hasRelationship() or !($property->getRelationship() instanceof Relationship\HasMany)) {
+			throw new InvalidMethodCallException("Cannot call removeFrom method with $name property. Only properties with m:hasMany relationship can be managed this way.");
+		}
+		if ($property->getFilters()) {
+			throw new InvalidMethodCallException("Cannot call removeFrom method with $name property. Only properties with no filters can be managed this way."); // deliberate restriction
+		}
+		$relationship = $property->getRelationship();
+		if ($arg instanceof Entity) {
+			if ($arg->isDetached()) {
+				throw new InvalidArgumentException('Cannot remove detached entity ' . get_class($arg) . '.');
+			}
+			$type = $property->getType();
+			if (!($arg instanceof $type)) {
+				throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($arg) . " given.");
+			}
+			$data = $arg->getRowData();
+			$arg = $data[$this->mapper->getPrimaryKey($relationship->getTargetTable())];
+		}
+		$table = $this->mapper->getTable($this->getReflection($this->mapper)->getName());
+		$values = array(
+			$relationship->getColumnReferencingSourceTable() => $this->row->{$this->mapper->getPrimaryKey($table)},
+			$relationship->getColumnReferencingTargetTable() => $arg,
+		);
+		$this->row->removeFromReferencing($values, $relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 	}
 
 	/**
@@ -332,6 +350,57 @@ abstract class Entity
 	public function getModifiedRowData()
 	{
 		return $this->row->getModifiedData();
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getHasManyRowDifferences()
+	{
+		$differences = array();
+		foreach ($this->getReflection($this->mapper)->getEntityProperties() as $property) {
+			if ($property->hasRelationship() and ($property->getRelationship() instanceof Relationship\HasMany)) {
+				$relationship = $property->getRelationship();
+				$difference = $this->row->createReferencingDataDifference(
+					$relationship->getRelationshipTable(),
+					null,
+					$relationship->getColumnReferencingSourceTable(),
+					$relationship->getStrategy()
+				);
+				if ($difference->mayHaveAny()) {
+					$differences[$relationship->getColumnReferencingSourceTable() . ':' . $relationship->getRelationshipTable() . ':' . $relationship->getColumnReferencingTargetTable()] = $difference->getByPivot($relationship->getColumnReferencingTargetTable());
+				}
+			}
+		}
+		return $differences;
+	}
+
+	/**
+	 * Tells whether entity is in modified state
+	 *
+	 * @return bool
+	 */
+	public function isModified()
+	{
+		return $this->row->isModified();
+	}
+
+	/**
+	 * Tells whether entity is in detached state (like newly created entity)
+	 *
+	 * @return bool
+	 */
+	public function isDetached()
+	{
+		return $this->row->isDetached();
+	}
+
+	/**
+	 * Marks entity as detached (it means non-persisted)
+	 */
+	public function detach()
+	{
+		$this->row->detach();
 	}
 
 	/**
@@ -519,6 +588,48 @@ abstract class Entity
 			};
 		}
 		return $filterCallback;
+	}
+
+	/**
+	 * @param string $action
+	 * @param string $name
+	 * @param mixed $arg
+	 * @throws InvalidMethodCallException
+	 * @throws InvalidArgumentException
+	 * @throws InvalidValueException
+	 */
+	private function addToOrRemoveFrom($action, $name, $arg)
+	{
+		$method = $action === self::ACTION_ADD ? 'addTo' : 'removeFrom';
+		if ($arg === null) {
+			throw new InvalidArgumentException("Invalid argument given.");
+		}
+		$property = $this->getReflection($this->mapper)->getEntityProperty($name);
+		if ($property === null or !$property->hasRelationship() or !($property->getRelationship() instanceof Relationship\HasMany)) {
+			throw new InvalidMethodCallException("Cannot call $method method with $name property. Only properties with m:hasMany relationship can be managed this way.");
+		}
+		if ($property->getFilters()) {
+			throw new InvalidMethodCallException("Cannot call $method method with $name property. Only properties with no filters can be managed this way."); // deliberate restriction
+		}
+		$relationship = $property->getRelationship();
+		if ($arg instanceof Entity) {
+			if ($arg->isDetached()) {
+				throw new InvalidArgumentException('Cannot add or remove detached entity ' . get_class($arg) . '.');
+			}
+			$type = $property->getType();
+			if (!($arg instanceof $type)) {
+				throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($arg) . " given.");
+			}
+			$data = $arg->getRowData();
+			$arg = $data[$this->mapper->getPrimaryKey($relationship->getTargetTable())];
+		}
+		$table = $this->mapper->getTable($this->getReflection($this->mapper)->getName());
+		$values = array(
+			$relationship->getColumnReferencingSourceTable() => $this->row->{$this->mapper->getPrimaryKey($table)},
+			$relationship->getColumnReferencingTargetTable() => $arg,
+		);
+		$method .= 'Referencing';
+		$this->row->$method($values, $relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 	}
 	
 }
