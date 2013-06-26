@@ -237,12 +237,16 @@ abstract class Entity
 		}
 		if (substr($name, 0, 3) === 'get') {
 			return $this->__get(lcfirst(substr($name, 3)), $arguments);
+
 		} elseif (substr($name, 0, 3) === 'set') {
 			$this->__set(lcfirst(substr($name, 3)), $arguments);
+
 		} elseif (substr($name, 0, 5) === 'addTo' and strlen($name) > 5) {
 			$this->addToOrRemoveFrom(self::ACTION_ADD, lcfirst(substr($name, 5)), array_shift($arguments));
+
 		} elseif (substr($name, 0, 10) === 'removeFrom' and strlen($name) > 10) {
 			$this->addToOrRemoveFrom(self::ACTION_REMOVE, lcfirst(substr($name, 10)), array_shift($arguments));
+
 		} else {
 			throw $e;
 		}
@@ -268,45 +272,6 @@ abstract class Entity
 				$this->__set($field, $value);
 			}
 		}
-	}
-
-	/**
-	 * @param string $name
-	 * @param mixed $arg
-	 * @throws InvalidMethodCallException
-	 * @throws InvalidArgumentException
-	 * @throws InvalidValueException
-	 */
-	public function removeFrom($name, $arg)
-	{
-		if ($arg === null) {
-			throw new InvalidArgumentException("Invalid argument given.");
-		}
-		$property = $this->getReflection($this->mapper)->getEntityProperty($name);
-		if ($property === null or !$property->hasRelationship() or !($property->getRelationship() instanceof Relationship\HasMany)) {
-			throw new InvalidMethodCallException("Cannot call removeFrom method with $name property. Only properties with m:hasMany relationship can be managed this way.");
-		}
-		if ($property->getFilters()) {
-			throw new InvalidMethodCallException("Cannot call removeFrom method with $name property. Only properties with no filters can be managed this way."); // deliberate restriction
-		}
-		$relationship = $property->getRelationship();
-		if ($arg instanceof Entity) {
-			if ($arg->isDetached()) {
-				throw new InvalidArgumentException('Cannot remove detached entity ' . get_class($arg) . '.');
-			}
-			$type = $property->getType();
-			if (!($arg instanceof $type)) {
-				throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($arg) . " given.");
-			}
-			$data = $arg->getRowData();
-			$arg = $data[$this->mapper->getPrimaryKey($relationship->getTargetTable())];
-		}
-		$table = $this->mapper->getTable($this->getReflection($this->mapper)->getName());
-		$values = array(
-			$relationship->getColumnReferencingSourceTable() => $this->row->{$this->mapper->getPrimaryKey($table)},
-			$relationship->getColumnReferencingTargetTable() => $arg,
-		);
-		$this->row->removeFromReferencing($values, $relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 	}
 
 	/**
@@ -631,5 +596,5 @@ abstract class Entity
 		$method .= 'Referencing';
 		$this->row->$method($values, $relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
 	}
-	
+
 }
