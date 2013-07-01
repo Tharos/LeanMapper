@@ -443,6 +443,19 @@ abstract class Entity
 		return $entities;
 	}
 
+	/**
+	 * Creates entity instance for given row
+	 *
+	 * @param string $class
+	 * @param Row $row
+	 *
+	 * @return mixed
+	 */
+	protected function createEntityInstance($class, Row $row)
+	{
+		return new $class($row, $this->mapper);
+	}
+
 	protected function initDefaults()
 	{
 	}
@@ -468,7 +481,7 @@ abstract class Entity
 			return null;
 		} else {
 			$class = $property->getType();
-			return new $class($row, $this->mapper);
+			return $this->createEntityInstance($class, $row);
 		}
 	}
 
@@ -487,7 +500,7 @@ abstract class Entity
 		foreach ($rows as $row) {
 			$valueRow = $row->referenced($relationship->getTargetTable(), $targetTableFilter, $relationship->getColumnReferencingTargetTable());
 			if ($valueRow !== null) {
-				$value[] = new $class($valueRow, $this->mapper);
+				$value[] = $this->createEntityInstance($class, $valueRow);
 			}
 		}
 		return $this->createCollection($value);
@@ -515,7 +528,7 @@ abstract class Entity
 		} else {
 			$row = reset($rows);
 			$class = $property->getType();
-			return new $class($row, $this->mapper);
+			return $this->createEntityInstance($class, $row);
 		}
 	}
 
@@ -531,7 +544,7 @@ abstract class Entity
 		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {
-			$value[] = new $class($row, $this->mapper);
+			$value[] = $this->createEntityInstance($class, $row);
 		}
 		return $this->createCollection($value);
 	}
