@@ -39,9 +39,10 @@ interface IMapper
 	 * Returns fully qualified entity class name from given table name
 	 *
 	 * @param string $table
+	 * @param Row|null $row
 	 * @return string
 	 */
-	public function getEntityClass($table);
+	public function getEntityClass($table, Row $row = null);
 
 	/**
 	 * Returns table column name from given fully qualified entity class name and entity field name

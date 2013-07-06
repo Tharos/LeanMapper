@@ -47,7 +47,7 @@ class DefaultMapper implements IMapper
 	/**
 	 * @inheritdoc
 	 */
-	public function getEntityClass($table)
+	public function getEntityClass($table, Row $row = null)
 	{
 		return $this->defaultEntityNamespace . '\\' . ucfirst($table);
 	}

@@ -42,6 +42,9 @@ abstract class Repository
 	/** @var string */
 	private $docComment;
 
+	/** @var bool */
+	private $entityAnnotationChecked = false;
+
 
 	/**
 	 * @param DibiConnection $connection
@@ -205,24 +208,28 @@ abstract class Repository
 	/**
 	 * Helps to create array of entities from given array of DibiRow instances
 	 *
-	 * @param array $rows
+	 * @param DibiRow[] $rows
 	 * @param string|null $entityClass
 	 * @param string|null $table
 	 * @return array
 	 */
 	protected function createEntities(array $rows, $entityClass = null, $table = null)
 	{
-		if ($entityClass === null) {
-			$entityClass = $this->getEntityClass();
-		}
 		if ($table === null) {
 			$table = $this->getTable();
 		}
 		$entities = array();
 		$collection = Result::getInstance($rows, $table, $this->connection, $this->mapper);
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		foreach ($rows as $row) {
-			$entities[$row->$primaryKey] = new $entityClass($collection->getRow($row->$primaryKey));
+		if ($entityClass !== null) {
+			foreach ($rows as $dibiRow) {
+				$entities[$dibiRow->$primaryKey] = new $entityClass($collection->getRow($dibiRow->$primaryKey));
+			}
+		} else {
+			foreach ($rows as $dibiRow) {
+				$entityClass = $this->getEntityClass($row = $collection->getRow($dibiRow->$primaryKey));
+				$entities[$dibiRow->$primaryKey] = new $entityClass($row);
+			}
 		}
 		return $this->createCollection($entities);
 	}
@@ -245,17 +252,25 @@ abstract class Repository
 	/**
 	 * Returns fully qualified name of entity class which repository can handle
 	 *
+	 * @param Row|null $row
 	 * @return string
 	 * @throws InvalidStateException
 	 */
-	protected function getEntityClass()
+	protected function getEntityClass(Row $row = null)
 	{
 		if ($this->entityClass === null) {
-			$entityClass = AnnotationsParser::parseSimpleAnnotationValue('entity', $this->getDocComment());
-			if ($entityClass !== null) {
+			if (!$this->entityAnnotationChecked) {
+				$this->entityAnnotationChecked = true;
+				$entityClass = AnnotationsParser::parseSimpleAnnotationValue('entity', $this->getDocComment());
+				if ($entityClass !== null) {
+					return $this->entityClass = $entityClass;
+				}
+			}
+			$entityClass = $this->mapper->getEntityClass($this->mapper->getTableByRepositoryClass(get_called_class()), $row);
+			if ($row === null) { // this allows small performance optimalization (TODO: note in documentation)
 				$this->entityClass = $entityClass;
 			} else {
-				$this->entityClass = $this->mapper->getEntityClass($this->mapper->getTableByRepositoryClass(get_called_class()));
+				return $entityClass;
 			}
 		}
 		return $this->entityClass;
