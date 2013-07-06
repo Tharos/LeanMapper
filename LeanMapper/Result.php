@@ -63,6 +63,8 @@ class Result implements \Iterator
 	/** @var self[] */
 	private $referencing = array();
 
+	/** @var Row[] */
+	private $rows = array();
 
 	/**
 	 * Creates new common instance (it means persisted)
@@ -137,7 +139,12 @@ class Result implements \Iterator
 		if (!isset($this->data[$id])) {
 			return null;
 		}
-		return new Row($this, $id);
+
+		if (!isset($this->rows[$id])) {
+			$this->rows[$id] = new Row($this, $id);
+		}
+
+		return $this->rows[$id];
 	}
 
 	/**
@@ -373,7 +380,7 @@ class Result implements \Iterator
 		$rows = array();
 		foreach ($collection as $key => $row) {
 			if ($row[$viaColumn] === $id) {
-				$rows[] = new Row($collection, $key);
+				$rows[] = $collection->getRow($key);
 			}
 		}
 		return $rows;
