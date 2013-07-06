@@ -6,11 +6,6 @@ use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
-$queries = array();
-$connection->onEvent[] = function ($event) use (&$queries) {
-	$queries[] = $event->sql;
-};
-
 //////////
 
 /**
