@@ -180,9 +180,9 @@ class PropertyFactory
 				return new Relationship\HasOne($pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable);
 			case 'hasMany':
 				return new Relationship\HasMany(
-					$pieces[0] ?: $mapper !== null ? $mapper->getRelationshipColumn($mapper->getRelationshipTable($sourceTable, $targetTable), $sourceTable) : $sourceTable,
-					$pieces[1] ?: $mapper !== null ? $mapper->getRelationshipTable($sourceTable, $targetTable) : $sourceTable . '_' . $targetTable,
-					$pieces[2] ?: $mapper !== null ? $mapper->getRelationshipColumn($mapper->getRelationshipTable($sourceTable, $targetTable), $targetTable) : $targetTable,
+					$pieces[0] ?: ($mapper !== null ? $mapper->getRelationshipColumn($mapper->getRelationshipTable($sourceTable, $targetTable), $sourceTable) : $sourceTable),
+					$pieces[1] ?: ($mapper !== null ? $mapper->getRelationshipTable($sourceTable, $targetTable) : $sourceTable . '_' . $targetTable),
+					$pieces[2] ?: ($mapper !== null ? $mapper->getRelationshipColumn($mapper->getRelationshipTable($sourceTable, $targetTable), $targetTable) : $targetTable),
 					$pieces[3] ?: $targetTable,
 					$strategy
 				);
