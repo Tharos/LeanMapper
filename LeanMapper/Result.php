@@ -386,10 +386,14 @@ class Result implements \Iterator
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
 		$originKey = $referencingResult->getOriginKey();
-		if (!isset($this->index[$originKey][$id])) {
+		if (!isset($this->index[$originKey])) {
+			$this->index[$originKey] = array();
 			foreach ($referencingResult as $key => $row) {
 				$this->index[$originKey][$row[$viaColumn]][] = new Row($referencingResult, $key);
 			}
+		}
+		if (!isset($this->index[$originKey][$id])) {
+			return array();
 		}
 		return $this->index[$originKey][$id];
 	}
