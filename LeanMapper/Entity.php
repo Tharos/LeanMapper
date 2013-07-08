@@ -49,7 +49,7 @@ abstract class Entity
 	protected static $reflections = array();
 
 	/** @var array */
-	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getReflection', 'getHasManyRowDifferences');
+	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getReflection', 'getHasManyRowDifferences', 'getEntityClass');
 
 
 	/**
@@ -138,7 +138,7 @@ abstract class Entity
 				if (!$property->containsCollection()) {
 					$type = $property->getType();
 					if (!($value instanceof $type)) {
-						throw new InvalidValueException("Property '$name' is expected to contain an instance of '{$property->getType()}', instance of '" . get_class($value) . "' given.");
+						throw new InvalidValueException("Property '$name' is expected to contain an instance of '$type', instance of '" . get_class($value) . "' given.");
 					}
 				} else {
 					if (!is_array($value)) {
@@ -447,13 +447,23 @@ abstract class Entity
 	{
 	}
 
+	/**
+	 * @param Property $property
+	 * @param Row $row
+	 * @return string
+	 */
+	protected function getEntityClass(Property $property, Row $row = null)
+	{
+		return $this->mapper->getEntityClass($property->getRelationship()->getTargetTable(), $row);
+	}
+
 	////////////////////
 	////////////////////
 
 	/**
 	 * @param Property $property
 	 * @param Closure|null $filter
-	 * @return mixed
+	 * @return Entity
 	 * @throws InvalidValueException
 	 */
 	private function getHasOneValue(Property $property, Closure $filter = null)
@@ -467,8 +477,10 @@ abstract class Entity
 			}
 			return null;
 		} else {
-			$class = $property->getType();
-			return new $class($row, $this->mapper);
+			$class = $this->getEntityClass($property, $row);
+			$entity = new $class($row, $this->mapper);
+			$this->checkConsistency($property, $class, $entity);
+			return $entity;
 		}
 	}
 
@@ -476,18 +488,22 @@ abstract class Entity
 	 * @param Property $property
 	 * @param Closure|null $relTableFilter
 	 * @param Closure|null $targetTableFilter
-	 * @return array
+	 * @return Entity[]
+	 * @throws InvalidValueException
 	 */
 	private function getHasManyValue(Property $property, Closure $relTableFilter = null, Closure $targetTableFilter = null)
 	{
 		$relationship = $property->getRelationship();
 		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relTableFilter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
-		$class = $property->getType();
 		$value = array();
+		$type = $property->getType();
 		foreach ($rows as $row) {
 			$valueRow = $row->referenced($relationship->getTargetTable(), $targetTableFilter, $relationship->getColumnReferencingTargetTable());
 			if ($valueRow !== null) {
-				$value[] = new $class($valueRow, $this->mapper);
+				$class = $this->getEntityClass($property, $valueRow);
+				$entity = new $class($valueRow, $this->mapper);
+				$this->checkConsistency($property, $class, $entity);
+				$value[] = $entity;
 			}
 		}
 		return $this->createCollection($value);
@@ -496,7 +512,7 @@ abstract class Entity
 	/**
 	 * @param Property $property
 	 * @param Closure|null $filter
-	 * @return mixed
+	 * @return Entity
 	 * @throws InvalidValueException
 	 */
 	private function getBelongsToOneValue(Property $property, Closure $filter = null)
@@ -514,24 +530,28 @@ abstract class Entity
 			return null;
 		} else {
 			$row = reset($rows);
-			$class = $property->getType();
-			return new $class($row, $this->mapper);
+			$class = $this->getEntityClass($property, $row);
+			$entity = new $class($row, $this->mapper);
+			$this->checkConsistency($property, $class, $entity);
+			return $entity;
 		}
 	}
 
 	/**
 	 * @param Property $property
 	 * @param Closure|null $filter
-	 * @return array
+	 * @return Entity[]
 	 */
 	private function getBelongsToManyValue(Property $property, Closure $filter = null)
 	{
 		$relationship = $property->getRelationship();
 		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
-		$class = $property->getType();
 		$value = array();
 		foreach ($rows as $row) {
-			$value[] = new $class($row, $this->mapper);
+			$class = $this->getEntityClass($property, $row);
+			$entity = new $class($row, $this->mapper);
+			$this->checkConsistency($property, $class, $entity);
+			$value[] = $entity;
 		}
 		return $this->createCollection($value);
 	}
@@ -595,6 +615,20 @@ abstract class Entity
 		);
 		$method .= 'Referencing';
 		$this->row->$method($values, $relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
+	}
+
+	/**
+	 * @param Property $property
+	 * @param string $mapperClass
+	 * @param Entity $entity
+	 * @throws InvalidValueException
+	 */
+	private function checkConsistency(Property $property, $mapperClass, Entity $entity)
+	{
+		$type = $property->getType();
+		if (!($entity instanceof $type)) {
+			throw new InvalidValueException("Inconsistency found: property '{$property->getName()}' is supposed to contain an instance of '$type' (due to type hint), but mapper maps it to '$mapperClass'. Please fix getEntityClass() method in mapper, property annotation or entities inheritance.");
+		}
 	}
 
 }
