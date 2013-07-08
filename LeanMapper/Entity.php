@@ -48,8 +48,11 @@ abstract class Entity
 	/** @var EntityReflection[] */
 	protected static $reflections = array();
 
+	/** @var EntityReflection */
+	private $currentReflection;
+
 	/** @var array */
-	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getReflection', 'getHasManyRowDifferences', 'getEntityClass');
+	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getCurrentReflection', 'getReflection', 'getHasManyRowDifferences', 'getEntityClass');
 
 
 	/**
@@ -88,11 +91,11 @@ abstract class Entity
 	 */
 	public function __get($name/*, array $filterArgs*/)
 	{
-		$property = $this->getReflection($this->mapper)->getEntityProperty($name);
+		$property = $this->getCurrentReflection()->getEntityProperty($name);
 		if ($property === null) {
 			$method = 'get' . ucfirst($name);
 			$internalGetters = array_flip($this->internalGetters);
-			if (method_exists($this, $method) and !isset($internalGetters[$method])) {  // TODO: find better solution (using reflection)
+			if (method_exists($this, $method) and !isset($internalGetters[$method])) {  // TODO: find better solution (using reflection?)
 				return call_user_func(array($this, $method)); // $filterArgs are not relevant here
 			}
 			throw new MemberAccessException("Undefined property: $name");
@@ -161,7 +164,7 @@ abstract class Entity
 	 */
 	function __set($name, $value)
 	{
-		$property = $this->getReflection($this->mapper)->getEntityProperty($name);
+		$property = $this->getCurrentReflection()->getEntityProperty($name);
 		if ($property === null) {
 			$method = 'set' . ucfirst($name);
 			if (method_exists($this, $method)) { // TODO: find better solution (using reflection)
@@ -282,11 +285,11 @@ abstract class Entity
 	public function getData()
 	{
 		$data = array();
-		foreach ($this->getReflection($this->mapper)->getEntityProperties() as $property) {
+		foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
 			$data[$property->getName()] = $this->__get($property->getName());
 		}
 		$internalGetters = array_flip($this->internalGetters);
-		foreach ($this->getReflection($this->mapper)->getMethods(ReflectionMethod::IS_PUBLIC) as $method) { // TODO: better support from EntityReflection
+		foreach ($this->getCurrentReflection()->getMethods(ReflectionMethod::IS_PUBLIC) as $method) { // TODO: better support from EntityReflection
 			$name = $method->getName();
 			if (substr($name, 0, 3) === 'get' and !isset($internalGetters[$name])) {
 				if ($method->getNumberOfRequiredParameters() === 0) {
@@ -323,7 +326,7 @@ abstract class Entity
 	public function getHasManyRowDifferences()
 	{
 		$differences = array();
-		foreach ($this->getReflection($this->mapper)->getEntityProperties() as $property) {
+		foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
 			if ($property->hasRelationship() and ($property->getRelationship() instanceof Relationship\HasMany)) {
 				$relationship = $property->getRelationship();
 				$difference = $this->row->createReferencingDataDifference(
@@ -381,7 +384,7 @@ abstract class Entity
 			throw new InvalidMethodCallException('Mapper can only be provided to detached entity.');
 		}
 		$newProperties = $this->getReflection($mapper)->getEntityProperties();
-		foreach ($this->getReflection($this->mapper)->getEntityProperties() as $oldProperty) {
+		foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
 			if ($oldProperty->getColumn() !== null) {
 				$name = $oldProperty->getName();
 				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
@@ -397,6 +400,7 @@ abstract class Entity
 		}
 		$this->mapper = $mapper;
 		$this->row->setMapper($mapper);
+		$this->currentReflection = null;
 	}
 
 	/**
@@ -432,6 +436,17 @@ abstract class Entity
 		}
 
 		return static::$reflections[$class][$mapperClass];
+	}
+
+	/**
+	 * @return EntityReflection
+	 */
+	protected function getCurrentReflection()
+	{
+		if ($this->currentReflection === null) {
+			$this->currentReflection = $this->getReflection($this->mapper);
+		}
+		return $this->currentReflection;
 	}
 
 	/**
@@ -589,7 +604,7 @@ abstract class Entity
 		if ($arg === null) {
 			throw new InvalidArgumentException("Invalid argument given.");
 		}
-		$property = $this->getReflection($this->mapper)->getEntityProperty($name);
+		$property = $this->getCurrentReflection()->getEntityProperty($name);
 		if ($property === null or !$property->hasRelationship() or !($property->getRelationship() instanceof Relationship\HasMany)) {
 			throw new InvalidMethodCallException("Cannot call $method method with $name property. Only properties with m:hasMany relationship can be managed this way.");
 		}
@@ -608,7 +623,7 @@ abstract class Entity
 			$data = $arg->getRowData();
 			$arg = $data[$this->mapper->getPrimaryKey($relationship->getTargetTable())];
 		}
-		$table = $this->mapper->getTable($this->getReflection($this->mapper)->getName());
+		$table = $this->mapper->getTable($this->getCurrentReflection()->getName());
 		$values = array(
 			$relationship->getColumnReferencingSourceTable() => $this->row->{$this->mapper->getPrimaryKey($table)},
 			$relationship->getColumnReferencingTargetTable() => $arg,

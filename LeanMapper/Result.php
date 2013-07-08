@@ -63,6 +63,12 @@ class Result implements \Iterator
 	/** @var self[] */
 	private $referencing = array();
 
+	/** @var string|null */
+	private $originKey;
+
+	/** @var array */
+	private $index = array();
+
 
 	/**
 	 * Creates new common instance (it means persisted)
@@ -71,10 +77,11 @@ class Result implements \Iterator
 	 * @param string $table
 	 * @param DibiConnection $connection
 	 * @param IMapper $mapper
+	 * @param string|null $originKey
 	 * @return self
 	 * @throws InvalidArgumentException
 	 */
-	public static function getInstance($data, $table, DibiConnection $connection, IMapper $mapper)
+	public static function getInstance($data, $table, DibiConnection $connection, IMapper $mapper, $originKey = null)
 	{
 		$dataArray = array();
 		$primaryKey = $mapper->getPrimaryKey($table);
@@ -97,7 +104,7 @@ class Result implements \Iterator
 				throw $e;
 			}
 		}
-		return new self($dataArray, $table, $connection, $mapper);
+		return new self($dataArray, $table, $connection, $mapper, $originKey);
 	}
 
 	/**
@@ -124,6 +131,14 @@ class Result implements \Iterator
 	public function getMapper()
 	{
 		return $this->mapper;
+	}
+
+	/**
+	 * @return string|null
+	 */
+	public function getOriginKey()
+	{
+		return $this->originKey;
 	}
 
 	/**
@@ -366,17 +381,17 @@ class Result implements \Iterator
 	 */
 	public function getReferencingRows($id, $table, Closure $filter = null, $viaColumn = null, $strategy = null)
 	{
-		$collection = $this->getReferencingResult($table, $filter, $viaColumn, $strategy);
+		$referencingResult = $this->getReferencingResult($table, $filter, $viaColumn, $strategy);
 		if ($viaColumn === null) {
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
-		$rows = array();
-		foreach ($collection as $key => $row) {
-			if ($row[$viaColumn] === $id) {
-				$rows[] = new Row($collection, $key);
+		$originKey = $referencingResult->getOriginKey();
+		if (!isset($this->index[$originKey][$id])) {
+			foreach ($referencingResult as $key => $row) {
+				$this->index[$originKey][$row[$viaColumn]][] = new Row($referencingResult, $key);
 			}
 		}
-		return $rows;
+		return $this->index[$originKey][$id];
 	}
 
 	/**
@@ -495,8 +510,9 @@ class Result implements \Iterator
 	 * @param string|null $table
 	 * @param DibiConnection|null $connection
 	 * @param IMapper|null $mapper
+	 * @param string|null $originKey
 	 */
-	private function __construct(array $data = null, $table = null, DibiConnection $connection = null, IMapper $mapper = null)
+	private function __construct(array $data = null, $table = null, DibiConnection $connection = null, IMapper $mapper = null, $originKey = null)
 	{
 		if ($data === null) {
 			$data = array(array());
@@ -505,6 +521,7 @@ class Result implements \Iterator
 		$this->table = $table;
 		$this->connection = $connection;
 		$this->mapper = $mapper;
+		$this->originKey = $originKey;
 	}
 
 	/**
@@ -528,7 +545,7 @@ class Result implements \Iterator
 			if (!isset($this->referenced[$key])) {
 				$data = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn))
 						->fetchAll();
-				$this->referenced[$key] = self::getInstance($data, $table, $this->connection, $this->mapper);
+				$this->referenced[$key] = self::getInstance($data, $table, $this->connection, $this->mapper, $key);
 			}
 		} else {
 			$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn));
@@ -538,7 +555,7 @@ class Result implements \Iterator
 			$key .= '#' . md5($sql);
 
 			if (!isset($this->referenced[$key])) {
-				$this->referenced[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper);
+				$this->referenced[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 			}
 		}
 		return $this->referenced[$key];
@@ -567,7 +584,7 @@ class Result implements \Iterator
 			if ($filter === null) {
 				if (!isset($this->referencing[$key])) {
 					$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
-					$this->referencing[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection, $this->mapper);
+					$this->referencing[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection, $this->mapper, $key);
 				}
 			} else {
 				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
@@ -577,7 +594,7 @@ class Result implements \Iterator
 				$key .= '#' . md5($sql);
 
 				if (!isset($this->referencing[$key])) {
-					$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper);
+					$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 				}
 			}
 		} else { // self::STRATEGY_UNION
@@ -591,17 +608,17 @@ class Result implements \Iterator
 							$this->buildUnionStrategySql($ids, $table, $viaColumn)
 						)->fetchAll();
 					}
-					$this->referencing[$key] = self::getInstance($data, $table, $this->connection, $this->mapper);
+					$this->referencing[$key] = self::getInstance($data, $table, $this->connection, $this->mapper, $key);
 				}
 			} else {
 				$ids = $this->extractIds($primaryKey);
 				if (count($ids) === 0) {
-					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection, $this->mapper);
+					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection, $this->mapper, $key);
 				} else {
 					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filter);
 					$key .= '#' . md5($sql);
 					if (!isset($this->referencing[$key])) {
-						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper);
+						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 					}
 				}
 			}
