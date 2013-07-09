@@ -181,6 +181,13 @@ abstract class Entity
 				if (!$property->isNullable()) {
 					throw new InvalidValueException("Property '$name' cannot be null.");
 				}
+				$relationship = $property->getRelationship();
+				if ($relationship !== null) {
+					if (!($relationship instanceof Relationship\HasOne)) {
+						throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set to null.');
+					}
+					$column = $relationship->getColumnReferencingTargetTable();
+				}
 				$this->row->$column = null;
 			} else {
 				if ($property->isBasicType()) {
