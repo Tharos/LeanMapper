@@ -547,8 +547,11 @@ class Result implements \Iterator
 		$primaryKey = $this->mapper->getPrimaryKey($table);
 		if ($filter === null) {
 			if (!isset($this->referenced[$key])) {
-				$data = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn))
-						->fetchAll();
+				$data = array();
+				if ($ids = $this->extractIds($viaColumn)) {
+					$data = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $ids)
+							->fetchAll();
+				}
 				$this->referenced[$key] = self::getInstance($data, $table, $this->connection, $this->mapper, $key);
 			}
 		} else {
