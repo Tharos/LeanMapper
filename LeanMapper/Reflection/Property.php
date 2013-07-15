@@ -202,10 +202,17 @@ class Property
 	 */
 	public function isValueFromEnum($value)
 	{
-		if (!$this->containsEnumeration()) {
-			throw new InvalidMethodCallException("It doesn't make sense to call this method on property that doesn't contain enumeration");
-		}
+		$this->checkContainsEnumeration();
 		return $this->propertyValuesEnum->isValueFromEnum($value);
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getEnumValues()
+	{
+		$this->checkContainsEnumeration();
+		return $this->propertyValuesEnum->getValues();
 	}
 
 	/**
@@ -216,6 +223,18 @@ class Property
 	public function getExtra()
 	{
 		return $this->extra;
+	}
+
+	//////////
+
+	/**
+	 * @throws InvalidMethodCallException
+	 */
+	private function checkContainsEnumeration()
+	{
+		if (!$this->containsEnumeration()) {
+			throw new InvalidMethodCallException("It doesn't make sense to call this method on property that doesn't contain enumeration");
+		}
 	}
 
 }

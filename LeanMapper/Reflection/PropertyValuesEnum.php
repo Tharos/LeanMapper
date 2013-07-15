@@ -22,8 +22,11 @@ use ReflectionClass;
 class PropertyValuesEnum
 {
 
-	/** @var string[] */
+	/** @var array */
 	private $values = array();
+
+	/** @var array */
+	private $index = array();
 
 
 	/**
@@ -38,8 +41,7 @@ class PropertyValuesEnum
 		if (empty($matches)) {
 			throw new InvalidAnnotationException('Invalid enumeration definition given: ' . $definition);
 		}
-		$class = $matches[1];
-		$prefix = substr($matches[2], 0, -1);
+		list(, $class, $prefix) = $matches;
 
 		if ($class === 'self' or $class === 'static') {
 			$constants = $reflection->getConstants();
@@ -52,7 +54,8 @@ class PropertyValuesEnum
 		}
 		foreach ($constants as $name => $value) {
 			if (substr($name, 0, strlen($prefix)) === $prefix) {
-				$this->values[$value] = true;
+				$this->values[$name] = $value;
+				$this->index[$value] = true;
 			}
 		}
 	}
@@ -65,7 +68,15 @@ class PropertyValuesEnum
 	 */
 	public function isValueFromEnum($value)
 	{
-		return isset($this->values[$value]);
+		return isset($this->index[$value]);
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getValues()
+	{
+		return $this->values;
 	}
 
 }
