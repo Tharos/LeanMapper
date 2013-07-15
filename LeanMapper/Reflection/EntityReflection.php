@@ -125,9 +125,9 @@ class EntityReflection extends \ReflectionClass
 					$property = PropertyFactory::createFromAnnotation($annotationType, $definition, $this, $this->mapper);
 					// collision check
 					$column = $property->getColumn();
-					if ($column !== null) {
+					if ($column !== null and $property->isWritable()) {
 						if (isset($columns[$column])) {
-							throw new InvalidStateException("Mapping collision on field '{$property->getName()}' (column $column).");
+							throw new InvalidStateException("Mapping collision on field '{$property->getName()}' (column $column). Please fix mapping or make chosen properties read only (property-read).");
 						}
 						$columns[$column] = true;
 					}

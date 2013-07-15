@@ -19,16 +19,16 @@ namespace LeanMapper\Relationship;
 class HasOne
 {
 
-	/** @var string */
+	/** @var string|null */
 	private $columnReferencingTargetTable;
 
-	/** @var string */
+	/** @var string|null */
 	private $targetTable;
 
 
 	/**
-	 * @param string $columnReferencingTargetTable
-	 * @param string $targetTable
+	 * @param string|null $columnReferencingTargetTable
+	 * @param string|null $targetTable
 	 */
 	public function __construct($columnReferencingTargetTable, $targetTable)
 	{
@@ -39,7 +39,7 @@ class HasOne
 	/**
 	 * Returns name of column referencing target table
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getColumnReferencingTargetTable()
 	{
@@ -49,7 +49,7 @@ class HasOne
 	/**
 	 * Returns name of target table
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getTargetTable()
 	{

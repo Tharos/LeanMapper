@@ -117,6 +117,9 @@ class PropertyFactory
 				throw new InvalidAnnotationException("All special column and table names must be specified in relationship definition when property holds relationship: @$annotationType $annotation");
 			}
 			$column = null;
+			if ($relationship instanceof Relationship\HasOne) {
+				$column = $relationship->getColumnReferencingTargetTable();
+			}
 		}
 		$extra = isset($matches[11]) ? $matches[11] : null;
 
@@ -171,29 +174,38 @@ class PropertyFactory
 		}
 		$pieces = array_replace(array_fill(0, 6, ''), $definition !== null ? explode(':', $definition) : array());
 
-		$sourceTable = $mapper !== null ? $mapper->getTable($sourceClass) : strtolower(self::trimNamespace($sourceClass));
-		$targetTable = $mapper !== null ? $mapper->getTable($propertyType->getType()) : strtolower(self::trimNamespace($propertyType->getType()));
+		$sourceTable = ($mapper !== null ? $mapper->getTable($sourceClass) : null);
+		$targetTable = ($mapper !== null ? $mapper->getTable($propertyType->getType()) : null);
 
 		switch ($relationshipType) {
 			case 'hasOne':
-				$relationshipColumn = $mapper !== null ? $mapper->getRelationshipColumn($sourceTable, $targetTable) : $targetTable;
+				$relationshipColumn = ($mapper !== null ? $mapper->getRelationshipColumn($sourceTable, $targetTable) : self::getSurrogateRelationshipColumn($propertyType));
 				return new Relationship\HasOne($pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable);
 			case 'hasMany':
 				return new Relationship\HasMany(
-					$pieces[0] ?: ($mapper !== null ? $mapper->getRelationshipColumn($mapper->getRelationshipTable($sourceTable, $targetTable), $sourceTable) : $sourceTable),
-					$pieces[1] ?: ($mapper !== null ? $mapper->getRelationshipTable($sourceTable, $targetTable) : $sourceTable . '_' . $targetTable),
-					$pieces[2] ?: ($mapper !== null ? $mapper->getRelationshipColumn($mapper->getRelationshipTable($sourceTable, $targetTable), $targetTable) : $targetTable),
+					$pieces[0] ?: ($mapper !== null ? $mapper->getRelationshipColumn($mapper->getRelationshipTable($sourceTable, $targetTable), $sourceTable) : null),
+					$pieces[1] ?: ($mapper !== null ? $mapper->getRelationshipTable($sourceTable, $targetTable) : null),
+					$pieces[2] ?: ($mapper !== null ? $mapper->getRelationshipColumn($mapper->getRelationshipTable($sourceTable, $targetTable), $targetTable) : null),
 					$pieces[3] ?: $targetTable,
 					$strategy
 				);
 			case 'belongsToOne':
-				$relationshipColumn = $mapper !== null ? $mapper->getRelationshipColumn($targetTable, $sourceTable) : $sourceTable;
+				$relationshipColumn = ($mapper !== null ? $mapper->getRelationshipColumn($targetTable, $sourceTable) : $sourceTable);
 				return new Relationship\BelongsToOne($pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable, $strategy);
 			case 'belongsToMany':
-				$relationshipColumn = $mapper !== null ? $mapper->getRelationshipColumn($targetTable, $sourceTable) : $sourceTable;
+				$relationshipColumn = ($mapper !== null ? $mapper->getRelationshipColumn($targetTable, $sourceTable) : $sourceTable);
 				return new Relationship\BelongsToMany($pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable, $strategy);
 		}
 		return null;
+	}
+
+	/**
+	 * @param PropertyType $propertyType
+	 * @return string
+	 */
+	private static function getSurrogateRelationshipColumn(PropertyType $propertyType)
+	{
+		return strtolower(self::trimNamespace($propertyType->getType())) . '{hasOne:' . self::generateRandomString(10) . '}';
 	}
 
 	/**
@@ -204,6 +216,15 @@ class PropertyFactory
 	{
 		$class = explode('\\', $class);
 		return end($class);
+	}
+
+	/**
+	 * @param int $length
+	 * @return string
+	 */
+	private static function generateRandomString($length)
+	{
+		return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length);
 	}
 
 }

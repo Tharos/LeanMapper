@@ -186,7 +186,6 @@ abstract class Entity
 					if (!($relationship instanceof Relationship\HasOne)) {
 						throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set to null.');
 					}
-					$column = $relationship->getColumnReferencingTargetTable();
 				}
 				$this->row->$column = null;
 			} else {
@@ -212,12 +211,15 @@ abstract class Entity
 							throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set via magic __set.');
 						}
 						$column = $relationship->getColumnReferencingTargetTable();
-						$table = $relationship->getTargetTable();
 
 						if ($value->isDetached()) {
 							throw new InvalidValueException('Detached entity must be stored in database before use in relationships.');
 						}
-						$this->row->$column = $value->id;
+						$mapper = $value->mapper; // mapper stealing :)
+						$table = $mapper->getTable(get_class($value));
+						$idField = $mapper->getEntityField($table, $mapper->getPrimaryKey($table));
+
+						$this->row->$column = $value->$idField;
 						$this->row->cleanReferencedRowsCache($table, $column);
 					} else {
 						if (!is_object($value)) {
@@ -392,16 +394,17 @@ abstract class Entity
 		}
 		$newProperties = $this->getReflection($mapper)->getEntityProperties();
 		foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
-			if ($oldProperty->getColumn() !== null) {
+			$oldColumn = $oldProperty->getColumn();
+			if ($oldColumn !== null) {
 				$name = $oldProperty->getName();
 				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
 					throw new InvalidStateException('Inconsistent sets of properties.');
 				}
-				if (isset($this->row->$name)) {
-					$newName = $newProperties[$name]->getColumn();
-					$value = $this->row->$name;
-					unset($this->row->$name);
-					$this->row->$newName = $value;
+				if (isset($this->row->$oldColumn)) {
+					$newColumn = $newProperties[$name]->getColumn();
+					$value = $this->row->$oldColumn;
+					unset($this->row->$oldColumn);
+					$this->row->$newColumn = $value;
 				}
 			}
 		}
