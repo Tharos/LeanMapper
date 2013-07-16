@@ -187,22 +187,24 @@ abstract class Repository
 	/**
 	 * Helps to create entity instance from given DibiRow instance
 	 *
-	 * @param DibiRow $row
+	 * @param DibiRow $dibiRow
 	 * @param string|null $entityClass
 	 * @param string|null $table
 	 * @return mixed
 	 */
-	protected function createEntity(DibiRow $row, $entityClass = null, $table = null)
+	protected function createEntity(DibiRow $dibiRow, $entityClass = null, $table = null)
 	{
-		if ($entityClass === null) {
-			$entityClass = $this->getEntityClass();
-		}
 		if ($table === null) {
 			$table = $this->getTable();
 		}
-		$result = Result::getInstance($row, $table, $this->connection, $this->mapper);
+		$result = Result::getInstance($dibiRow, $table, $this->connection, $this->mapper);
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		return new $entityClass($result->getRow($row->$primaryKey));
+
+		$row = $result->getRow($dibiRow->$primaryKey);
+		if ($entityClass === null) {
+			$entityClass = $this->getEntityClass($row);
+		}
+		return new $entityClass($row);
 	}
 
 	/**
