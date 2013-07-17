@@ -28,6 +28,10 @@ class PropertyFilters
 	public function __construct($definition, Aliases $aliases)
 	{
 		foreach (preg_split('#\s*\|\s*#', trim($definition)) as $set) {
+			if ($set === '') {
+				$this->filters[] = array();
+				continue;
+			}
 			$filters = array();
 			foreach (preg_split('#\s*,\s*#', $set) as $filter) {
 				if ($filter === '') {
