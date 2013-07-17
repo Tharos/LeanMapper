@@ -268,12 +268,7 @@ abstract class Repository
 					return $this->entityClass = $entityClass;
 				}
 			}
-			$entityClass = $this->mapper->getEntityClass($this->mapper->getTableByRepositoryClass(get_called_class()), $row);
-			if ($row === null) { // this allows small performance optimalization (TODO: note in documentation)
-				$this->entityClass = $entityClass;
-			} else {
-				return $entityClass;
-			}
+			return $this->mapper->getEntityClass($this->mapper->getTableByRepositoryClass(get_called_class()), $row);
 		}
 		return $this->entityClass;
 	}
