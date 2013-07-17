@@ -139,7 +139,7 @@ abstract class Repository
 					}
 				} else {
 					$this->connection->query(
-						'DELETE FROM %n WHERE %n = ? %lmt', $relationshipTable, $columnReferencingTargetTable, $value, - $count
+						'DELETE FROM %n WHERE %n = ? AND %n = ? %lmt', $relationshipTable, $columnReferencingSourceTable, $entity->$idField, $columnReferencingTargetTable, $value, - $count
 					);
 				}
 			}
