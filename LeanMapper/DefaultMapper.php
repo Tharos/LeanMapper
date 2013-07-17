@@ -96,17 +96,14 @@ class DefaultMapper implements IMapper
 		throw new InvalidStateException('Cannot determine table name.');
 	}
 
-	////////////////////
-	////////////////////
-
 	/**
 	 * @param $class
 	 * @return string
 	 */
-	private function trimNamespace($class)
+	protected function trimNamespace($class)
 	{
 		$class = explode('\\', $class);
 		return end($class);
 	}
-	
+
 }
