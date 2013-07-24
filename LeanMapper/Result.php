@@ -235,7 +235,7 @@ class Result implements \Iterator
 	public function removeDataEntry(array $values)
 	{
 		foreach ($this->data as $key => $entry) {
-			if ($values === array_intersect_assoc($entry, $values)) {
+			if (array_diff_assoc($values, array_intersect_assoc($entry, $values)) === array()) {
 				$this->removed[] = $entry;
 				unset($this->data[$key], $this->modified[$key]);
 				break;
