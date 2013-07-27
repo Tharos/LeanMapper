@@ -55,74 +55,91 @@ class PropertyFactory
 			(\|null)?\s+
 			(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
 			(?:\s+\(([^)]+)\))?
-			(?:\s+m:enum\(([^)]+)\))?
-			(?:\s+m:(?:(hasOne|hasMany|belongsToOne|belongsToMany)(?:\(([^)]+)\))?))?
-			(?:\s+m:filter\(([^)]+)\))?
-			(?:\s+m:extra\(([^)]+)\))?
+			(?:\s+(.*)\s*)?
 		~xi', $annotation, $matches);
 
 		if (!$matched) {
-			throw new InvalidAnnotationException("Invalid property annotation given: @$annotationType $annotation");
+			throw new InvalidAnnotationException("Invalid field definition given: @$annotationType $annotation");
 		}
+
 		$propertyType = new PropertyType($matches[2], $aliases);
-
-		// TODO: move some validations to Property __construct
 		$containsCollection = $matches[3] !== '';
-		if ($propertyType->isBasicType() and $containsCollection) {
-			throw new InvalidAnnotationException("Unsupported property annotation given: @$annotationType $annotation");
-		}
 		$isNullable = ($matches[1] !== '' or $matches[4] !== '');
-
-		if ($containsCollection and $isNullable) {
-			throw new InvalidAnnotationException("It doesn't make sense to have a property containing collection nullable: @$annotationType $annotation");
-		}
-
 		$name = substr($matches[5], 1);
 
-		// column name
 		$column = $mapper !== null ? $mapper->getColumn($reflection->getName(), $name) : $name;
 		if (isset($matches[6]) and $matches[6] !== '') {
 			$column = $matches[6];
 		}
 
-		$propertyValuesEnum = null;
-		if (isset($matches[7]) and $matches[7] !== '') {
-			if (!$propertyType->isBasicType() or $propertyType->getType() === 'array') {
-				throw new InvalidAnnotationException("Invalid property annotation given: values of {$propertyType->getType()} property cannot be enumerated");
-			}
-			$propertyValuesEnum = new PropertyValuesEnum($matches[7], $reflection);
-		}
-
-		$propertyFilters = null;
-		if (isset($matches[10]) and $matches[10] !== '') {
-			if ($propertyType->isBasicType()) {
-				throw new InvalidAnnotationException("Invalid property annotation given: {$propertyType->getType()} property cannot be filtered");
-			}
-			$propertyFilters =  new PropertyFilters($matches[10], $aliases);
-		}
-
 		$relationship = null;
-		if (isset($matches[8]) and $matches[8] !== '') {
-			$relationship = self::createRelationship(
-				$reflection->getName(),
-				$propertyType,
-				$containsCollection,
-				$matches[8],
-				(isset($matches[9]) and $matches[9] !== null) ? $matches[9] : null,
-				$mapper
-			);
+		$propertyValuesEnum = null;
+		$propertyPasses = null;
+		$propertyFilters = null;
+
+		if (isset($matches[7])) {
+			$flagMatches = array();
+			preg_match_all('~m:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\(([^)]*)\))?~', $matches[7], $flagMatches, PREG_SET_ORDER);
+			foreach ($flagMatches as $match) {
+				$flag = $match[1];
+				$flagArgument = (isset($match[2]) and $match[2] !== '') ? $match[2] : null;
+
+				switch ($flag) {
+					case 'hasOne':
+					case 'hasMany':
+					case 'belongsToOne':
+					case 'belongsToMany':
+						if ($relationship !== null) {
+							throw new InvalidAnnotationException("It doesn't make sense to have multiple relationship definitions in annotation: @$annotationType $annotation");
+						}
+						$relationship = self::createRelationship(
+							$reflection->getName(),
+							$propertyType,
+							$containsCollection,
+							$flag,
+							$flagArgument,
+							$mapper
+						);
+						break;
+					case 'enum':
+						if ($propertyValuesEnum !== null) {
+							throw new InvalidAnnotationException("Multiple values enumerations found in annotation: @$annotationType $annotation");
+						}
+						if ($flagArgument === null) {
+							throw new InvalidAnnotationException("Parameter of m:enum flag was not found in annotation: @$annotationType $annotation");
+						}
+						if (!$propertyType->isBasicType() or $propertyType->getType() === 'array') {
+							throw new InvalidAnnotationException("Values of {$propertyType->getType()} property cannot be enumerated.");
+						}
+						$propertyValuesEnum = new PropertyValuesEnum($flagArgument, $reflection);
+						break;
+					case 'passThru': // TODO: use in entity
+						if ($propertyPasses !== null) {
+							throw new InvalidAnnotationException("Multiple m:passThru flags found in annotation: @$annotationType $annotation");
+						}
+						$propertyPasses = new PropertyPasses($flagArgument);
+						break;
+					case 'filter': // TODO: rewrite filters
+						if ($propertyFilters !== null) {
+							throw new InvalidAnnotationException("Multiple m:filter flags found in annotation: @$annotationType $annotation");
+						}
+						if ($propertyType->isBasicType()) {
+							throw new InvalidAnnotationException("Property of type {$propertyType->getType()} cannot be filtered.");
+						}
+						$propertyFilters =  new PropertyFilters($flagArgument, $aliases);
+						break;
+					case 'useMethod': // TODO: implement
+						break;
+					default: // TODO: implement
+				}
+			}
 		}
 		if ($relationship !== null) {
-			if (isset($matches[6]) and $matches[6] !== '') {
-				throw new InvalidAnnotationException("All special column and table names must be specified in relationship definition when property holds relationship: @$annotationType $annotation");
-			}
 			$column = null;
 			if ($relationship instanceof Relationship\HasOne) {
 				$column = $relationship->getColumnReferencingTargetTable();
 			}
 		}
-		$extra = isset($matches[11]) ? $matches[11] : null;
-
 		return new Property(
 			$name,
 			$column,
@@ -132,8 +149,7 @@ class PropertyFactory
 			$containsCollection,
 			$relationship,
 			$propertyFilters,
-			$propertyValuesEnum,
-			$extra
+			$propertyValuesEnum
 		);
 	}
 
