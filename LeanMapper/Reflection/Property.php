@@ -66,9 +66,8 @@ class Property
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
 	 * @param PropertyFilters|null $propertyFilters
 	 * @param PropertyValuesEnum|null $propertyValuesEnum
-	 * @param string|null $extra
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, PropertyValuesEnum $propertyValuesEnum = null, $extra = null)
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, PropertyValuesEnum $propertyValuesEnum = null)
 	{
 		$this->name = $name;
 		$this->column = $column;
@@ -79,7 +78,6 @@ class Property
 		$this->relationship = $relationship;
 		$this->propertyFilters = $propertyFilters;
 		$this->propertyValuesEnum = $propertyValuesEnum;
-		$this->extra = $extra;
 	}
 
 	/**
@@ -213,16 +211,6 @@ class Property
 	{
 		$this->checkContainsEnumeration();
 		return $this->propertyValuesEnum->getValues();
-	}
-
-	/**
-	 * Returns value of m:extra flag (if given)
-	 *
-	 * @return string|null
-	 */
-	public function getExtra()
-	{
-		return $this->extra;
 	}
 
 	//////////

@@ -101,6 +101,23 @@ class PropertyFactory
 							$mapper
 						);
 						break;
+					case 'useMethod': // TODO: implement
+						break;
+					case 'filter': // TODO: rewrite filters
+						if ($propertyFilters !== null) {
+							throw new InvalidAnnotationException("Multiple m:filter flags found in annotation: @$annotationType $annotation");
+						}
+						if ($propertyType->isBasicType()) {
+							throw new InvalidAnnotationException("Property of type {$propertyType->getType()} cannot be filtered.");
+						}
+						$propertyFilters =  new PropertyFilters($flagArgument, $aliases);
+						break;
+					case 'passThru': // TODO: use in entity
+						if ($propertyPasses !== null) {
+							throw new InvalidAnnotationException("Multiple m:passThru flags found in annotation: @$annotationType $annotation");
+						}
+						$propertyPasses = new PropertyPasses($flagArgument);
+						break;
 					case 'enum':
 						if ($propertyValuesEnum !== null) {
 							throw new InvalidAnnotationException("Multiple values enumerations found in annotation: @$annotationType $annotation");
@@ -112,23 +129,6 @@ class PropertyFactory
 							throw new InvalidAnnotationException("Values of {$propertyType->getType()} property cannot be enumerated.");
 						}
 						$propertyValuesEnum = new PropertyValuesEnum($flagArgument, $reflection);
-						break;
-					case 'passThru': // TODO: use in entity
-						if ($propertyPasses !== null) {
-							throw new InvalidAnnotationException("Multiple m:passThru flags found in annotation: @$annotationType $annotation");
-						}
-						$propertyPasses = new PropertyPasses($flagArgument);
-						break;
-					case 'filter': // TODO: rewrite filters
-						if ($propertyFilters !== null) {
-							throw new InvalidAnnotationException("Multiple m:filter flags found in annotation: @$annotationType $annotation");
-						}
-						if ($propertyType->isBasicType()) {
-							throw new InvalidAnnotationException("Property of type {$propertyType->getType()} cannot be filtered.");
-						}
-						$propertyFilters =  new PropertyFilters($flagArgument, $aliases);
-						break;
-					case 'useMethod': // TODO: implement
 						break;
 					default: // TODO: implement
 				}
