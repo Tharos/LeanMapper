@@ -291,19 +291,31 @@ abstract class Entity
 	/**
 	 * Returns array of high-level fields with values
 	 *
+	 * @param array|null $whitelist
 	 * @return array
 	 */
-	public function getData()
+	public function getData(array $whitelist = null)
 	{
 		$data = array();
+		if ($whitelist !== null) {
+			$whitelist = array_flip($whitelist);
+		}
 		$reflection = $this->getCurrentReflection();
 		foreach ($reflection->getEntityProperties() as $property) {
-			$data[$property->getName()] = $this->__get($property->getName());
+			$field = $property->getName();
+			if ($whitelist !== null and !isset($whitelist[$field])) {
+				continue;
+			}
+			$data[$field] = $this->__get($property->getName());
 		}
 		foreach ($reflection->getGetters() as $name => $getter) {
 			// TODO: check that getter hasn't been used yet (due to m:useMethod)
+			$field = lcfirst(substr($name, 3));
+			if ($whitelist !== null and !isset($whitelist[$field])) {
+				continue;
+			}
 			if ($getter->getNumberOfRequiredParameters() === 0) {
-				$data[lcfirst(substr($name, 3))] = $getter->invoke($this);
+				$data[$field] = $getter->invoke($this);
 			}
 		}
 		return $data;
