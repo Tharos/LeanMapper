@@ -11,6 +11,7 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Relationship\BelongsToMany;
 use LeanMapper\Relationship\BelongsToOne;
@@ -55,8 +56,8 @@ class Property
 	/** @var PropertyValuesEnum|null */
 	private $propertyValuesEnum;
 
-	/** @var string|null */
-	private $extra;
+	/** @var array */
+	private $customFlags;
 
 
 	/**
@@ -70,8 +71,9 @@ class Property
 	 * @param PropertyPasses|null $propertyPasses
 	 * @param PropertyFilters|null $propertyFilters
 	 * @param PropertyValuesEnum|null $propertyValuesEnum
+	 * @param array|null $customFlags
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null)
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
 	{
 		$this->name = $name;
 		$this->column = $column;
@@ -83,6 +85,8 @@ class Property
 		$this->propertyFilters = $propertyFilters;
 		$this->propertyPasses = $propertyPasses;
 		$this->propertyValuesEnum = $propertyValuesEnum;
+		$this->customFlags = $customFlags;
+
 	}
 
 	/**
@@ -232,6 +236,28 @@ class Property
 	{
 		$this->checkContainsEnumeration();
 		return $this->propertyValuesEnum->getValues();
+	}
+
+	/**
+	 * @param string $name
+	 * @return bool
+	 */
+	public function hasCustomFlag($name)
+	{
+		return array_key_exists($name, $this->customFlags);
+	}
+
+	/**
+	 * @param string $name
+	 * @return string
+	 * @throws InvalidArgumentException
+	 */
+	public function getCustomFlagValue($name)
+	{
+		if (!$this->hasCustomFlag($name)) {
+			throw new InvalidArgumentException("Property doesn't have custom flag $name.");
+		}
+		return $this->customFlags[$name];
 	}
 
 	//////////

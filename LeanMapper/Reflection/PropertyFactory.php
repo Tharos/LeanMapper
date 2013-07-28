@@ -76,6 +76,7 @@ class PropertyFactory
 		$propertyValuesEnum = null;
 		$propertyPasses = null;
 		$propertyFilters = null;
+		$customFlags = array();
 
 		if (isset($matches[7])) {
 			$flagMatches = array();
@@ -130,7 +131,11 @@ class PropertyFactory
 						}
 						$propertyValuesEnum = new PropertyValuesEnum($flagArgument, $reflection);
 						break;
-					default: // TODO: implement
+					default:
+						if (array_key_exists($flag, $customFlags)) {
+							throw new InvalidAnnotationException("Multiple m:$flag flags found in annotation: @$annotationType $annotation");
+						}
+						$customFlags[$flag] = $flagArgument;
 				}
 			}
 		}
@@ -150,7 +155,8 @@ class PropertyFactory
 			$relationship,
 			$propertyFilters,
 			$propertyPasses,
-			$propertyValuesEnum
+			$propertyValuesEnum,
+			$customFlags
 		);
 	}
 
