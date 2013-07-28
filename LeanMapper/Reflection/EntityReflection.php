@@ -13,6 +13,7 @@ namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidStateException;
 use LeanMapper\IMapper;
+use ReflectionMethod;
 
 /**
  * Entity reflection
@@ -29,10 +30,19 @@ class EntityReflection extends \ReflectionClass
 	private $properties;
 
 	/** @var array */
+	private $getters;
+
+	/** @var array */
+	private $setters;
+
+	/** @var array */
 	private $aliases;
 
 	/** @var string */
 	private $docComment;
+
+	/** @var array */
+	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getCurrentReflection', 'getReflection', 'getHasManyRowDifferences', 'getEntityClass');
 
 
 	/**
@@ -43,6 +53,8 @@ class EntityReflection extends \ReflectionClass
 	{
 		parent::__construct($argument);
 		$this->mapper = $mapper;
+		$this->parseProperties();
+		$this->initGettersAndSetters();
 	}
 
 	/**
@@ -53,7 +65,6 @@ class EntityReflection extends \ReflectionClass
 	 */
 	public function getEntityProperty($name)
 	{
-		$this->initProperties();
 		return isset($this->properties[$name]) ? $this->properties[$name] : null;
 	}
 
@@ -64,7 +75,6 @@ class EntityReflection extends \ReflectionClass
 	 */
 	public function getEntityProperties()
 	{
-		$this->initProperties();
 		return $this->properties;
 	}
 
@@ -104,15 +114,40 @@ class EntityReflection extends \ReflectionClass
 		return $this->docComment;
 	}
 
-	////////////////////
-	////////////////////
-
-	private function initProperties()
+	/**
+	 * Gets requested getter reflection
+	 *
+	 * @param string $name
+	 * @return ReflectionMethod|null
+	 */
+	public function getGetter($name)
 	{
-		if ($this->properties === null) {
-			$this->parseProperties();
-		}
+		return isset($this->getters[$name]) ? $this->getters[$name] : null;
 	}
+
+	/**
+	 * Gets array of getter reflections
+	 *
+	 * @return ReflectionMethod[]
+	 */
+	public function getGetters()
+	{
+		return $this->getters;
+	}
+
+	/**
+	 * Gets requested setter reflection
+	 *
+	 * @param string $name
+	 * @return ReflectionMethod|null
+	 */
+	public function getSetter($name)
+	{
+		return isset($this->setters[$name]) ? $this->setters[$name] : null;
+	}
+
+	////////////////////
+	////////////////////
 
 	private function parseProperties()
 	{
@@ -135,6 +170,23 @@ class EntityReflection extends \ReflectionClass
 				}
 			}
 		}
+	}
+
+	private function initGettersAndSetters()
+	{
+		$this->getters = $this->setters = array();
+		foreach ($this->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+			$name = $method->getName();
+			if (strlen($name) > 3) {
+				$prefix = substr($name, 0, 3);
+				if ($prefix === 'get') {
+					$this->getters[$name] = $method;
+				} elseif ($prefix === 'set') {
+					$this->setters[$name] = $method;
+				}
+			}
+		}
+		$this->getters = array_diff_key($this->getters, array_flip($this->internalGetters));
 	}
 
 	/**

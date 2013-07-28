@@ -24,7 +24,6 @@ use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
 use LeanMapper\Relationship;
 use LeanMapper\Row;
-use ReflectionMethod;
 use Traversable;
 
 /**
@@ -50,9 +49,6 @@ abstract class Entity
 
 	/** @var EntityReflection */
 	private $currentReflection;
-
-	/** @var array */
-	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getCurrentReflection', 'getReflection', 'getHasManyRowDifferences', 'getEntityClass');
 
 
 	/**
@@ -91,17 +87,17 @@ abstract class Entity
 	 */
 	public function __get($name/*, array $filterArgs*/)
 	{
-		$property = $this->getCurrentReflection()->getEntityProperty($name);
+		$reflection = $this->getCurrentReflection();
+		$getter = $reflection->getGetter('get' . ucfirst($name));
+		if ($getter !== null) {
+			return $getter->invoke($this); // filters are not relevant here
+		}
+		$property = $reflection->getEntityProperty($name);
 		if ($property === null) {
-			$method = 'get' . ucfirst($name);
-			$internalGetters = array_flip($this->internalGetters);
-			if (method_exists($this, $method) and !isset($internalGetters[$method])) {  // TODO: find better solution (using reflection?)
-				return call_user_func(array($this, $method)); // $filterArgs are not relevant here
-			}
 			throw new MemberAccessException("Undefined property: $name");
 		}
-		$column = $property->getColumn();
 		if ($property->isBasicType()) {
+			$column = $property->getColumn();
 			$value = $this->row->$column;
 			if ($value === null) {
 				if (!$property->isNullable()) {
@@ -131,6 +127,7 @@ abstract class Entity
 				$value = call_user_func_array(array($this, $method), $args);
 
 			} else {
+				$column = $property->getColumn();
 				$value = $this->row->$column;
 				if ($value === null) {
 					if (!$property->isNullable()) {
@@ -164,15 +161,15 @@ abstract class Entity
 	 */
 	function __set($name, $value)
 	{
-		$property = $this->getCurrentReflection()->getEntityProperty($name);
-		if ($property === null) {
-			$method = 'set' . ucfirst($name);
-			if (method_exists($this, $method)) { // TODO: find better solution (using reflection)
-				call_user_func(array($this, $method), $value);
-			} else {
+		$reflection = $this->getCurrentReflection();
+		$setter = $reflection->getSetter('set' . ucfirst($name));
+		if ($setter !== null) {
+			$setter->invoke($this, $value);
+		} else {
+			$property = $reflection->getEntityProperty($name);
+			if ($property === null) {
 				throw new MemberAccessException("Undefined property: $name");
 			}
-		} else {
 			if (!$property->isWritable()) {
 				throw new MemberAccessException("Cannot write to read only property '$name'.");
 			}
@@ -294,16 +291,14 @@ abstract class Entity
 	public function getData()
 	{
 		$data = array();
-		foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
+		$reflection = $this->getCurrentReflection();
+		foreach ($reflection->getEntityProperties() as $property) {
 			$data[$property->getName()] = $this->__get($property->getName());
 		}
-		$internalGetters = array_flip($this->internalGetters);
-		foreach ($this->getCurrentReflection()->getMethods(ReflectionMethod::IS_PUBLIC) as $method) { // TODO: better support from EntityReflection
-			$name = $method->getName();
-			if (substr($name, 0, 3) === 'get' and !isset($internalGetters[$name])) {
-				if ($method->getNumberOfRequiredParameters() === 0) {
-					$data[lcfirst(substr($name, 3))] = $method->invoke($this);
-				}
+		foreach ($reflection->getGetters() as $name => $getter) {
+			// TODO: check that getter hasn't been used yet (due to m:useMethod)
+			if ($getter->getNumberOfRequiredParameters() === 0) {
+				$data[lcfirst(substr($name, 3))] = $getter->invoke($this);
 			}
 		}
 		return $data;
