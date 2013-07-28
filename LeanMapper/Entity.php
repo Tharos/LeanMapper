@@ -96,6 +96,7 @@ abstract class Entity
 		if ($property === null) {
 			throw new MemberAccessException("Undefined property: $name");
 		}
+		$pass = $property->getGetterPass();
 		if ($property->isBasicType()) {
 			$column = $property->getColumn();
 			$value = $this->row->$column;
@@ -103,13 +104,13 @@ abstract class Entity
 				if (!$property->isNullable()) {
 					throw new InvalidValueException("Property '$name' cannot be null.");
 				}
-				return null;
-			}
-			if (!settype($value, $property->getType())) {
-				throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
-			}
-			if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
-				throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
+			} else {
+				if (!settype($value, $property->getType())) {
+					throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
+				}
+				if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
+					throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
+				}
 			}
 		} else {
 			if ($property->hasRelationship()) {
@@ -133,19 +134,22 @@ abstract class Entity
 					if (!$property->isNullable()) {
 						throw new InvalidValueException("Property '$name' cannot be null.");
 					}
-					return null;
-				}
-				if (!$property->containsCollection()) {
-					$type = $property->getType();
-					if (!($value instanceof $type)) {
-						throw new InvalidValueException("Property '$name' is expected to contain an instance of '$type', instance of '" . get_class($value) . "' given.");
-					}
 				} else {
-					if (!is_array($value)) {
-						throw new InvalidValueException("Property '$name' is expected to contain an array of '{$property->getType()}' instances.");
+					if (!$property->containsCollection()) {
+						$type = $property->getType();
+						if (!($value instanceof $type)) {
+							throw new InvalidValueException("Property '$name' is expected to contain an instance of '$type', instance of '" . get_class($value) . "' given.");
+						}
+					} else {
+						if (!is_array($value)) {
+							throw new InvalidValueException("Property '$name' is expected to contain an array of '{$property->getType()}' instances.");
+						}
 					}
 				}
 			}
+		}
+		if ($pass !== null) {
+			$value = $this->$pass($value);
 		}
 		return $value;
 	}
@@ -173,6 +177,7 @@ abstract class Entity
 			if (!$property->isWritable()) {
 				throw new MemberAccessException("Cannot write to read only property '$name'.");
 			}
+			$pass = $property->getSetterPass();
 			$column = $property->getColumn();
 			if ($value === null) {
 				if (!$property->isNullable()) {
@@ -184,7 +189,6 @@ abstract class Entity
 						throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set to null.');
 					}
 				}
-				$this->row->$column = null;
 			} else {
 				if ($property->isBasicType()) {
 					if (!settype($value, $property->getType())) {
@@ -193,7 +197,6 @@ abstract class Entity
 					if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
 						throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
 					}
-					$this->row->$column = $value;
 				} else {
 					$type = $property->getType();
 					if (!($value instanceof $type)) {
@@ -208,7 +211,6 @@ abstract class Entity
 							throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set via magic __set.');
 						}
 						$column = $relationship->getColumnReferencingTargetTable();
-
 						if ($value->isDetached()) {
 							throw new InvalidValueException('Detached entity must be stored in database before use in relationships.');
 						}
@@ -216,16 +218,19 @@ abstract class Entity
 						$table = $mapper->getTable(get_class($value));
 						$idField = $mapper->getEntityField($table, $mapper->getPrimaryKey($table));
 
-						$this->row->$column = $value->$idField;
+						$value = $value->$idField;
 						$this->row->cleanReferencedRowsCache($table, $column);
 					} else {
 						if (!is_object($value)) {
 							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . gettype($value) . " given.");
 						}
-						$this->row->$column = $value;
 					}
 				}
 			}
+			if ($pass !== null) {
+				$value = $this->$pass($value);
+			}
+			$this->row->$column = $value;
 		}
 	}
 

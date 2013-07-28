@@ -49,6 +49,9 @@ class Property
 	/** @var PropertyFilters|null */
 	private $propertyFilters;
 
+	/** @var PropertyPasses|null */
+	private $propertyPasses;
+
 	/** @var PropertyValuesEnum|null */
 	private $propertyValuesEnum;
 
@@ -64,10 +67,11 @@ class Property
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
+	 * @param PropertyPasses|null $propertyPasses
 	 * @param PropertyFilters|null $propertyFilters
 	 * @param PropertyValuesEnum|null $propertyValuesEnum
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, PropertyValuesEnum $propertyValuesEnum = null)
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null)
 	{
 		$this->name = $name;
 		$this->column = $column;
@@ -77,6 +81,7 @@ class Property
 		$this->containsCollection = $containsCollection;
 		$this->relationship = $relationship;
 		$this->propertyFilters = $propertyFilters;
+		$this->propertyPasses = $propertyPasses;
 		$this->propertyValuesEnum = $propertyValuesEnum;
 	}
 
@@ -179,6 +184,22 @@ class Property
 	public function getFilters($index = null)
 	{
 		return $this->propertyFilters !== null ? $this->propertyFilters->getFilters($index) : null;
+	}
+
+	/**
+	 * @return string|null
+	 */
+	public function getGetterPass()
+	{
+		return $this->propertyPasses !== null ? $this->propertyPasses->getGetterPass() : null;
+	}
+
+	/**
+	 * @return string|null
+	 */
+	public function getSetterPass()
+	{
+		return $this->propertyPasses !== null ? $this->propertyPasses->getSetterPass() : null;
 	}
 
 	/**

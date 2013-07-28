@@ -112,7 +112,7 @@ class PropertyFactory
 						}
 						$propertyFilters =  new PropertyFilters($flagArgument, $aliases);
 						break;
-					case 'passThru': // TODO: use in entity
+					case 'passThru':
 						if ($propertyPasses !== null) {
 							throw new InvalidAnnotationException("Multiple m:passThru flags found in annotation: @$annotationType $annotation");
 						}
@@ -149,6 +149,7 @@ class PropertyFactory
 			$containsCollection,
 			$relationship,
 			$propertyFilters,
+			$propertyPasses,
 			$propertyValuesEnum
 		);
 	}
