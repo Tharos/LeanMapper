@@ -21,8 +21,11 @@ use LeanMapper\Exception\InvalidAnnotationException;
 class PropertyPasses
 {
 
-	/** @var string[] */
-	private $passes = array(null, null);
+	/** @var string */
+	private $getterPass;
+
+	/** @var string */
+	private $setterPass;
 
 
 	/**
@@ -31,31 +34,26 @@ class PropertyPasses
 	 */
 	public function __construct($definition)
 	{
-		$passes = array();
+		$counter = 0;
 		foreach (preg_split('#\s*\|\s*#', trim($definition)) as $pass) {
+			$counter++;
+			if ($counter > 2) {
+				throw new InvalidAnnotationException('PropertyPasses cannot have more than two parts.');
+			}
 			if ($pass === '') {
-				$passes[] = null;
 				continue;
 			}
 			if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $pass)) {
 				throw new InvalidAnnotationException('Invalid method pass name given: ' . $pass);
 			}
-			$passes[] = $pass;
+			if ($counter === 1) {
+				$this->getterPass = $pass;
+			} else { // $counter === 2
+				$this->setterPass = $pass;
+			}
 		}
-		switch (count($passes)) {
-			case 0:
-				break;
-			case 1:
-				$this->passes = array($pass, $pass);
-				break;
-			case 2:
-				$this->passes = $passes;
-				break;
-			default:
-				throw new InvalidAnnotationException('PropertyPasses cannot have more than two parts.');
-		}
-		if (count($this->passes) > 2) {
-			throw new InvalidAnnotationException('PropertyPasses cannot have more than two parts.');
+		if ($counter === 1) {
+			$this->setterPass = $this->getterPass;
 		}
 	}
 
@@ -64,7 +62,7 @@ class PropertyPasses
 	 */
 	public function getGetterPass()
 	{
-		return $this->passes[0];
+		return $this->getterPass;
 	}
 
 	/**
@@ -72,7 +70,7 @@ class PropertyPasses
 	 */
 	public function getSetterPass()
 	{
-		return $this->passes[1];
+		return $this->setterPass;
 	}
 
 }
