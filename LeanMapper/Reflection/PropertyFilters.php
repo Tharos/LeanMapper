@@ -60,6 +60,7 @@ class PropertyFilters
 					$filters[] = $function;
 				}
 			}
+			// TODO: check count($filters) > 2
 			$this->filters[] = $filters;
 		}
 	}
