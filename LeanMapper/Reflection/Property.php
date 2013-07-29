@@ -77,7 +77,7 @@ class Property
 	 * @param PropertyValuesEnum|null $propertyValuesEnum
 	 * @param array|null $customFlags
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
 	{
 		$this->name = $name;
 		$this->column = $column;
