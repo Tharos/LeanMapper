@@ -84,17 +84,26 @@ abstract class Entity
 	 * @throws InvalidValueException
 	 * @throws MemberAccessException
 	 * @throws RuntimeException
+	 * @throws InvalidMethodCallException
 	 */
 	public function __get($name/*, array $filterArgs*/)
 	{
 		$reflection = $this->getCurrentReflection();
-		$getter = $reflection->getGetter('get' . ucfirst($name));
-		if ($getter !== null) {
-			return $getter->invoke($this); // filters are not relevant here
+		$nativeGetter = $reflection->getGetter('get' . ucfirst($name));
+		if ($nativeGetter !== null) {
+			return $nativeGetter->invoke($this); // filters are not relevant here
 		}
 		$property = $reflection->getEntityProperty($name);
 		if ($property === null) {
 			throw new MemberAccessException("Undefined property: $name");
+		}
+		$customGetter = $property->getGetter();
+		if ($customGetter !== null) {
+			$customGetterReflection = $reflection->getGetter($customGetter);
+			if ($customGetterReflection === null) {
+				throw new InvalidMethodCallException("Missing getter method '$customGetter'.");
+			}
+			return $customGetterReflection->invoke($this); // filters are not relevant here
 		}
 		$pass = $property->getGetterPass();
 		if ($property->isBasicType()) {
@@ -166,9 +175,9 @@ abstract class Entity
 	function __set($name, $value)
 	{
 		$reflection = $this->getCurrentReflection();
-		$setter = $reflection->getSetter('set' . ucfirst($name));
-		if ($setter !== null) {
-			$setter->invoke($this, $value);
+		$nativeSetter = $reflection->getSetter('set' . ucfirst($name));
+		if ($nativeSetter !== null) {
+			$nativeSetter->invoke($this, $value);
 		} else {
 			$property = $reflection->getEntityProperty($name);
 			if ($property === null) {
@@ -177,60 +186,69 @@ abstract class Entity
 			if (!$property->isWritable()) {
 				throw new MemberAccessException("Cannot write to read only property '$name'.");
 			}
-			$pass = $property->getSetterPass();
-			$column = $property->getColumn();
-			if ($value === null) {
-				if (!$property->isNullable()) {
-					throw new InvalidValueException("Property '$name' cannot be null.");
+			$customSetter = $property->getSetter();
+			if ($customSetter !== null) {
+				$customSetterReflection = $reflection->getSetter($customSetter);
+				if ($customSetterReflection === null) {
+					throw new InvalidMethodCallException("Missing setter method '$customSetter'.");
 				}
-				$relationship = $property->getRelationship();
-				if ($relationship !== null) {
-					if (!($relationship instanceof Relationship\HasOne)) {
-						throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set to null.');
-					}
-				}
+				$customSetterReflection->invoke($this, $value);
 			} else {
-				if ($property->isBasicType()) {
-					if (!settype($value, $property->getType())) {
-						throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
+				$pass = $property->getSetterPass();
+				$column = $property->getColumn();
+				if ($value === null) {
+					if (!$property->isNullable()) {
+						throw new InvalidValueException("Property '$name' cannot be null.");
 					}
-					if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
-						throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
+					$relationship = $property->getRelationship();
+					if ($relationship !== null) {
+						if (!($relationship instanceof Relationship\HasOne)) {
+							throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set to null.');
+						}
 					}
 				} else {
-					$type = $property->getType();
-					if (!($value instanceof $type)) {
-						throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
-					}
-					if ($property->hasRelationship()) {
-						if (!($value instanceof Entity)) {
-							throw new InvalidValueException("Only entities can be set via magic __set on field with relationships.");
+					if ($property->isBasicType()) {
+						if (!settype($value, $property->getType())) {
+							throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
 						}
-						$relationship = $property->getRelationship();
-						if (!($relationship instanceof Relationship\HasOne)) {
-							throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set via magic __set.');
+						if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
+							throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
 						}
-						$column = $relationship->getColumnReferencingTargetTable();
-						if ($value->isDetached()) {
-							throw new InvalidValueException('Detached entity must be stored in database before use in relationships.');
-						}
-						$mapper = $value->mapper; // mapper stealing :)
-						$table = $mapper->getTable(get_class($value));
-						$idField = $mapper->getEntityField($table, $mapper->getPrimaryKey($table));
-
-						$value = $value->$idField;
-						$this->row->cleanReferencedRowsCache($table, $column);
 					} else {
-						if (!is_object($value)) {
-							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . gettype($value) . " given.");
+						$type = $property->getType();
+						if (!($value instanceof $type)) {
+							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
+						}
+						if ($property->hasRelationship()) {
+							if (!($value instanceof Entity)) {
+								throw new InvalidValueException("Only entities can be set via magic __set on field with relationships.");
+							}
+							$relationship = $property->getRelationship();
+							if (!($relationship instanceof Relationship\HasOne)) {
+								throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set via magic __set.');
+							}
+							$column = $relationship->getColumnReferencingTargetTable();
+							if ($value->isDetached()) {
+								throw new InvalidValueException('Detached entity must be stored in database before use in relationships.');
+							}
+							$mapper = $value->mapper; // mapper stealing :)
+							$table = $mapper->getTable(get_class($value));
+							$idField = $mapper->getEntityField($table, $mapper->getPrimaryKey($table));
+
+							$value = $value->$idField;
+							$this->row->cleanReferencedRowsCache($table, $column);
+						} else {
+							if (!is_object($value)) {
+								throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . gettype($value) . " given.");
+							}
 						}
 					}
 				}
+				if ($pass !== null) {
+					$value = $this->$pass($value);
+				}
+				$this->row->$column = $value;
 			}
-			if ($pass !== null) {
-				$value = $this->$pass($value);
-			}
-			$this->row->$column = $value;
 		}
 	}
 
@@ -296,20 +314,28 @@ abstract class Entity
 	 */
 	public function getData(array $whitelist = null)
 	{
+
 		$data = array();
 		if ($whitelist !== null) {
 			$whitelist = array_flip($whitelist);
 		}
 		$reflection = $this->getCurrentReflection();
+		$usedGetters = array();
 		foreach ($reflection->getEntityProperties() as $property) {
 			$field = $property->getName();
 			if ($whitelist !== null and !isset($whitelist[$field])) {
 				continue;
 			}
 			$data[$field] = $this->__get($property->getName());
+			$getter = $property->getGetter();
+			if ($getter !== null) {
+				$usedGetters[$getter] = true;
+			}
 		}
 		foreach ($reflection->getGetters() as $name => $getter) {
-			// TODO: check that getter hasn't been used yet (due to m:useMethod)
+			if (isset($usedGetters[$getter->getName()])) {
+				continue;
+			}
 			$field = lcfirst(substr($name, 3));
 			if ($whitelist !== null and !isset($whitelist[$field])) {
 				continue;

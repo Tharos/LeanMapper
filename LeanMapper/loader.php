@@ -35,6 +35,7 @@ require_once __DIR__ . '/Reflection/Property.php';
 require_once __DIR__ . '/Reflection/PropertyValuesEnum.php';
 require_once __DIR__ . '/Reflection/PropertyFactory.php';
 require_once __DIR__ . '/Reflection/PropertyFilters.php';
+require_once __DIR__ . '/Reflection/PropertyMethods.php';
 require_once __DIR__ . '/Reflection/PropertyPasses.php';
 require_once __DIR__ . '/Reflection/PropertyType.php';
 require_once __DIR__ . '/Repository.php';

@@ -63,6 +63,7 @@ class PropertyFactory
 		}
 
 		$propertyType = new PropertyType($matches[2], $aliases);
+		$isWritable = $annotationType === 'property';
 		$containsCollection = $matches[3] !== '';
 		$isNullable = ($matches[1] !== '' or $matches[4] !== '');
 		$name = substr($matches[5], 1);
@@ -73,9 +74,10 @@ class PropertyFactory
 		}
 
 		$relationship = null;
-		$propertyValuesEnum = null;
-		$propertyPasses = null;
+		$propertyMethods = null;
 		$propertyFilters = null;
+		$propertyPasses = null;
+		$propertyValuesEnum = null;
 		$customFlags = array();
 
 		if (isset($matches[7])) {
@@ -102,7 +104,11 @@ class PropertyFactory
 							$mapper
 						);
 						break;
-					case 'useMethod': // TODO: implement
+					case 'useMethods':
+						if ($propertyMethods !== null) {
+							throw new InvalidAnnotationException("Multiple m:useMethods flags found in annotation: @$annotationType $annotation");
+						}
+						$propertyMethods = new PropertyMethods($name, $isWritable, $flagArgument);
 						break;
 					case 'filter': // TODO: rewrite filters
 						if ($propertyFilters !== null) {
@@ -149,10 +155,11 @@ class PropertyFactory
 			$name,
 			$column,
 			$propertyType,
-			$annotationType === 'property',
+			$isWritable,
 			$isNullable,
 			$containsCollection,
 			$relationship,
+			$propertyMethods,
 			$propertyFilters,
 			$propertyPasses,
 			$propertyValuesEnum,

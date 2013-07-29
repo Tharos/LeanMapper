@@ -47,6 +47,9 @@ class Property
 	/** @var HasOne|HasMany|BelongsToOne|BelongsToMany|null */
 	private $relationship;
 
+	/** @var PropertyMethods|null */
+	private $propertyMethods;
+
 	/** @var PropertyFilters|null */
 	private $propertyFilters;
 
@@ -68,12 +71,13 @@ class Property
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
-	 * @param PropertyPasses|null $propertyPasses
+	 * @param PropertyMethods|null $propertyMethods
 	 * @param PropertyFilters|null $propertyFilters
+	 * @param PropertyPasses|null $propertyPasses
 	 * @param PropertyValuesEnum|null $propertyValuesEnum
 	 * @param array|null $customFlags
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
 	{
 		$this->name = $name;
 		$this->column = $column;
@@ -82,6 +86,7 @@ class Property
 		$this->isNullable = $isNullable;
 		$this->containsCollection = $containsCollection;
 		$this->relationship = $relationship;
+		$this->propertyMethods = $propertyMethods;
 		$this->propertyFilters = $propertyFilters;
 		$this->propertyPasses = $propertyPasses;
 		$this->propertyValuesEnum = $propertyValuesEnum;
@@ -177,6 +182,22 @@ class Property
 	public function getRelationship()
 	{
 		return $this->relationship;
+	}
+
+	/**
+	 * @return string|null
+	 */
+	public function getGetter()
+	{
+		return $this->propertyMethods !== null ? $this->propertyMethods->getGetter() : null;
+	}
+
+	/**
+	 * @return string|null
+	 */
+	public function getSetter()
+	{
+		return $this->propertyMethods !== null ? $this->propertyMethods->getSetter() : null;
 	}
 
 	/**
