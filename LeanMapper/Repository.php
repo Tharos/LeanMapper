@@ -12,7 +12,6 @@
 namespace LeanMapper;
 
 use dibi;
-use DibiConnection;
 use DibiRow;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidStateException;
@@ -27,7 +26,7 @@ use ReflectionClass;
 abstract class Repository
 {
 
-	/** @var DibiConnection */
+	/** @var Connection */
 	protected $connection;
 
 	/** @var IMapper */
@@ -47,10 +46,10 @@ abstract class Repository
 
 
 	/**
-	 * @param DibiConnection $connection
+	 * @param Connection $connection
 	 * @param IMapper $mapper
 	 */
-	public function __construct(DibiConnection $connection, IMapper $mapper)
+	public function __construct(Connection $connection, IMapper $mapper)
 	{
 		$this->connection = $connection;
 		$this->mapper = $mapper;

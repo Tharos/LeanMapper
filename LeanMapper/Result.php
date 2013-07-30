@@ -12,7 +12,6 @@
 namespace LeanMapper;
 
 use Closure;
-use DibiConnection;
 use DibiFluent;
 use DibiSqliteDriver;
 use DibiSqlite3Driver;
@@ -48,7 +47,7 @@ class Result implements \Iterator
 	/** @var string */
 	private $table;
 
-	/** @var DibiConnection */
+	/** @var Connection */
 	private $connection;
 
 	/** @var IMapper */
@@ -75,13 +74,13 @@ class Result implements \Iterator
 	 *
 	 * @param DibiRow|DibiRow[] $data
 	 * @param string $table
-	 * @param DibiConnection $connection
+	 * @param Connection $connection
 	 * @param IMapper $mapper
 	 * @param string|null $originKey
 	 * @return self
 	 * @throws InvalidArgumentException
 	 */
-	public static function getInstance($data, $table, DibiConnection $connection, IMapper $mapper, $originKey = null)
+	public static function getInstance($data, $table, Connection $connection, IMapper $mapper, $originKey = null)
 	{
 		$dataArray = array();
 		$primaryKey = $mapper->getPrimaryKey($table);
@@ -322,10 +321,10 @@ class Result implements \Iterator
 	 * @param mixed $newId
 	 * @param mixed $oldId
 	 * @param string $table
-	 * @param DibiConnection $connection
+	 * @param Connection $connection
 	 * @throws InvalidStateException
 	 */
-	public function markAsCreated($newId, $oldId, $table, DibiConnection $connection)
+	public function markAsCreated($newId, $oldId, $table, Connection $connection)
 	{
 		if (!$this->isDetached()) {
 			throw new InvalidStateException('Result is not in detached state.');
@@ -512,11 +511,11 @@ class Result implements \Iterator
 	/**
 	 * @param array|null $data
 	 * @param string|null $table
-	 * @param DibiConnection|null $connection
+	 * @param Connection|null $connection
 	 * @param IMapper|null $mapper
 	 * @param string|null $originKey
 	 */
-	private function __construct(array $data = null, $table = null, DibiConnection $connection = null, IMapper $mapper = null, $originKey = null)
+	private function __construct(array $data = null, $table = null, Connection $connection = null, IMapper $mapper = null, $originKey = null)
 	{
 		if ($data === null) {
 			$data = array(array());

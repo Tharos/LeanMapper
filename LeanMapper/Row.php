@@ -12,7 +12,6 @@
 namespace LeanMapper;
 
 use Closure;
-use DibiConnection;
 
 /**
  * Pointer to specific position inside LeanMapper\Result instance
@@ -164,9 +163,9 @@ class Row
 	 *
 	 * @param int $id
 	 * @param string $table
-	 * @param DibiConnection $connection
+	 * @param Connection $connection
 	 */
-	public function markAsCreated($id, $table, DibiConnection $connection)
+	public function markAsCreated($id, $table, Connection $connection)
 	{
 		$this->result->markAsCreated($id, $this->id, $table, $connection);
 		$this->id = $id;

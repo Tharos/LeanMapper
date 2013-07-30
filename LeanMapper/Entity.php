@@ -12,7 +12,6 @@
 namespace LeanMapper;
 
 use Closure;
-use DibiConnection;
 use DibiFluent;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
@@ -456,9 +455,9 @@ abstract class Entity
 	 *
 	 * @param int $id
 	 * @param string $table
-	 * @param DibiConnection $connection
+	 * @param Connection $connection
 	 */
-	public function markAsCreated($id, $table, DibiConnection $connection)
+	public function markAsCreated($id, $table, Connection $connection)
 	{
 		$this->row->markAsCreated($id, $table, $connection);
 	}
