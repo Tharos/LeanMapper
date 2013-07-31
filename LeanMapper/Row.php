@@ -11,8 +11,6 @@
 
 namespace LeanMapper;
 
-use Closure;
-
 /**
  * Pointer to specific position inside LeanMapper\Result instance
  *
@@ -177,7 +175,7 @@ class Row
 	 * @param string $table
 	 * @param string|null $viaColumn
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @return Row|null
 	 */
 	public function referenced($table, $viaColumn = null, $filters = null, $filterArgs = null)
@@ -191,7 +189,7 @@ class Row
 	 * @param string $table
 	 * @param string|null $viaColumn
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @param string|null $strategy
 	 * @return Row[]
 	 */
@@ -205,7 +203,7 @@ class Row
 	 * @param string $table
 	 * @param string|null $viaColumn
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @param string|null $strategy
 	 */
 	public function addToReferencing(array $values, $table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = null)
@@ -218,7 +216,7 @@ class Row
 	 * @param string $table
 	 * @param string|null $viaColumn
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @param string|null $strategy
 	 */
 	public function removeFromReferencing(array $values, $table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = null)
@@ -230,7 +228,7 @@ class Row
 	 * @param string $table
 	 * @param string|null $viaColumn
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @param string|null $strategy
 	 * @return DataDifference
 	 */
@@ -254,7 +252,7 @@ class Row
 	 * @param string $table
 	 * @param string|null $viaColumn
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @param string|null $strategy
 	 */
 	public function cleanReferencingAddedAndRemovedMeta($table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = null)

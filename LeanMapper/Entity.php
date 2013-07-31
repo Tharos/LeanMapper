@@ -11,7 +11,6 @@
 
 namespace LeanMapper;
 
-use Closure;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidStateException;
@@ -124,7 +123,7 @@ abstract class Entity
 				$relationship = $property->getRelationship();
 
 				$method = explode('\\', get_class($relationship));
-				$method = 'get' . array_pop($method) . 'Value';
+				$method = 'get' . end($method) . 'Value';
 
 				$args = array($property, $property->getFilters(0));
 				if ($method === 'getHasManyValue') {
@@ -529,7 +528,7 @@ abstract class Entity
 	/**
 	 * @param Property $property
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @return Entity
 	 * @throws InvalidValueException
 	 */
@@ -555,7 +554,7 @@ abstract class Entity
 	 * @param Property $property
 	 * @param string|array|null $relTableFilters
 	 * @param string|array|null $targetTableFilters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @return Entity[]
 	 * @throws InvalidValueException
 	 */
@@ -580,7 +579,7 @@ abstract class Entity
 	/**
 	 * @param Property $property
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @return Entity
 	 * @throws InvalidValueException
 	 */
@@ -609,7 +608,7 @@ abstract class Entity
 	/**
 	 * @param Property $property
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @return Entity[]
 	 */
 	private function getBelongsToManyValue(Property $property, $filters = null, $filterArgs = null)
@@ -665,7 +664,7 @@ abstract class Entity
 			$relationship->getColumnReferencingTargetTable() => $arg,
 		);
 		$method .= 'Referencing';
-		$this->row->$method($values, $relationship->getRelationshipTable(), null, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
+		$this->row->$method($values, $relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), null, $relationship->getStrategy());
 	}
 
 	/**

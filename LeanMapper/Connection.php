@@ -22,9 +22,9 @@ use LeanMapper\Exception\InvalidArgumentException;
 class Connection extends DibiConnection
 {
 
-	const FILTER_ARGS_BASIC = 'basic';
+	const FILTER_TYPE_SIMPLE = 'simple';
 
-	const FILTER_ARGS_RICH = 'rich';
+	const FILTER_TYPE_PROPERTY = 'rich';
 
 	/** @var array */
 	private $filters;
@@ -36,7 +36,7 @@ class Connection extends DibiConnection
 	 * @param string $argsMode
 	 * @throws InvalidArgumentException
 	 */
-	public function registerFilter($name, $callback, $argsMode = self::FILTER_ARGS_BASIC)
+	public function registerFilter($name, $callback, $argsMode = self::FILTER_TYPE_SIMPLE)
 	{
 		if (isset($this->filters[$name])) {
 			throw new InvalidArgumentException("Filter with name '$name' was already registered.");
@@ -44,7 +44,7 @@ class Connection extends DibiConnection
 		if (!is_callable($callback, true)) {
 			throw new InvalidArgumentException("Callback given for filter '$name' is not callable.");
 		}
-		if ($argsMode !== self::FILTER_ARGS_BASIC and $argsMode !== self::FILTER_ARGS_RICH) {
+		if ($argsMode !== self::FILTER_TYPE_SIMPLE and $argsMode !== self::FILTER_TYPE_PROPERTY) {
 			throw new InvalidArgumentException("Invalid filter arguments mode given for filter with name '$name': $argsMode");
 		}
 		$this->filters[$name] = array($callback, $argsMode);

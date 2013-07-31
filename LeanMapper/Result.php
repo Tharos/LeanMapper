@@ -354,7 +354,7 @@ class Result implements \Iterator
 	 * @param string $table
 	 * @param string|null $viaColumn
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @throws InvalidStateException
 	 * @return Row|null
 	 */
@@ -374,7 +374,7 @@ class Result implements \Iterator
 	 * @param string $table
 	 * @param string|null $viaColumn
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @param string $strategy
 	 * @throws InvalidStateException
 	 * @return Row[]
@@ -401,39 +401,42 @@ class Result implements \Iterator
 	/**
 	 * @param array $values
 	 * @param string $table
-	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
+	 * @param string|array|null $filters
+	 * @param mixed|array|null $filterArgs
 	 * @param string|null $strategy
 	 */
-	public function addToReferencing(array $values, $table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	public function addToReferencing(array $values, $table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = self::STRATEGY_IN)
 	{
-		$this->getReferencingResult($table, $filter, $viaColumn, $strategy)
+		$this->getReferencingResult($table, $viaColumn, $filters, $filterArgs, $strategy)
 				->addDataEntry($values);
 	}
 
 	/**
 	 * @param array $values
 	 * @param string $table
-	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
+	 * @param string|array|null $filters
+	 * @param mixed|array|null $filterArgs
 	 * @param string|null $strategy
 	 */
-	public function removeFromReferencing(array $values, $table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	public function removeFromReferencing(array $values, $table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = self::STRATEGY_IN)
 	{
-		$this->getReferencingResult($table, $filter, $viaColumn, $strategy)
+		$this->getReferencingResult($table, $viaColumn, $filters, $filterArgs, $strategy)
 				->removeDataEntry($values);
 	}
 
 	/**
 	 * @param string $table
-	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
+	 * @param string|array|null $filters
+	 * @param mixed|array|null $filterArgs
 	 * @param string|null $strategy
 	 * @return DataDifference
 	 */
-	public function createReferencingDataDifference($table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	public function createReferencingDataDifference($table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = self::STRATEGY_IN)
 	{
-		return $this->getReferencingResult($table, $filter, $viaColumn, $strategy)
+		return $this->getReferencingResult($table, $viaColumn, $filters, $filterArgs, $strategy)
 				->createDataDifference();
 	}
 
@@ -458,13 +461,14 @@ class Result implements \Iterator
 
 	/**
 	 * @param string $table
-	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
+	 * @param string|array|null $filters
+	 * @param mixed|array|null $filterArgs
 	 * @param string|null $strategy
 	 */
-	public function cleanReferencingAddedAndRemovedMeta($table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	public function cleanReferencingAddedAndRemovedMeta($table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = self::STRATEGY_IN)
 	{
-		$this->getReferencingResult($table, $filter, $viaColumn, $strategy)
+		$this->getReferencingResult($table, $viaColumn, $filters, $filterArgs, $strategy)
 				->cleanAddedAndRemovedMeta();
 	}
 
@@ -532,7 +536,7 @@ class Result implements \Iterator
 	 * @param string $table
 	 * @param string $viaColumn
 	 * @param string|array|null $filters
-	 * @param string|array|null $filterArgs
+	 * @param mixed|array|null $filterArgs
 	 * @throws InvalidArgumentException
 	 * @throws InvalidStateException
 	 * @return self
@@ -716,7 +720,7 @@ class Result implements \Iterator
 	 * @param mixed||null $filterArgs
 	 * @throws Exception\InvalidArgumentException
 	 */
-	private function applyFilters(Fluent $statement, $filters, $filterArgs)
+	private function applyFilters(Fluent $statement, $filters, $filterArgs = null)
 	{
 		if (!is_array($filters)) {
 			if (!is_string($filters)) {
@@ -724,8 +728,12 @@ class Result implements \Iterator
 			}
 			$filters = array($filters);
 		}
+		if (!is_array($filterArgs)) {
+			$filterArgs = $filterArgs === null ? array() : array($filterArgs);
+		}
 		foreach ($filters as $filter) {
-			call_user_func_array(array($statement, 'applyFilterFromEntity'), array_merge(array($filter), $filterArgs));
+			$method = $this->connection->getFilterArgsMode($filter) === Connection::FILTER_TYPE_PROPERTY ? 'applyPropertyFilter' : 'applyFilter';
+			call_user_func_array(array($statement, $method), array_merge(array($filter), $filterArgs));
 		}
 	}
 
