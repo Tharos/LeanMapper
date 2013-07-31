@@ -25,7 +25,11 @@ class PropertyFilters
 	private $filters = array();
 
 
-	public function __construct($definition, Aliases $aliases)
+	/**
+	 * @param string $definition
+	 * @throws InvalidAnnotationException
+	 */
+	public function __construct($definition)
 	{
 		foreach (preg_split('#\s*\|\s*#', trim($definition)) as $set) {
 			if ($set === '') {
@@ -33,32 +37,11 @@ class PropertyFilters
 				continue;
 			}
 			$filters = array();
-			foreach (preg_split('#\s*,\s*#', $set) as $filter) {
+			foreach (preg_split('#\s*,\s*#', trim($set)) as $filter) {
 				if ($filter === '') {
-					throw new InvalidAnnotationException('Empty filter definition given.');
+					throw new InvalidAnnotationException('Empty filter name given.');
 				}
-				$matches = array();
-				preg_match('#^(?:((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+)::)?((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+)$#', $filter, $matches);
-				if (empty($matches) or ($matches[1] !== '' and strpos($matches[2], '\\') !== false)) {
-					throw new InvalidAnnotationException('Invalid filter definition given: ' . $filter);
-				}
-				$function = $matches[2];
-				if ($matches[1] !== '') {
-					$class = $matches[1];
-					if (substr($class, 0, 1) === '\\') {
-						$class = substr($class, 1);
-					} else {
-						$class = $aliases->translate($class);
-					}
-					$filters[] = $class . '::' . $function;
-				} else {
-					if (substr($function, 0, 1) === '\\') {
-						$function = substr($function, 1);
-					} else {
-						$function = $aliases->translate($function);
-					}
-					$filters[] = $function;
-				}
+				$filters[] = $filter;
 			}
 			// TODO: check count($filters) > 2
 			$this->filters[] = $filters;
@@ -66,7 +49,7 @@ class PropertyFilters
 	}
 
 	/**
-	 * Returns array of entity filters (array of callable strings)
+	 * Returns array of entity filters (array of filter names)
 	 *
 	 * @param int|null $index
 	 * @return string[]

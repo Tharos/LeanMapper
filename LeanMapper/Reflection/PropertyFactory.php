@@ -117,7 +117,7 @@ class PropertyFactory
 						if ($propertyType->isBasicType()) {
 							throw new InvalidAnnotationException("Property of type {$propertyType->getType()} cannot be filtered.");
 						}
-						$propertyFilters =  new PropertyFilters($flagArgument, $aliases);
+						$propertyFilters =  new PropertyFilters($flagArgument);
 						break;
 					case 'passThru':
 						if ($propertyPasses !== null) {

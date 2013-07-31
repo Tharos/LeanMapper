@@ -29,7 +29,7 @@ class DefaultMapper implements IMapper
 
 
 	/**
-	 * @inheritdoc
+	 * @inheritdoc TODO: fix comments
 	 */
 	public function getPrimaryKey($table)
 	{

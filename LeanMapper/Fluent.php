@@ -44,15 +44,22 @@ class Fluent extends DibiFluent
 	 * @return $this
 	 * @throws InvalidMethodCallException
 	 */
-	public function applyFilterFromProperty($name, Entity $entity, Property $property, $args = null)
+	public function applyFilterFromEntity($name, Entity $entity, Property $property, $args = null)
 	{
-		$connection = $this->getConnection();
-		if ($connection->getFilterArgsMode($name) !== Connection::FILTER_ARGS_RICH) {
-			throw new InvalidMethodCallException("Filter '$name' cannot be called using Fluent::applyFilterFromProperty.");
-		}
 		$args = func_get_args();
 		$args[0] = $this;
-		call_user_func_array($this->connection->getFilterCallback($name), $args);
+		$connection = $this->getConnection();
+		if ($connection->getFilterArgsMode($name) === Connection::FILTER_ARGS_RICH) {
+			call_user_func_array($this->connection->getFilterCallback($name), $args);
+		} else {
+			$args = array_slice($args, 3);
+			if (empty($args)) {
+				$args = array($name);
+			} else {
+				array_unshift($args, $name);
+			}
+			call_user_func_array(array($this, 'applyFilter'), $args);
+		}
 		return $this;
 	}
 

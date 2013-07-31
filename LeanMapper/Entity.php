@@ -12,7 +12,6 @@
 namespace LeanMapper;
 
 use Closure;
-use DibiFluent;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidStateException;
@@ -122,19 +121,24 @@ abstract class Entity
 			}
 		} else {
 			if ($property->hasRelationship()) {
-
-				$filter = ($set = $property->getFilters(0)) ? $this->getFilterCallback($set, func_get_args()) : null;
 				$relationship = $property->getRelationship();
 
 				$method = explode('\\', get_class($relationship));
 				$method = 'get' . array_pop($method) . 'Value';
-				$args = array($property, $filter);
 
+				$args = array($property, $property->getFilters(0));
 				if ($method === 'getHasManyValue') {
-					$args[] = ($set = $property->getFilters(1)) ? $this->getFilterCallback($set, func_get_args()) : null;
+					$args[] = $property->getFilters(1);
 				}
-				$value = call_user_func_array(array($this, $method), $args);
 
+				$filterArgs = array($this, $property);
+				$funcArgs = func_get_args();
+				if (isset($funcArgs[1])) {
+					$filterArgs = array_merge($filterArgs, $funcArgs[1]);
+				}
+				$args[] = $filterArgs;
+
+				$value = call_user_func_array(array($this, $method), $args);
 			} else {
 				$column = $property->getColumn();
 				$value = $this->row->$column;
@@ -524,14 +528,15 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param Closure|null $filter
+	 * @param string|array|null $filters
+	 * @param string|array|null $filterArgs
 	 * @return Entity
 	 * @throws InvalidValueException
 	 */
-	private function getHasOneValue(Property $property, Closure $filter = null)
+	private function getHasOneValue(Property $property, $filters = null, $filterArgs = null)
 	{
 		$relationship = $property->getRelationship();
-		$row = $this->row->referenced($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingTargetTable());
+		$row = $this->row->referenced($relationship->getTargetTable(), $relationship->getColumnReferencingTargetTable(), $filters, $filterArgs);
 		if ($row === null) {
 			if (!$property->isNullable()) {
 				$name = $property->getName();
@@ -548,19 +553,20 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param Closure|null $relTableFilter
-	 * @param Closure|null $targetTableFilter
+	 * @param string|array|null $relTableFilters
+	 * @param string|array|null $targetTableFilters
+	 * @param string|array|null $filterArgs
 	 * @return Entity[]
 	 * @throws InvalidValueException
 	 */
-	private function getHasManyValue(Property $property, Closure $relTableFilter = null, Closure $targetTableFilter = null)
+	private function getHasManyValue(Property $property, $relTableFilters = null, $targetTableFilters = null, $filterArgs = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relTableFilter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
+		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), $relTableFilters, $filterArgs, $relationship->getStrategy());
 		$value = array();
 		$type = $property->getType();
 		foreach ($rows as $row) {
-			$valueRow = $row->referenced($relationship->getTargetTable(), $targetTableFilter, $relationship->getColumnReferencingTargetTable());
+			$valueRow = $row->referenced($relationship->getTargetTable(), $relationship->getColumnReferencingTargetTable(), $targetTableFilters);
 			if ($valueRow !== null) {
 				$class = $this->getEntityClass($property, $valueRow);
 				$entity = new $class($valueRow, $this->mapper);
@@ -573,14 +579,15 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param Closure|null $filter
+	 * @param string|array|null $filters
+	 * @param string|array|null $filterArgs
 	 * @return Entity
 	 * @throws InvalidValueException
 	 */
-	private function getBelongsToOneValue(Property $property, Closure $filter = null)
+	private function getBelongsToOneValue(Property $property, $filters = null, $filterArgs = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
+		$rows = $this->row->referencing($relationship->getTargetTable(), $relationship->getColumnReferencingSourceTable(), $filters, $filterArgs, $relationship->getStrategy());
 		$count = count($rows);
 		if ($count > 1) {
 			throw new InvalidValueException('There cannot be more than one entity referencing to entity with m:belongToOne relationship.');
@@ -601,13 +608,14 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param Closure|null $filter
+	 * @param string|array|null $filters
+	 * @param string|array|null $filterArgs
 	 * @return Entity[]
 	 */
-	private function getBelongsToManyValue(Property $property, Closure $filter = null)
+	private function getBelongsToManyValue(Property $property, $filters = null, $filterArgs = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
+		$rows = $this->row->referencing($relationship->getTargetTable(), $relationship->getColumnReferencingSourceTable(), $filters, $filterArgs, $relationship->getStrategy());
 		$value = array();
 		foreach ($rows as $row) {
 			$class = $this->getEntityClass($property, $row);
@@ -616,25 +624,6 @@ abstract class Entity
 			$value[] = $entity;
 		}
 		return $this->createCollection($value);
-	}
-
-	/**
-	 * @param array $propertyFilters
-	 * @param array $filterArgs
-	 * @return callable|null
-	 */
-	private function getFilterCallback(array $propertyFilters, array $filterArgs)
-	{
-		$filterCallback = null;
-		if (!empty($propertyFilters)) {
-			$filterArgs = isset($filterArgs[1]) ? $filterArgs[1] : array();
-			$filterCallback = function (DibiFluent $statement) use ($propertyFilters, $filterArgs) {
-				foreach ($propertyFilters as $propertyFilter) {
-					call_user_func_array($propertyFilter, array_merge(array($statement), $filterArgs));
-				}
-			};
-		}
-		return $filterCallback;
 	}
 
 	/**
