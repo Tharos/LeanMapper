@@ -204,11 +204,20 @@ class Property
 	 * Returns property filters
 	 *
 	 * @param int|null $index
-	 * @return string[]|null
+	 * @return array|null
 	 */
 	public function getFilters($index = null)
 	{
 		return $this->propertyFilters !== null ? $this->propertyFilters->getFilters($index) : null;
+	}
+
+	/**
+	 * @param int|null $index
+	 * @return array|string|null
+	 */
+	public function getFiltersAnnotationArg($index = null)
+	{
+		return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersAnnotationArg($index) : null;
 	}
 
 	/**

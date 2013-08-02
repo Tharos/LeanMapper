@@ -21,8 +21,11 @@ use LeanMapper\Exception\InvalidAnnotationException;
 class PropertyFilters
 {
 
-	/** @var string[] */
+	/** @var array */
 	private $filters = array();
+
+	/** @var array */
+	private $annotationArgs = array();
 
 
 	/**
@@ -32,19 +35,23 @@ class PropertyFilters
 	public function __construct($definition)
 	{
 		foreach (preg_split('#\s*\|\s*#', trim($definition)) as $set) {
-			if ($set === '') {
+			$matches = array();
+			preg_match('~^(.*?)(?:#(.*))?$~', $set, $matches);
+
+			if ($matches[1] === '') {
 				$this->filters[] = array();
+				$this->annotationArgs[] = null;
 				continue;
 			}
 			$filters = array();
-			foreach (preg_split('#\s*,\s*#', trim($set)) as $filter) {
+			foreach (preg_split('#\s*,\s*#', trim($matches[1])) as $filter) {
 				if ($filter === '') {
 					throw new InvalidAnnotationException('Empty filter name given.');
 				}
 				$filters[] = $filter;
 			}
-			// TODO: check count($filters) > 2
 			$this->filters[] = $filters;
+			$this->annotationArgs[] = isset($matches[2]) ? $matches[2] : null;
 		}
 	}
 
@@ -52,7 +59,7 @@ class PropertyFilters
 	 * Returns array of entity filters (array of filter names)
 	 *
 	 * @param int|null $index
-	 * @return string[]
+	 * @return array
 	 */
 	public function getFilters($index = null)
 	{
@@ -63,6 +70,21 @@ class PropertyFilters
 			return array();
 		}
 		return $this->filters[$index];
+	}
+
+	/**
+	 * @param int|null $index
+	 * @return array|string|null
+	 */
+	public function getFiltersAnnotationArg($index = null)
+	{
+		if ($index === null) {
+			return $this->annotationArgs;
+		}
+		if (!isset($this->annotationArgs[$index])) {
+			return null;
+		}
+		return $this->annotationArgs[$index];
 	}
 
 }

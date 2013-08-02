@@ -132,13 +132,22 @@ abstract class Entity
 				}
 				if (isset($firstFilters) or isset($secondFilters)) {
 					$funcArgs = func_get_args();
-					$filterArgs = isset($funcArgs[1]) ? $funcArgs[1] : array();
 					if (isset($firstFilters)) {
+						$annotationArg = $property->getFiltersAnnotationArg(0);
+						$filterArgs = $annotationArg === null ? array() : array($annotationArg);
+						if (isset($funcArgs[1])) {
+							$filterArgs = array_merge($filterArgs, $funcArgs[1]);
+						}
 						$args[] = new Filtering($firstFilters, $filterArgs, $this, $property);
 					} else {
 						$args[] = null;
 					}
 					if (isset($secondFilters)) {
+						$annotationArg = $property->getFiltersAnnotationArg(1);
+						$filterArgs = $annotationArg === null ? array() : array($annotationArg);
+						if (isset($funcArgs[1])) {
+							$filterArgs = array_merge($filterArgs, $funcArgs[1]);
+						}
 						$args[] = new Filtering($secondFilters, $filterArgs, $this, $property);
 					}
 				}
