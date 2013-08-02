@@ -11,7 +11,6 @@
 
 namespace LeanMapper;
 
-use Closure;
 use DibiSqliteDriver;
 use DibiSqlite3Driver;
 use DibiRow;
@@ -353,14 +352,13 @@ class Result implements \Iterator
 	 * @param int $id
 	 * @param string $table
 	 * @param string|null $viaColumn
-	 * @param string|array|null $filters
-	 * @param mixed|array|null $filterArgs
+	 * @param Filtering|null $filtering
 	 * @throws InvalidStateException
 	 * @return Row|null
 	 */
-	public function getReferencedRow($id, $table, $viaColumn = null, $filters = null, $filterArgs = null)
+	public function getReferencedRow($id, $table, $viaColumn = null, Filtering $filtering = null)
 	{
-		$result = $this->getReferencedResult($table, $viaColumn, $filters, $filterArgs);
+		$result = $this->getReferencedResult($table, $viaColumn, $filtering);
 		if ($viaColumn === null) {
 			$viaColumn = $this->mapper->getRelationshipColumn($this->table, $table);
 		}
@@ -373,15 +371,14 @@ class Result implements \Iterator
 	 * @param int $id
 	 * @param string $table
 	 * @param string|null $viaColumn
-	 * @param string|array|null $filters
-	 * @param mixed|array|null $filterArgs
+	 * @param Filtering|null $filtering
 	 * @param string $strategy
 	 * @throws InvalidStateException
 	 * @return Row[]
 	 */
-	public function getReferencingRows($id, $table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = null)
+	public function getReferencingRows($id, $table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
-		$referencingResult = $this->getReferencingResult($table, $viaColumn, $filters, $filterArgs, $strategy);
+		$referencingResult = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
 		if ($viaColumn === null) {
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
@@ -402,13 +399,12 @@ class Result implements \Iterator
 	 * @param array $values
 	 * @param string $table
 	 * @param string|null $viaColumn
-	 * @param string|array|null $filters
-	 * @param mixed|array|null $filterArgs
+	 * @param Filtering|null $filtering
 	 * @param string|null $strategy
 	 */
-	public function addToReferencing(array $values, $table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = self::STRATEGY_IN)
+	public function addToReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
 	{
-		$this->getReferencingResult($table, $viaColumn, $filters, $filterArgs, $strategy)
+		$this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
 				->addDataEntry($values);
 	}
 
@@ -416,27 +412,25 @@ class Result implements \Iterator
 	 * @param array $values
 	 * @param string $table
 	 * @param string|null $viaColumn
-	 * @param string|array|null $filters
-	 * @param mixed|array|null $filterArgs
+	 * @param Filtering|null $filtering
 	 * @param string|null $strategy
 	 */
-	public function removeFromReferencing(array $values, $table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = self::STRATEGY_IN)
+	public function removeFromReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
 	{
-		$this->getReferencingResult($table, $viaColumn, $filters, $filterArgs, $strategy)
+		$this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
 				->removeDataEntry($values);
 	}
 
 	/**
 	 * @param string $table
 	 * @param string|null $viaColumn
-	 * @param string|array|null $filters
-	 * @param mixed|array|null $filterArgs
+	 * @param Filtering|null $filtering
 	 * @param string|null $strategy
 	 * @return DataDifference
 	 */
-	public function createReferencingDataDifference($table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = self::STRATEGY_IN)
+	public function createReferencingDataDifference($table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
 	{
-		return $this->getReferencingResult($table, $viaColumn, $filters, $filterArgs, $strategy)
+		return $this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
 				->createDataDifference();
 	}
 
@@ -462,13 +456,12 @@ class Result implements \Iterator
 	/**
 	 * @param string $table
 	 * @param string|null $viaColumn
-	 * @param string|array|null $filters
-	 * @param mixed|array|null $filterArgs
+	 * @param Filtering|null $filtering
 	 * @param string|null $strategy
 	 */
-	public function cleanReferencingAddedAndRemovedMeta($table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = self::STRATEGY_IN)
+	public function cleanReferencingAddedAndRemovedMeta($table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
 	{
-		$this->getReferencingResult($table, $viaColumn, $filters, $filterArgs, $strategy)
+		$this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
 				->cleanAddedAndRemovedMeta();
 	}
 
@@ -535,13 +528,12 @@ class Result implements \Iterator
 	/**
 	 * @param string $table
 	 * @param string $viaColumn
-	 * @param string|array|null $filters
-	 * @param mixed|array|null $filterArgs
+	 * @param Filtering|null $filtering
 	 * @throws InvalidArgumentException
 	 * @throws InvalidStateException
 	 * @return self
 	 */
-	private function getReferencedResult($table, $viaColumn = null, $filters = null, $filterArgs = null)
+	private function getReferencedResult($table, $viaColumn = null, Filtering $filtering = null)
 	{
 		if ($this->isDetached()) {
 			throw new InvalidStateException('Cannot get referenced result for detached result.');
@@ -551,7 +543,7 @@ class Result implements \Iterator
 		}
 		$key = "$table($viaColumn)";
 		$primaryKey = $this->mapper->getPrimaryKey($table);
-		if ($filters === null) {
+		if ($filtering === null) {
 			if (!isset($this->referenced[$key])) {
 				$data = array();
 				if ($ids = $this->extractIds($viaColumn)) {
@@ -562,7 +554,7 @@ class Result implements \Iterator
 			}
 		} else {
 			$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn));
-			$this->applyFilters($statement, $filters, $filterArgs);
+			$this->applyFiltering($statement, $filtering);
 
 			$sql = (string) $statement;
 			$key .= '#' . md5($sql);
@@ -577,14 +569,13 @@ class Result implements \Iterator
 	/**
 	 * @param string $table
 	 * @param string $viaColumn
-	 * @param string|array|null $filters
-	 * @param mixed|null $filterArgs
+	 * @param Filtering|null $filtering
 	 * @param string $strategy
 	 * @throws InvalidArgumentException
 	 * @throws InvalidStateException
 	 * @return self
 	 */
-	private function getReferencingResult($table, $viaColumn = null, $filters = null, $filterArgs = null, $strategy = self::STRATEGY_IN)
+	private function getReferencingResult($table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
 	{
 		$strategy = $this->translateStrategy($strategy);
 		if ($this->isDetached()) {
@@ -596,14 +587,14 @@ class Result implements \Iterator
 		$key = "$table($viaColumn)$strategy";
 		$primaryKey = $this->mapper->getPrimaryKey($this->table);
 		if ($strategy === self::STRATEGY_IN) {
-			if ($filters === null) {
+			if ($filtering === null) {
 				if (!isset($this->referencing[$key])) {
 					$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
 					$this->referencing[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection, $this->mapper, $key);
 				}
 			} else {
 				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
-				$this->applyFilters($statement, $filters, $filterArgs);
+				$this->applyFiltering($statement, $filtering);
 
 				$sql = (string) $statement;
 				$key .= '#' . md5($sql);
@@ -613,7 +604,7 @@ class Result implements \Iterator
 				}
 			}
 		} else { // self::STRATEGY_UNION
-			if ($filters === null) {
+			if ($filtering === null) {
 				if (!isset($this->referencing[$key])) {
 					$ids = $this->extractIds($primaryKey);
 					if (count($ids) === 0) {
@@ -630,7 +621,7 @@ class Result implements \Iterator
 				if (count($ids) === 0) {
 					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection, $this->mapper, $key);
 				} else {
-					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filters, $filterArgs);
+					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
 					$key .= '#' . md5($sql);
 					if (!isset($this->referencing[$key])) {
 						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
@@ -659,20 +650,19 @@ class Result implements \Iterator
 	 * @param array $ids
 	 * @param string $table
 	 * @param string $viaColumn
-	 * @param $filters
-	 * @param $filterArgs
+	 * @param Filtering|null $filtering
 	 * @return mixed
 	 */
-	private function buildUnionStrategySql(array $ids, $table, $viaColumn, $filters = null, $filterArgs = null)
+	private function buildUnionStrategySql(array $ids, $table, $viaColumn, Filtering $filtering = null)
 	{
 		$statement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, array_shift($ids));
-		if ($filters !== null) {
-			$this->applyFilters($statement, $filters, $filterArgs);
+		if ($filtering !== null) {
+			$this->applyFiltering($statement, $filtering);
 		}
 		while ($id = array_shift($ids)) {
 			$tempStatement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, $id);
-			if ($filters !== null) {
-				$this->applyFilters($tempStatement, $filters, $filterArgs);
+			if ($filtering !== null) {
+				$this->applyFiltering($tempStatement, $filtering);
 			}
 			$statement->union($tempStatement);
 		}
@@ -716,24 +706,19 @@ class Result implements \Iterator
 
 	/**
 	 * @param Fluent $statement
-	 * @param string|array|null $filters
-	 * @param mixed||null $filterArgs
-	 * @throws Exception\InvalidArgumentException
+	 * @param Filtering|null $filtering
+	 * @throws InvalidArgumentException
 	 */
-	private function applyFilters(Fluent $statement, $filters, $filterArgs = null)
+	private function applyFiltering(Fluent $statement, Filtering $filtering)
 	{
-		if (!is_array($filters)) {
-			if (!is_string($filters)) {
-				throw new InvalidArgumentException('Invalid filter name given (name must be string).');
+		foreach ($filtering->getFilters() as $filter) {
+			$args = array($filter);
+			if ($this->connection->getFilterArgsMode($filter) === Connection::FILTER_TYPE_PROPERTY) {
+				$args[] = $filtering->getEntity();
+				$args[] = $filtering->getProperty();
 			}
-			$filters = array($filters);
-		}
-		if (!is_array($filterArgs)) {
-			$filterArgs = $filterArgs === null ? array() : array($filterArgs);
-		}
-		foreach ($filters as $filter) {
-			$method = $this->connection->getFilterArgsMode($filter) === Connection::FILTER_TYPE_PROPERTY ? 'applyPropertyFilter' : 'applyFilter';
-			call_user_func_array(array($statement, $method), array_merge(array($filter), $filterArgs));
+			$args = array_merge($args, $filtering->getArgs());
+			call_user_func_array(array($statement, 'applyFilter'), $args);
 		}
 	}
 

@@ -24,7 +24,7 @@ class Connection extends DibiConnection
 
 	const FILTER_TYPE_SIMPLE = 'simple';
 
-	const FILTER_TYPE_PROPERTY = 'rich';
+	const FILTER_TYPE_PROPERTY = 'property';
 
 	/** @var array */
 	private $filters;

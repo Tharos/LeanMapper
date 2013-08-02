@@ -125,18 +125,23 @@ abstract class Entity
 				$method = explode('\\', get_class($relationship));
 				$method = 'get' . end($method) . 'Value';
 
-				$args = array($property, $property->getFilters(0));
+				$args = array($property);
+				$firstFilters = $property->getFilters(0);
 				if ($method === 'getHasManyValue') {
-					$args[] = $property->getFilters(1);
+					$secondFilters = $property->getFilters(1);
 				}
-
-				$filterArgs = array($this, $property);
-				$funcArgs = func_get_args();
-				if (isset($funcArgs[1])) {
-					$filterArgs = array_merge($filterArgs, $funcArgs[1]);
+				if (isset($firstFilters) or isset($secondFilters)) {
+					$funcArgs = func_get_args();
+					$filterArgs = isset($funcArgs[1]) ? $funcArgs[1] : array();
+					if (isset($firstFilters)) {
+						$args[] = new Filtering($firstFilters, $filterArgs, $this, $property);
+					} else {
+						$args[] = null;
+					}
+					if (isset($secondFilters)) {
+						$args[] = new Filtering($secondFilters, $filterArgs, $this, $property);
+					}
 				}
-				$args[] = $filterArgs;
-
 				$value = call_user_func_array(array($this, $method), $args);
 			} else {
 				$column = $property->getColumn();
@@ -258,7 +263,6 @@ abstract class Entity
 	 * Calls __get() or __set() method when get<$name> or set<$name> methods don't exist
 	 *
 	 * @param string $name
-	 * @param array $arguments
 	 * @param array $arguments
 	 * @return mixed
 	 * @throws InvalidMethodCallException
@@ -527,15 +531,14 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param string|array|null $filters
-	 * @param mixed|array|null $filterArgs
+	 * @param Filtering|null $filtering
 	 * @return Entity
 	 * @throws InvalidValueException
 	 */
-	private function getHasOneValue(Property $property, $filters = null, $filterArgs = null)
+	private function getHasOneValue(Property $property, Filtering $filtering = null)
 	{
 		$relationship = $property->getRelationship();
-		$row = $this->row->referenced($relationship->getTargetTable(), $relationship->getColumnReferencingTargetTable(), $filters, $filterArgs);
+		$row = $this->row->referenced($relationship->getTargetTable(), $relationship->getColumnReferencingTargetTable(), $filtering);
 		if ($row === null) {
 			if (!$property->isNullable()) {
 				$name = $property->getName();
@@ -544,7 +547,7 @@ abstract class Entity
 			return null;
 		} else {
 			$class = $this->getEntityClass($property, $row);
-			$entity = new $class($row, $this->mapper);
+			$entity = new $class($row);
 			$this->checkConsistency($property, $class, $entity);
 			return $entity;
 		}
@@ -552,23 +555,22 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param string|array|null $relTableFilters
-	 * @param string|array|null $targetTableFilters
-	 * @param mixed|array|null $filterArgs
+	 * @param Filtering|null $relTableFiltering
+	 * @param Filtering|null $targetTableFiltering
 	 * @return Entity[]
 	 * @throws InvalidValueException
 	 */
-	private function getHasManyValue(Property $property, $relTableFilters = null, $targetTableFilters = null, $filterArgs = null)
+	private function getHasManyValue(Property $property,  Filtering $relTableFiltering = null,  Filtering $targetTableFiltering = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), $relTableFilters, $filterArgs, $relationship->getStrategy());
+		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), $relTableFiltering, $relationship->getStrategy());
 		$value = array();
 		$type = $property->getType();
 		foreach ($rows as $row) {
-			$valueRow = $row->referenced($relationship->getTargetTable(), $relationship->getColumnReferencingTargetTable(), $targetTableFilters);
+			$valueRow = $row->referenced($relationship->getTargetTable(), $relationship->getColumnReferencingTargetTable(), $targetTableFiltering);
 			if ($valueRow !== null) {
 				$class = $this->getEntityClass($property, $valueRow);
-				$entity = new $class($valueRow, $this->mapper);
+				$entity = new $class($valueRow);
 				$this->checkConsistency($property, $class, $entity);
 				$value[] = $entity;
 			}
@@ -578,15 +580,14 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param string|array|null $filters
-	 * @param mixed|array|null $filterArgs
+	 * @param Filtering|null $filtering
 	 * @return Entity
 	 * @throws InvalidValueException
 	 */
-	private function getBelongsToOneValue(Property $property, $filters = null, $filterArgs = null)
+	private function getBelongsToOneValue(Property $property, Filtering $filtering = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), $relationship->getColumnReferencingSourceTable(), $filters, $filterArgs, $relationship->getStrategy());
+		$rows = $this->row->referencing($relationship->getTargetTable(), $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$count = count($rows);
 		if ($count > 1) {
 			throw new InvalidValueException('There cannot be more than one entity referencing to entity with m:belongToOne relationship.');
@@ -599,7 +600,7 @@ abstract class Entity
 		} else {
 			$row = reset($rows);
 			$class = $this->getEntityClass($property, $row);
-			$entity = new $class($row, $this->mapper);
+			$entity = new $class($row);
 			$this->checkConsistency($property, $class, $entity);
 			return $entity;
 		}
@@ -607,18 +608,17 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param string|array|null $filters
-	 * @param mixed|array|null $filterArgs
+	 * @param Filtering|null $filtering
 	 * @return Entity[]
 	 */
-	private function getBelongsToManyValue(Property $property, $filters = null, $filterArgs = null)
+	private function getBelongsToManyValue(Property $property, Filtering $filtering = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), $relationship->getColumnReferencingSourceTable(), $filters, $filterArgs, $relationship->getStrategy());
+		$rows = $this->row->referencing($relationship->getTargetTable(), $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$value = array();
 		foreach ($rows as $row) {
 			$class = $this->getEntityClass($property, $row);
-			$entity = new $class($row, $this->mapper);
+			$entity = new $class($row);
 			$this->checkConsistency($property, $class, $entity);
 			$value[] = $entity;
 		}
