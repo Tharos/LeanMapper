@@ -76,9 +76,13 @@ class Property
 	 * @param PropertyPasses|null $propertyPasses
 	 * @param PropertyValuesEnum|null $propertyValuesEnum
 	 * @param array|null $customFlags
+	 * @throws InvalidArgumentException
 	 */
 	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
 	{
+		if ($propertyFilters !== null and $relationship === null) {
+			throw new InvalidArgumentException('Cannot apply filter to property without relationship.');
+		}
 		$this->name = $name;
 		$this->column = $column;
 		$this->type = $type;

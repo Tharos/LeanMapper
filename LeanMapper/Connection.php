@@ -38,6 +38,9 @@ class Connection extends DibiConnection
 	 */
 	public function registerFilter($name, $callback, $argsMode = self::FILTER_TYPE_SIMPLE)
 	{
+		if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $name)) {
+			throw new InvalidArgumentException("Invalid filter name given: $name. For filter names apply the same rules as for function names in PHP.");
+		}
 		if (isset($this->filters[$name])) {
 			throw new InvalidArgumentException("Filter with name '$name' was already registered.");
 		}
