@@ -62,29 +62,32 @@ abstract class Repository
 	 * @param Entity $entity
 	 * @return mixed
 	 */
-	public function persist(Entity $entity)
+	public function persist(Entity $entity, $entityClass = null, $table = null)
 	{
+		if ($table === null) {
+			$table = $this->getTable();
+		}
 		$result = null;
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+		$primaryKey = $this->mapper->getPrimaryKey($table);
+		$idField = $this->mapper->getEntityField($table, $primaryKey);
 
-		$this->checkEntityType($entity);
+		$this->checkEntityType($entity, $entityClass);
 		if ($entity->isModified()) {
 			if ($entity->isDetached()) {
 				$entity->useMapper($this->mapper);
 
 				$values = $this->beforeCreate($entity->getModifiedRowData());
 				$this->connection->query(
-					'INSERT INTO %n %v', $this->getTable(), $values
+					'INSERT INTO %n %v', $table, $values
 				);
 				$id = isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
-				$entity->markAsCreated($id, $this->getTable(), $this->connection);
+				$entity->markAsCreated($id, $table, $this->connection);
 
 				return $id;
 			} else {
 				$values = $this->beforeUpdate($entity->getModifiedRowData());
 				$result = $this->connection->query(
-					'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $entity->$idField
+					'UPDATE %n SET %a WHERE %n = ?', $table, $values, $primaryKey, $entity->$idField
 				);
 				$entity->markAsUpdated();
 			}
@@ -99,14 +102,17 @@ abstract class Repository
 	 * @param Entity|int $arg
 	 * @throws InvalidStateException
 	 */
-	public function delete($arg)
+	public function delete($arg, $entityClass = null, $table = null)
 	{
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+		if ($table === null) {
+			$table = $this->getTable();
+		}
+		$primaryKey = $this->mapper->getPrimaryKey($table);
+		$idField = $this->mapper->getEntityField($table, $primaryKey);
 
 		$id = $arg;
 		if ($arg instanceof Entity) {
-			$this->checkEntityType($arg);
+			$this->checkEntityType($arg, $entityClass);
 			if ($arg->isDetached()) {
 				throw new InvalidStateException('Cannot delete detached entity.');
 			}
@@ -114,17 +120,20 @@ abstract class Repository
 			$arg->detach();
 		}
 		$this->connection->query(
-			'DELETE FROM %n WHERE %n = ?', $this->getTable(), $primaryKey, $id
+			'DELETE FROM %n WHERE %n = ?', $table, $primaryKey, $id
 		);
 	}
 
 	/**
 	 * @param Entity $entity
 	 */
-	protected function persistHasManyChanges(Entity $entity)
+	protected function persistHasManyChanges(Entity $entity, $table = null)
 	{
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+		if ($table === null) {
+			$table = $this->getTable();
+		}
+		$primaryKey = $this->mapper->getPrimaryKey($table);
+		$idField = $this->mapper->getEntityField($table, $primaryKey);
 
 		$multiInsert = array();
 		foreach ($entity->getHasManyRowDifferences() as $key => $difference) {
@@ -198,7 +207,7 @@ abstract class Repository
 			$table = $this->getTable();
 		}
 		$result = Result::getInstance($dibiRow, $table, $this->connection, $this->mapper);
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$primaryKey = $this->mapper->getPrimaryKey($table);
 
 		$row = $result->getRow($dibiRow->$primaryKey);
 		if ($entityClass === null) {
@@ -222,7 +231,7 @@ abstract class Repository
 		}
 		$entities = array();
 		$collection = Result::getInstance($rows, $table, $this->connection, $this->mapper);
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$primaryKey = $this->mapper->getPrimaryKey($table);
 		if ($entityClass !== null) {
 			foreach ($rows as $dibiRow) {
 				$entities[$dibiRow->$primaryKey] = new $entityClass($collection->getRow($dibiRow->$primaryKey));
@@ -277,9 +286,11 @@ abstract class Repository
 	 * @param Entity $entity
 	 * @throws InvalidArgumentException
 	 */
-	protected function checkEntityType(Entity $entity)
+	protected function checkEntityType(Entity $entity, $entityClass = null)
 	{
-		$entityClass = $this->getEntityClass();
+		if($entityClass === null) {
+			$entityClass = $this->getEntityClass();
+		}
 		if (!($entity instanceof $entityClass)) {
 			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
 		}
