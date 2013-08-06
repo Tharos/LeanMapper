@@ -22,10 +22,6 @@ use LeanMapper\Exception\InvalidArgumentException;
 class Connection extends DibiConnection
 {
 
-	const FILTER_TYPE_SIMPLE = 'simple';
-
-	const FILTER_TYPE_PROPERTY = 'property';
-
 	/** @var array */
 	private $filters;
 
@@ -33,10 +29,10 @@ class Connection extends DibiConnection
 	/**
 	 * @param string $name
 	 * @param mixed $callback
-	 * @param string $argsMode
+	 * @param string|null $autowiringSchema
 	 * @throws InvalidArgumentException
 	 */
-	public function registerFilter($name, $callback, $argsMode = self::FILTER_TYPE_SIMPLE)
+	public function registerFilter($name, $callback, $autowiringSchema = null)
 	{
 		if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $name)) {
 			throw new InvalidArgumentException("Invalid filter name given: $name. For filter names apply the same rules as for function names in PHP.");
@@ -47,10 +43,12 @@ class Connection extends DibiConnection
 		if (!is_callable($callback, true)) {
 			throw new InvalidArgumentException("Callback given for filter '$name' is not callable.");
 		}
-		if ($argsMode !== self::FILTER_TYPE_SIMPLE and $argsMode !== self::FILTER_TYPE_PROPERTY) {
-			throw new InvalidArgumentException("Invalid filter arguments mode given for filter with name '$name': $argsMode");
+		if ($autowiringSchema === null) {
+			$autowiringSchema = '';
+		} elseif (!preg_match('#^(?:([pe])(?!.*\1))*$#', $autowiringSchema)) {
+			throw new InvalidArgumentException("Unsupported autowiring schema given: $autowiringSchema. Please use only characters p (Property) and e (Entity) in unique, non-repeating combination.");
 		}
-		$this->filters[$name] = array($callback, $argsMode);
+		$this->filters[$name] = array($callback, $autowiringSchema);
 	}
 
 	/**
@@ -64,13 +62,13 @@ class Connection extends DibiConnection
 	}
 
 	/**
-	 * @param string $name
+	 * @param string $filterName
 	 * @return string
 	 */
-	public function getFilterArgsMode($name)
+	public function getAutowiringSchema($filterName)
 	{
-		$this->checkFilterExistence($name);
-		return $this->filters[$name][1];
+		$this->checkFilterExistence($filterName);
+		return $this->filters[$filterName][1];
 	}
 
 	/**

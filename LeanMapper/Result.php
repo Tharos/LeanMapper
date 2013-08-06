@@ -711,11 +711,18 @@ class Result implements \Iterator
 	 */
 	private function applyFiltering(Fluent $statement, Filtering $filtering)
 	{
+		$namedArgs = $filtering->getNamedArgs();
 		foreach ($filtering->getFilters() as $filter) {
 			$args = array($filter);
-			if ($this->connection->getFilterArgsMode($filter) === Connection::FILTER_TYPE_PROPERTY) {
-				$args[] = $filtering->getEntity();
-				$args[] = $filtering->getProperty();
+			foreach (str_split($this->connection->getAutowiringSchema($filter)) as $autowiredArg) {
+				if ($autowiredArg === 'e') {
+					$args[] = $filtering->getEntity();
+				} elseif ($autowiredArg === 'p') {
+					$args[] = $filtering->getProperty();
+				}
+			}
+			if (isset($namedArgs[$filter])) {
+				$args[] = $namedArgs[$filter];
 			}
 			$args = array_merge($args, $filtering->getArgs());
 			call_user_func_array(array($statement, 'applyFilter'), $args);

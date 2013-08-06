@@ -35,37 +35,35 @@ class PropertyFilters
 	public function __construct($definition)
 	{
 		foreach (preg_split('#\s*\|\s*#', trim($definition)) as $set) {
-			$matches = array();
-			preg_match('~^(.*?)(?:#(.*))?$~', $set, $matches);
-
-			if ($matches[1] === '') {
-				$this->filters[] = array();
-				$this->annotationArgs[] = null;
+			if ($set === '') {
+				$this->filters[] = $this->annotationArgs[] = array();
 				continue;
 			}
-			$filters = array();
-			foreach (preg_split('#\s*,\s*#', trim($matches[1])) as $filter) {
-				if ($filter === '') {
-					throw new InvalidAnnotationException('Empty filter name given.');
+			$filters = $annotationArgs = array();
+			foreach (preg_split('#\s*,\s*#', $set) as $filter) {
+				$matches = array();
+				preg_match('~^([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(?:#(.*))?$~', $filter, $matches);
+				if (empty($matches)) {
+					throw new InvalidAnnotationException("Unsupported filter usage given: $filter.");
 				}
-				$filters[] = $filter;
+				$filters[] = $filterName = $matches[1];
+				if (isset($matches[2])) {
+					$annotationArgs[$filterName] = $matches[2];
+				}
 			}
 			$this->filters[] = $filters;
-			$this->annotationArgs[] = isset($matches[2]) ? $matches[2] : null;
+			$this->annotationArgs[] = $annotationArgs;
 		}
 	}
 
 	/**
 	 * Returns array of entity filters (array of filter names)
 	 *
-	 * @param int|null $index
+	 * @param int $index
 	 * @return array
 	 */
-	public function getFilters($index = null)
+	public function getFilters($index = 0)
 	{
-		if ($index === null) {
-			return $this->filters;
-		}
 		if (!isset($this->filters[$index])) {
 			return array();
 		}
@@ -73,16 +71,13 @@ class PropertyFilters
 	}
 
 	/**
-	 * @param int|null $index
-	 * @return array|string|null
+	 * @param int $index
+	 * @return array
 	 */
-	public function getFiltersAnnotationArg($index = null)
+	public function getFiltersAnnotationArgs($index = 0)
 	{
-		if ($index === null) {
-			return $this->annotationArgs;
-		}
 		if (!isset($this->annotationArgs[$index])) {
-			return null;
+			return array();
 		}
 		return $this->annotationArgs[$index];
 	}

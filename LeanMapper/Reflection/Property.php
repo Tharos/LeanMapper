@@ -207,21 +207,21 @@ class Property
 	/**
 	 * Returns property filters
 	 *
-	 * @param int|null $index
+	 * @param int $index
 	 * @return array|null
 	 */
-	public function getFilters($index = null)
+	public function getFilters($index = 0)
 	{
 		return $this->propertyFilters !== null ? $this->propertyFilters->getFilters($index) : null;
 	}
 
 	/**
-	 * @param int|null $index
+	 * @param int $index
 	 * @return array|string|null
 	 */
-	public function getFiltersAnnotationArg($index = null)
+	public function getFiltersAnnotationArgs($index = 0)
 	{
-		return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersAnnotationArg($index) : null;
+		return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersAnnotationArgs($index) : null;
 	}
 
 	/**

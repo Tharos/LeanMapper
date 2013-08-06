@@ -32,15 +32,19 @@ class Filtering
 	/** @var Property|null */
 	private $property;
 
+	/** @var array */
+	private $namedArgs;
+
 
 	/**
 	 * @param string|array $filters
 	 * @param array|null $args
 	 * @param Entity|null $entity
 	 * @param Property|null $property
+	 * @param array|null $namedArgs
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct($filters, array $args = null, Entity $entity = null, Property $property = null)
+	public function __construct($filters, array $args = null, Entity $entity = null, Property $property = null, array $namedArgs = array())
 	{
 		if (!is_array($filters)) {
 			if (!is_string($filters)) {
@@ -52,6 +56,7 @@ class Filtering
 		$this->args = $args !== null ? $args : array();
 		$this->entity = $entity;
 		$this->property = $property;
+		$this->namedArgs = $namedArgs;
 	}
 
 	/**
@@ -84,6 +89,14 @@ class Filtering
 	public function getProperty()
 	{
 		return $this->property;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getNamedArgs()
+	{
+		return $this->namedArgs;
 	}
 
 }

@@ -110,7 +110,7 @@ class PropertyFactory
 						}
 						$propertyMethods = new PropertyMethods($name, $isWritable, $flagArgument);
 						break;
-					case 'filter': // TODO: rewrite filters
+					case 'filter':
 						if ($propertyFilters !== null) {
 							throw new InvalidAnnotationException("Multiple m:filter flags found in annotation: @$annotationType $annotation");
 						}
