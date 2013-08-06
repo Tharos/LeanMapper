@@ -130,11 +130,11 @@ abstract class Entity
 				if ($method === 'getHasManyValue') {
 					$secondFilters = $property->getFilters(1);
 				}
-				if (isset($firstFilters) or isset($secondFilters)) {
+				if (!empty($firstFilters) or !empty($secondFilters)) {
 					$funcArgs = func_get_args();
 					$filterArgs = isset($funcArgs[1]) ? $funcArgs[1] : array();
-					$args[] = isset($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, $property->getFiltersAnnotationArgs(0)) : null;
-					if (isset($secondFilters)) {
+					$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, $property->getFiltersAnnotationArgs(0)) : null;
+					if (!empty($secondFilters)) {
 						$args[] = new Filtering($secondFilters, $filterArgs, $this, $property, $property->getFiltersAnnotationArgs(1));
 					}
 				}
