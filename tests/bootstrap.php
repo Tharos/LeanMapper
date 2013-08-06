@@ -1,5 +1,6 @@
 <?php
 
+use LeanMapper\Connection;
 use LeanMapper\DefaultMapper;
 
 if (@!include __DIR__ . '/../vendor/autoload.php') {
@@ -33,7 +34,7 @@ class TestMapper extends DefaultMapper
 
 }
 
-$connection = new DibiConnection(array(
+$connection = new Connection(array(
 	'driver' => 'sqlite3',
 	'database' => __DIR__ . '/db/library.sq3',
 ));

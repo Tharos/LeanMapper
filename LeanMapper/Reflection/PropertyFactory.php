@@ -110,14 +110,11 @@ class PropertyFactory
 						}
 						$propertyMethods = new PropertyMethods($name, $isWritable, $flagArgument);
 						break;
-					case 'filter': // TODO: rewrite filters
+					case 'filter':
 						if ($propertyFilters !== null) {
 							throw new InvalidAnnotationException("Multiple m:filter flags found in annotation: @$annotationType $annotation");
 						}
-						if ($propertyType->isBasicType()) {
-							throw new InvalidAnnotationException("Property of type {$propertyType->getType()} cannot be filtered.");
-						}
-						$propertyFilters =  new PropertyFilters($flagArgument, $aliases);
+						$propertyFilters =  new PropertyFilters($flagArgument);
 						break;
 					case 'passThru':
 						if ($propertyPasses !== null) {

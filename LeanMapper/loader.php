@@ -10,9 +10,11 @@
  */
 
 require_once __DIR__ . '/IMapper.php';
+require_once __DIR__ . '/Connection.php';
 require_once __DIR__ . '/DefaultMapper.php';
 require_once __DIR__ . '/DataDifference.php';
 require_once __DIR__ . '/Entity.php';
+require_once __DIR__ . '/Filtering.php';
 require_once __DIR__ . '/Exception/InvalidAnnotationException.php';
 require_once __DIR__ . '/Exception/InvalidArgumentException.php';
 require_once __DIR__ . '/Exception/InvalidMethodCallException.php';
@@ -21,6 +23,7 @@ require_once __DIR__ . '/Exception/InvalidValueException.php';
 require_once __DIR__ . '/Exception/MemberAccessException.php';
 require_once __DIR__ . '/Exception/RuntimeException.php';
 require_once __DIR__ . '/Exception/UtilityClassException.php';
+require_once __DIR__ . '/Fluent.php';
 require_once __DIR__ . '/Relationship/BelongsTo.php';
 require_once __DIR__ . '/Relationship/BelongsToMany.php';
 require_once __DIR__ . '/Relationship/BelongsToOne.php';

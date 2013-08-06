@@ -11,9 +11,6 @@
 
 namespace LeanMapper;
 
-use Closure;
-use DibiConnection;
-
 /**
  * Pointer to specific position inside LeanMapper\Result instance
  *
@@ -164,9 +161,9 @@ class Row
 	 *
 	 * @param int $id
 	 * @param string $table
-	 * @param DibiConnection $connection
+	 * @param Connection $connection
 	 */
-	public function markAsCreated($id, $table, DibiConnection $connection)
+	public function markAsCreated($id, $table, Connection $connection)
 	{
 		$this->result->markAsCreated($id, $this->id, $table, $connection);
 		$this->id = $id;
@@ -176,63 +173,64 @@ class Row
 	 * Returns referenced LeanMapper\Row instance
 	 *
 	 * @param string $table
-	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
 	 * @return Row|null
 	 */
-	public function referenced($table, Closure $filter = null, $viaColumn = null)
+	public function referenced($table, $viaColumn = null, Filtering $filtering = null)
 	{
-		return $this->result->getReferencedRow($this->id, $table, $filter, $viaColumn);
+		return $this->result->getReferencedRow($this->id, $table, $viaColumn, $filtering);
 	}
 
 	/**
 	 * Returns array of LeanMapper\Row instances referencing current row
 	 *
 	 * @param string $table
-	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
 	 * @param string|null $strategy
 	 * @return Row[]
 	 */
-	public function referencing($table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	public function referencing($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
-		return $this->result->getReferencingRows($this->id, $table, $filter, $viaColumn, $strategy);
+		return $this->result->getReferencingRows($this->id, $table, $viaColumn, $filtering, $strategy);
 	}
 
 	/**
 	 * @param array $values
 	 * @param string $table
-	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
 	 * @param string|null $strategy
 	 */
-	public function addToReferencing(array $values, $table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	public function addToReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
-		$this->result->addToReferencing($values, $table, $filter, $viaColumn, $strategy);
+		$this->result->addToReferencing($values, $table, $viaColumn, $filtering, $strategy);
 	}
 
 	/**
 	 * @param array $values
 	 * @param string $table
-	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
+
 	 * @param string|null $strategy
 	 */
-	public function removeFromReferencing(array $values, $table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	public function removeFromReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
-		$this->result->removeFromReferencing($values, $table, $filter, $viaColumn, $strategy);
+		$this->result->removeFromReferencing($values, $table, $viaColumn, $filtering, $strategy);
 	}
 
 	/**
 	 * @param string $table
-	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
 	 * @param string|null $strategy
 	 * @return DataDifference
 	 */
-	public function createReferencingDataDifference($table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	public function createReferencingDataDifference($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
-		return $this->result->createReferencingDataDifference($table, $filter, $viaColumn, $strategy);
+		return $this->result->createReferencingDataDifference($table, $viaColumn, $filtering, $strategy);
 	}
 
 	/**
@@ -248,13 +246,14 @@ class Row
 
 	/**
 	 * @param string $table
-	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
+
 	 * @param string|null $strategy
 	 */
-	public function cleanReferencingAddedAndRemovedMeta($table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	public function cleanReferencingAddedAndRemovedMeta($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
-		$this->result->cleanReferencingAddedAndRemovedMeta($table, $filter, $viaColumn, $strategy);
+		$this->result->cleanReferencingAddedAndRemovedMeta($table, $viaColumn, $filtering, $strategy);
 	}
 
 }
