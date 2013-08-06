@@ -81,7 +81,7 @@ class Property
 	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
 	{
 		if ($propertyFilters !== null and $relationship === null) {
-			throw new InvalidArgumentException('Cannot apply filter to property without relationship.');
+			throw new InvalidArgumentException('Cannot bind filter to property without relationship.');
 		}
 		$this->name = $name;
 		$this->column = $column;
