@@ -34,4 +34,14 @@ class Fluent extends DibiFluent
 		return $this;
 	}
 
+	/**
+	 * @param string|null $clause
+	 * @param array|null $args
+	 * @return string
+	 */
+	public function _export($clause = null, $args = null)
+	{
+		return parent::_export($clause, $args);
+	}
+
 }

@@ -555,12 +555,11 @@ class Result implements \Iterator
 		} else {
 			$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn));
 			$this->applyFiltering($statement, $filtering);
-
-			$sql = (string) $statement;
-			$key .= '#' . md5($sql);
+			$args = $statement->_export();
+			$key .= '#' . $this->calculateArgumentsHash($args);
 
 			if (!isset($this->referenced[$key])) {
-				$this->referenced[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
+				$this->referenced[$key] = self::getInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 			}
 		}
 		return $this->referenced[$key];
@@ -595,12 +594,11 @@ class Result implements \Iterator
 			} else {
 				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
 				$this->applyFiltering($statement, $filtering);
-
-				$sql = (string) $statement;
-				$key .= '#' . md5($sql);
+				$args = $statement->_export();
+				$key .= '#' . $this->calculateArgumentsHash($args);
 
 				if (!isset($this->referencing[$key])) {
-					$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
+					$this->referencing[$key] = self::getInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 				}
 			}
 		} else { // self::STRATEGY_UNION
@@ -621,9 +619,13 @@ class Result implements \Iterator
 				if (count($ids) === 0) {
 					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection, $this->mapper, $key);
 				} else {
-					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
-					$key .= '#' . md5($sql);
+					$firstStatement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, reset($ids));
+					$this->applyFiltering($firstStatement, $filtering);
+					$args = $firstStatement->_export();
+					$key .= '#' . $this->calculateArgumentsHash($args);
+
 					if (!isset($this->referencing[$key])) {
+						$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
 						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 					}
 				}
@@ -659,7 +661,7 @@ class Result implements \Iterator
 		if ($filtering !== null) {
 			$this->applyFiltering($statement, $filtering);
 		}
-		while ($id = array_shift($ids)) {
+		foreach ($ids as $id) {
 			$tempStatement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, $id);
 			if ($filtering !== null) {
 				$this->applyFiltering($tempStatement, $filtering);
@@ -727,6 +729,15 @@ class Result implements \Iterator
 			$args = array_merge($args, $filtering->getArgs());
 			call_user_func_array(array($statement, 'applyFilter'), $args);
 		}
+	}
+
+	/**
+	 * @param array $arguments
+	 * @return string
+	 */
+	private function calculateArgumentsHash(array $arguments)
+	{
+		return md5(serialize($arguments));
 	}
 
 }
