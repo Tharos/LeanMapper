@@ -50,7 +50,7 @@ $book->getTags(1, 'argument', true);
 
 $args = (array) $args;
 
-Assert::equal(3, count($args));
+Assert::equal(4, count($args));
 
 Assert::equal(7, count($args[0]));
 

@@ -553,11 +553,14 @@ class Result implements \Iterator
 				$this->referenced[$key] = self::getInstance($data, $table, $this->connection, $this->mapper, $key);
 			}
 		} else {
-			$key .= spl_object_hash($filtering);
+			$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn));
+			$this->applyFiltering($statement, $filtering);
+
+			$sql = (string) $statement;
+			$key .= '#' . md5($sql);
+
 			if (!isset($this->referenced[$key])) {
-				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn));
-				$this->applyFiltering($statement, $filtering);
-				$this->referenced[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection, $this->mapper, $key);
+				$this->referenced[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 			}
 		}
 		return $this->referenced[$key];
