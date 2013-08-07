@@ -22,6 +22,12 @@ use LeanMapper\Exception\InvalidArgumentException;
 class Connection extends DibiConnection
 {
 
+	const WIRE_ENTITY = 1;
+
+	const WIRE_PROPERTY = 2;
+
+	const WIRE_ENTITY_AND_PROPERTY = 3;
+
 	/** @var array */
 	private $filters;
 
@@ -29,10 +35,10 @@ class Connection extends DibiConnection
 	/**
 	 * @param string $name
 	 * @param mixed $callback
-	 * @param string|null $autowiringSchema
+	 * @param string|int|null $wiringSchema
 	 * @throws InvalidArgumentException
 	 */
-	public function registerFilter($name, $callback, $autowiringSchema = null)
+	public function registerFilter($name, $callback, $wiringSchema = null)
 	{
 		if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $name)) {
 			throw new InvalidArgumentException("Invalid filter name given: $name. For filter names apply the same rules as for function names in PHP.");
@@ -43,12 +49,7 @@ class Connection extends DibiConnection
 		if (!is_callable($callback, true)) {
 			throw new InvalidArgumentException("Callback given for filter '$name' is not callable.");
 		}
-		if ($autowiringSchema === null) {
-			$autowiringSchema = '';
-		} elseif (!preg_match('#^(?:([pe])(?!.*\1))*$#', $autowiringSchema)) {
-			throw new InvalidArgumentException("Unsupported autowiring schema given: $autowiringSchema. Please use only characters p (Property) and e (Entity) in unique, non-repeating combination.");
-		}
-		$this->filters[$name] = array($callback, $autowiringSchema);
+		$this->filters[$name] = array($callback, $this->translateWiringSchema($wiringSchema));
 	}
 
 	/**
@@ -65,7 +66,7 @@ class Connection extends DibiConnection
 	 * @param string $filterName
 	 * @return string
 	 */
-	public function getAutowiringSchema($filterName)
+	public function getWiringSchema($filterName)
 	{
 		$this->checkFilterExistence($filterName);
 		return $this->filters[$filterName][1];
@@ -91,6 +92,31 @@ class Connection extends DibiConnection
 		if (!isset($this->filters[$name])) {
 			throw new InvalidArgumentException("Filter with name '$name' was not found.");
 		}
+	}
+
+	/**
+	 * @param string|int|null $wiringSchema
+	 * @return string
+	 * @throws InvalidArgumentException
+	 */
+	private function translateWiringSchema($wiringSchema)
+	{
+		if ($wiringSchema === null) {
+			return '';
+		}
+		if (is_int($wiringSchema)) {
+			$result = '';
+			if (($wiringSchema & self::WIRE_ENTITY) === 1) {
+				$result .= 'e';
+			}
+			if (($wiringSchema & self::WIRE_PROPERTY) === 2) {
+				$result .= 'p';
+			}
+			$wiringSchema = $result;
+		} elseif (!preg_match('#^(?:([pe])(?!.*\1))*$#', $wiringSchema)) {
+			throw new InvalidArgumentException("Unsupported wiring schema given: $wiringSchema. Please use only characters p (Property) and e (Entity) in unique, non-repeating combination.");
+		}
+		return $wiringSchema;
 	}
 
 }

@@ -3,6 +3,7 @@
 use LeanMapper\DefaultMapper;
 use LeanMapper\Entity;
 use Tester\Assert;
+use LeanMapper\Connection;
 
 require_once __DIR__ . '/../bootstrap.php';
 
@@ -73,3 +74,20 @@ Assert::type('LeanMapper\Reflection\Property', $args[2][2]);
 Assert::equal(1, $args[2][3]);
 Assert::equal('argument', $args[2][4]);
 Assert::equal(true, $args[2][5]);
+
+//////////
+
+$connection->registerFilter('third', 'exit', Connection::WIRE_ENTITY);
+Assert::equal('e', $connection->getWiringSchema('third'));
+
+$connection->registerFilter('fourth', 'exit', Connection::WIRE_PROPERTY);
+Assert::equal('p', $connection->getWiringSchema('fourth'));
+
+$connection->registerFilter('fifth', 'exit', Connection::WIRE_ENTITY | Connection::WIRE_PROPERTY);
+Assert::equal('ep', $connection->getWiringSchema('fifth'));
+
+$connection->registerFilter('sixth', 'exit', Connection::WIRE_ENTITY_AND_PROPERTY);
+Assert::equal('ep', $connection->getWiringSchema('sixth'));
+
+$connection->registerFilter('seventh', 'exit');
+Assert::equal('', $connection->getWiringSchema('seventh'));

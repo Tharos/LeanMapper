@@ -714,7 +714,7 @@ class Result implements \Iterator
 		$namedArgs = $filtering->getNamedArgs();
 		foreach ($filtering->getFilters() as $filter) {
 			$args = array($filter);
-			foreach (str_split($this->connection->getAutowiringSchema($filter)) as $autowiredArg) {
+			foreach (str_split($this->connection->getWiringSchema($filter)) as $autowiredArg) {
 				if ($autowiredArg === 'e') {
 					$args[] = $filtering->getEntity();
 				} elseif ($autowiredArg === 'p') {
