@@ -42,7 +42,7 @@ abstract class Repository
 	private $docComment;
 
 	/** @var bool */
-	private $entityAnnotationChecked = false;
+	private $tableAnnotationChecked = false;
 
 
 	/**
@@ -201,7 +201,7 @@ abstract class Repository
 
 		$row = $result->getRow($dibiRow->$primaryKey);
 		if ($entityClass === null) {
-			$entityClass = $this->getEntityClass($row);
+			$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
 		}
 		return new $entityClass($row);
 	}
@@ -228,7 +228,8 @@ abstract class Repository
 			}
 		} else {
 			foreach ($rows as $dibiRow) {
-				$entityClass = $this->getEntityClass($row = $collection->getRow($dibiRow->$primaryKey));
+				$row = $collection->getRow($dibiRow->$primaryKey);
+				$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
 				$entities[$dibiRow->$primaryKey] = new $entityClass($row);
 			}
 		}
@@ -244,44 +245,16 @@ abstract class Repository
 	protected function getTable()
 	{
 		if ($this->table === null) {
-			$name = AnnotationsParser::parseSimpleAnnotationValue('table', $this->getDocComment());
-			$this->table = $name !== null ? $name : $this->mapper->getTableByRepositoryClass(get_called_class());
-		}
-		return $this->table;
-	}
-
-	/**
-	 * Returns fully qualified name of entity class which repository can handle
-	 *
-	 * @param Row|null $row
-	 * @return string
-	 * @throws InvalidStateException
-	 */
-	protected function getEntityClass(Row $row = null)
-	{
-		if ($this->entityClass === null) {
-			if (!$this->entityAnnotationChecked) {
-				$this->entityAnnotationChecked = true;
-				$entityClass = AnnotationsParser::parseSimpleAnnotationValue('entity', $this->getDocComment());
-				if ($entityClass !== null) {
-					return $this->entityClass = $entityClass;
+			if (!$this->tableAnnotationChecked) {
+				$this->tableAnnotationChecked = true;
+				$table = AnnotationsParser::parseSimpleAnnotationValue('table', $this->getDocComment());
+				if ($table !== null) {
+					return $this->table = $table;
 				}
 			}
-			return $this->mapper->getEntityClass($this->mapper->getTableByRepositoryClass(get_called_class()), $row);
+			return $this->mapper->getTableByRepositoryClass(get_called_class());
 		}
-		return $this->entityClass;
-	}
-
-	/**
-	 * @param Entity $entity
-	 * @throws InvalidArgumentException
-	 */
-	protected function checkEntityType(Entity $entity)
-	{
-		$entityClass = $this->getEntityClass();
-		if (!($entity instanceof $entityClass)) {
-			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
-		}
+		return $this->table;
 	}
 
 	/**
@@ -306,6 +279,18 @@ abstract class Repository
 			$this->docComment = $reflection->getDocComment();
 		}
 		return $this->docComment;
+	}
+
+	/**
+	 * @param Entity $entity
+	 * @throws InvalidArgumentException
+	 */
+	private function checkEntityType(Entity $entity)
+	{
+		$entityClass = $this->mapper->getEntityClass($this->getTable());
+		if (!($entity instanceof $entityClass)) {
+			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
+		}
 	}
 	
 }
