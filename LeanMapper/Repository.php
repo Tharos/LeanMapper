@@ -11,7 +11,6 @@
 
 namespace LeanMapper;
 
-use dibi;
 use DibiRow;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidStateException;
