@@ -43,10 +43,6 @@ $property = PropertyFactory::createFromAnnotation('property', 'int $count = 10',
 
 Assert::equal(10, $property->getDefaultValue());
 
-$property = PropertyFactory::createFromAnnotation('property', 'int $count = 10', $entityReflection);
-
-Assert::equal(10, $property->getDefaultValue());
-
 $property = PropertyFactory::createFromAnnotation('property', 'int $count = 0x1F', $entityReflection);
 
 Assert::equal(31, $property->getDefaultValue());
