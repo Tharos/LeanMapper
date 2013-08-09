@@ -41,6 +41,9 @@ class Property
 	/** @var bool */
 	private $isNullable;
 
+	/** @var mixed|null */
+	private $defaultValue;
+
 	/** @var bool */
 	private $containsCollection;
 
@@ -70,6 +73,7 @@ class Property
 	 * @param bool $isWritable
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
+	 * @param mixed|null $defaultValue
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
 	 * @param PropertyMethods|null $propertyMethods
 	 * @param PropertyFilters|null $propertyFilters
@@ -78,7 +82,7 @@ class Property
 	 * @param array|null $customFlags
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $defaultValue = null, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
 	{
 		if ($propertyFilters !== null and $relationship === null) {
 			throw new InvalidArgumentException('Cannot bind filter to property without relationship.');
@@ -89,6 +93,7 @@ class Property
 		$this->isWritable = $isWritable;
 		$this->isNullable = $isNullable;
 		$this->containsCollection = $containsCollection;
+		$this->defaultValue = $defaultValue;
 		$this->relationship = $relationship;
 		$this->propertyMethods = $propertyMethods;
 		$this->propertyFilters = $propertyFilters;
@@ -126,6 +131,22 @@ class Property
 	public function containsCollection()
 	{
 		return $this->containsCollection;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function hasDefaultValue()
+	{
+		return $this->defaultValue !== null;
+	}
+
+	/**
+	 * @return mixed|null
+	 */
+	public function getDefaultValue()
+	{
+		return $this->defaultValue;
 	}
 
 	/**
