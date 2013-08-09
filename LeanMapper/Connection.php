@@ -106,10 +106,10 @@ class Connection extends DibiConnection
 		}
 		if (is_int($wiringSchema)) {
 			$result = '';
-			if (($wiringSchema & self::WIRE_ENTITY) === self::WIRE_ENTITY) {
+			if ($wiringSchema & self::WIRE_ENTITY) {
 				$result .= 'e';
 			}
-			if (($wiringSchema & self::WIRE_PROPERTY) === self::WIRE_PROPERTY) {
+			if ($wiringSchema & self::WIRE_PROPERTY) {
 				$result .= 'p';
 			}
 			$wiringSchema = $result;
