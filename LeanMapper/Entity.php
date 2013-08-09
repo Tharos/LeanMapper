@@ -62,7 +62,12 @@ abstract class Entity
 			$this->mapper = $arg->getMapper();
 		} else {
 			$this->row = Result::getDetachedInstance()->getRow();
-			// TODO: call fields initialization that would use default values from annotations
+			foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
+				if ($property->hasDefaultValue()) {
+					$propertyName = $property->getName();
+					$this->$propertyName = $property->getDefaultValue();
+				}
+			}
 			$this->initDefaults();
 			if ($arg !== null) {
 				if (!is_array($arg) and !($arg instanceof Traversable)) {
