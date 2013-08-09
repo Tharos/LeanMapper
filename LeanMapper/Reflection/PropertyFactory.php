@@ -54,6 +54,11 @@ class PropertyFactory
 			(\[\])?
 			(\|null)?\s+
 			(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
+			(?:\s+=\s*(?:
+				"((?:\\\\"|[^"])+)" |  # double quoted string
+				\'((?:\\\\\'|[^\'])+)\' |  # single quoted string
+				([^ ]*))  # unquoted value
+			)?
 			(?:\s+\(([^)]+)\))?
 			(?:\s+(.*)\s*)?
 		~xi', $annotation, $matches);
@@ -68,9 +73,21 @@ class PropertyFactory
 		$isNullable = ($matches[1] !== '' or $matches[4] !== '');
 		$name = substr($matches[5], 1);
 
-		$column = $mapper !== null ? $mapper->getColumn($reflection->getName(), $name) : $name;
+		$defaultValue = null;
 		if (isset($matches[6]) and $matches[6] !== '') {
-			$column = $matches[6];
+			$defaultValue = str_replace('\"', '"', $matches[6]);
+		} elseif (isset($matches[7]) and $matches[7] !== '') {
+			$defaultValue = str_replace("\\'", "'", $matches[7]);
+		} elseif (isset($matches[8]) and $matches[8] !== '') {
+			$defaultValue = $matches[8];
+		}
+		if ($defaultValue !== null) {
+			$defaultValue = self::fixDefaultValue($defaultValue, $propertyType);
+		}
+
+		$column = $mapper !== null ? $mapper->getColumn($reflection->getName(), $name) : $name;
+		if (isset($matches[9]) and $matches[9] !== '') {
+			$column = $matches[9];
 		}
 
 		$relationship = null;
@@ -80,9 +97,9 @@ class PropertyFactory
 		$propertyValuesEnum = null;
 		$customFlags = array();
 
-		if (isset($matches[7])) {
+		if (isset($matches[10])) {
 			$flagMatches = array();
-			preg_match_all('~m:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\(([^)]*)\))?~', $matches[7], $flagMatches, PREG_SET_ORDER);
+			preg_match_all('~m:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\(([^)]*)\))?~', $matches[10], $flagMatches, PREG_SET_ORDER);
 			foreach ($flagMatches as $match) {
 				$flag = $match[1];
 				$flagArgument = (isset($match[2]) and $match[2] !== '') ? $match[2] : null;
@@ -155,6 +172,7 @@ class PropertyFactory
 			$isWritable,
 			$isNullable,
 			$containsCollection,
+			$defaultValue,
 			$relationship,
 			$propertyMethods,
 			$propertyFilters,
@@ -252,6 +270,44 @@ class PropertyFactory
 	private static function generateRandomString($length)
 	{
 		return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length);
+	}
+
+	/**
+	 * @param mixed $value
+	 * @param PropertyType $propertyType
+	 * @return mixed
+	 * @throws InvalidAnnotationException
+	 */
+	private static function fixDefaultValue($value, PropertyType $propertyType)
+	{
+		if (!$propertyType->isBasicType()) {
+			throw new InvalidAnnotationException('Only properties of basic types may have default value specified.');
+		}
+		switch ($propertyType->getType()) {
+			case 'boolean':
+				$lower = strtolower($value);
+				if ($lower !== 'true' and $lower !== 'false') {
+					throw new InvalidAnnotationException("Property of type boolean cannot have default value '$value'.");
+				}
+				return $lower === 'true';
+			case 'integer':
+				if (!is_numeric($value)) {
+					throw new InvalidAnnotationException("Property of type integer cannot have default value '$value'.");
+				}
+				return intval($value, 0);
+			case 'float':
+				if (!is_numeric($value)) {
+					throw new InvalidAnnotationException("Property of type float cannot have default value '$value'.");
+				}
+				return floatval($value);
+			case 'array':
+				if (strtolower($value) !== 'array()') {
+					throw new InvalidAnnotationException("Property of type array cannot have default value '$value'.");
+				}
+				return array();
+			default: // string
+				return $value;
+		}
 	}
 
 }
