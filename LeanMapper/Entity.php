@@ -630,6 +630,9 @@ abstract class Entity
 	 */
 	private function addToOrRemoveFrom($action, $name, $arg)
 	{
+		if ($this->isDetached()) {
+			throw new InvalidMethodCallException('Cannot add or remove related entity to detached entity.');
+		}
 		$method = $action === self::ACTION_ADD ? 'addTo' : 'removeFrom';
 		if ($arg === null) {
 			throw new InvalidArgumentException("Invalid argument given.");
