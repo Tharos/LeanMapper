@@ -385,8 +385,8 @@ abstract class Entity
 				$relationship = $property->getRelationship();
 				$difference = $this->row->createReferencingDataDifference(
 					$relationship->getRelationshipTable(),
-					null,
 					$relationship->getColumnReferencingSourceTable(),
+					null,
 					$relationship->getStrategy()
 				);
 				if ($difference->mayHaveAny()) {
