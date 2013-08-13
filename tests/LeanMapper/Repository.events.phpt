@@ -1,0 +1,72 @@
+<?php
+
+use LeanMapper\Entity;
+use LeanMapper\Events;
+use LeanMapper\IMapper;
+use LeanMapper\Repository;
+use Tester\Assert;
+use LeanMapper\Connection;
+
+require_once __DIR__ . '/../bootstrap.php';
+
+////////////////////
+
+$log = new ArrayObject;
+
+/**
+ * @table author
+ */
+class CustomRepository extends Repository
+{
+
+	private $log;
+
+
+	public function __construct(Connection $connection, IMapper $mapper, ArrayObject $log)
+	{
+		parent::__construct($connection, $mapper);
+		$this->log = $log;
+	}
+
+	protected function initEvents()
+	{
+		$this->onAfterPersist[] = function ($author) {
+			$this->log->append('after persist: ' . $author->name);
+		};
+	}
+
+}
+
+$repository = new CustomRepository($connection, $mapper, $log);
+
+$repository->onBeforePersist[] = function ($author) use ($log) {
+	$log->append('before persist: ' . $author->name);
+};
+
+$repository->onBeforeCreate[] = function ($author) use ($log) {
+	$log->append('before create: ' . $author->name);
+};
+
+/**
+ * @property int $id
+ * @property string $name
+ */
+class Author extends Entity
+{
+}
+
+////////////////////
+
+$author = new Author;
+
+$author->name = 'John Doe';
+
+$repository->persist($author);
+
+$repository->delete($author);
+
+Assert::equal(array(
+	'before persist: John Doe',
+	'before create: John Doe',
+	'after persist: John Doe',
+), $log->getArrayCopy());

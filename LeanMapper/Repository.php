@@ -43,6 +43,9 @@ abstract class Repository
 	/** @var bool */
 	private $tableAnnotationChecked = false;
 
+	/** @var Events */
+	private $events;
+
 
 	/**
 	 * @param Connection $connection
@@ -52,6 +55,19 @@ abstract class Repository
 	{
 		$this->connection = $connection;
 		$this->mapper = $mapper;
+		$this->events = new Events;
+		$this->initEvents();
+	}
+
+	/**
+	 * @param string $name
+	 * @return array|null
+	 */
+	public function &__get($name)
+	{
+		if (preg_match('#^on[A-Z]#', $name)) {
+			return $this->events->getCallbacksReference(lcfirst(substr($name, 2)));
+		}
 	}
 
 	/**
@@ -63,31 +79,38 @@ abstract class Repository
 	public function persist(Entity $entity)
 	{
 		$result = null;
+		$trackedEvent = null;
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
 
 		$this->checkEntityType($entity);
+		$this->events->invokeCallbacks(Events::EVENT_BEFORE_PERSIST, $entity);
 		if ($entity->isModified()) {
 			if ($entity->isDetached()) {
 				$entity->useMapper($this->mapper);
 
+				$this->events->invokeCallbacks($trackedEvent = Events::EVENT_BEFORE_CREATE, $entity);
 				$values = $this->beforeCreate($entity->getModifiedRowData());
 				$this->connection->query(
 					'INSERT INTO %n %v', $this->getTable(), $values
 				);
-				$id = isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
-				$entity->markAsCreated($id, $this->getTable(), $this->connection);
-
-				return $id;
+				$result = isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
+				$entity->markAsCreated($result, $this->getTable(), $this->connection);
+				$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
 			} else {
+				$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
 				$values = $this->beforeUpdate($entity->getModifiedRowData());
 				$result = $this->connection->query(
 					'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $entity->$idField
 				);
 				$entity->markAsUpdated();
+				$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
 			}
 		}
-		$this->persistHasManyChanges($entity);
+		if ($trackedEvent === Events::EVENT_BEFORE_CREATE) {
+			$this->persistHasManyChanges($entity);
+		}
+		$this->events->invokeCallbacks(Events::EVENT_AFTER_PERSIST, $entity);
 		return $result;
 	}
 
@@ -108,12 +131,16 @@ abstract class Repository
 			if ($arg->isDetached()) {
 				throw new InvalidStateException('Cannot delete detached entity.');
 			}
+			$this->events->invokeCallbacks(Events::EVENT_BEFORE_DELETE, $arg);
 			$id = $arg->$idField;
-			$arg->detach();
 		}
 		$this->connection->query(
 			'DELETE FROM %n WHERE %n = ?', $this->getTable(), $primaryKey, $id
 		);
+		if ($arg instanceof Entity) {
+			$arg->detach();
+			$this->events->invokeCallbacks(Events::EVENT_AFTER_DELETE, $arg);
+		}
 	}
 
 	/**
@@ -147,6 +174,10 @@ abstract class Repository
 				'INSERT INTO %n %ex', $relationshipTable, $multiInsert
 			);
 		}
+	}
+
+	protected function initEvents()
+	{
 	}
 
 	/**
