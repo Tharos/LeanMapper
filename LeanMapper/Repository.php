@@ -148,9 +148,9 @@ abstract class Repository
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
 
-		$multiInsert = array();
 		foreach ($entity->getHasManyRowDifferences() as $key => $difference) {
 			list($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable) = explode(':', $key);
+			$multiInsert = array();
 			foreach ($difference as $value => $count) {
 				if ($count > 0) {
 					for ($i = 0; $i < $count; $i++) {
@@ -165,11 +165,11 @@ abstract class Repository
 					);
 				}
 			}
-		}
-		if (!empty($multiInsert)) {
-			$this->connection->query(
-				'INSERT INTO %n %ex', $relationshipTable, $multiInsert
-			);
+			if (!empty($multiInsert)) {
+				$this->connection->query(
+					'INSERT INTO %n %ex', $relationshipTable, $multiInsert
+				);
+			}
 		}
 	}
 
