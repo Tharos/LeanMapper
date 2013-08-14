@@ -60,14 +60,14 @@ class Events
 
 	/**
 	 * @param string $event
-	 * @param Entity $entity
+	 * @param mixed $arg
 	 * @throws InvalidArgumentException
 	 */
-	public function invokeCallbacks($event, Entity $entity)
+	public function invokeCallbacks($event, $arg)
 	{
 		$this->checkEventType($event);
 		foreach ($this->events[$event] as $callback) {
-			call_user_func($callback, $entity);
+			call_user_func($callback, $arg);
 		}
 	}
 

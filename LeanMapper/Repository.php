@@ -105,30 +105,23 @@ abstract class Repository
 	/**
 	 * Removes given entity (or entity with given id) from database
 	 *
-	 * @param Entity|int $arg
+	 * @param mixed $arg
 	 * @throws InvalidStateException
 	 */
 	public function delete($arg)
 	{
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
-
-		$id = $arg;
+		$this->events->invokeCallbacks(Events::EVENT_BEFORE_DELETE, $arg);
 		if ($arg instanceof Entity) {
 			$this->checkEntityType($arg);
 			if ($arg->isDetached()) {
 				throw new InvalidStateException('Cannot delete detached entity.');
 			}
-			$this->events->invokeCallbacks(Events::EVENT_BEFORE_DELETE, $arg);
-			$id = $arg->$idField;
 		}
-		$this->connection->query(
-			'DELETE FROM %n WHERE %n = ?', $this->getTable(), $primaryKey, $id
-		);
+		$this->deleteFromDatabase($arg);
 		if ($arg instanceof Entity) {
 			$arg->detach();
-			$this->events->invokeCallbacks(Events::EVENT_AFTER_DELETE, $arg);
 		}
+		$this->events->invokeCallbacks(Events::EVENT_AFTER_DELETE, $arg);
 	}
 
 	/**
@@ -193,6 +186,20 @@ abstract class Repository
 		$values = $entity->getModifiedRowData();
 		return $this->connection->query(
 			'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $entity->$idField
+		);
+	}
+
+	/**
+	 * @param mixed $arg
+	 */
+	protected function deleteFromDatabase($arg)
+	{
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+
+		$id = ($arg instanceof Entity) ? $arg->$idField : $arg;
+		$this->connection->query(
+			'DELETE FROM %n WHERE %n = ?', $this->getTable(), $primaryKey, $id
 		);
 	}
 
