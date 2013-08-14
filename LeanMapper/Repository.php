@@ -79,35 +79,26 @@ abstract class Repository
 	public function persist(Entity $entity)
 	{
 		$result = null;
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
-
 		$this->checkEntityType($entity);
+
 		$this->events->invokeCallbacks(Events::EVENT_BEFORE_PERSIST, $entity);
 		if ($entity->isModified()) {
 			if ($entity->isDetached()) {
 				$entity->useMapper($this->mapper);
-
 				$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
-				$values = $this->beforeCreate($entity->getModifiedRowData());
-				$this->connection->query(
-					'INSERT INTO %n %v', $this->getTable(), $values
-				);
-				$result = isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
+				$result = $this->insertIntoDatabase($entity);
 				$entity->markAsCreated($result, $this->getTable(), $this->connection);
 				$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
 			} else {
 				$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
-				$values = $this->beforeUpdate($entity->getModifiedRowData());
-				$result = $this->connection->query(
-					'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $entity->$idField
-				);
+				$result = $this->updateInDatabase($entity);
 				$entity->markAsUpdated();
 				$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
 			}
 		}
 		$this->persistHasManyChanges($entity);
 		$this->events->invokeCallbacks(Events::EVENT_AFTER_PERSIST, $entity);
+
 		return $result;
 	}
 
@@ -178,36 +169,31 @@ abstract class Repository
 	}
 
 	/**
-	 * Adjusts prepared values before database insert call
-	 *
-	 * @param array $values
-	 * @return array
+	 * @param Entity $entity
+	 * @return mixed
 	 */
-	protected function beforeCreate(array $values)
+	protected function insertIntoDatabase(Entity $entity)
 	{
-		return $this->beforePersist($values);
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$values = $entity->getModifiedRowData();
+		$this->connection->query(
+			'INSERT INTO %n %v', $this->getTable(), $values
+		);
+		return isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
 	}
 
 	/**
-	 * Adjusts prepared values before database update call
-	 *
-	 * @param array $values
-	 * @return array
+	 * @param Entity $entity
+	 * @return mixed
 	 */
-	protected function beforeUpdate(array $values)
+	protected function updateInDatabase(Entity $entity)
 	{
-		return $this->beforePersist($values);
-	}
-
-	/**
-	 * Adjusts prepared values before database insert or update call
-	 *
-	 * @param array $values
-	 * @return array
-	 */
-	protected function beforePersist(array $values)
-	{
-		return $values;
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+		$values = $entity->getModifiedRowData();
+		return $this->connection->query(
+			'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $entity->$idField
+		);
 	}
 
 	/**
