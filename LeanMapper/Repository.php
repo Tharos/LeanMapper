@@ -70,6 +70,10 @@ abstract class Repository
 		}
 	}
 
+	protected function initEvents()
+	{
+	}
+
 	/**
 	 * Stores modified fields of entity into database or creates new row in database when entity is in detached state
 	 *
@@ -78,7 +82,6 @@ abstract class Repository
 	 */
 	public function persist(Entity $entity)
 	{
-		$result = null;
 		$this->checkEntityType($entity);
 
 		$this->events->invokeCallbacks(Events::EVENT_BEFORE_PERSIST, $entity);
@@ -86,8 +89,8 @@ abstract class Repository
 			if ($entity->isDetached()) {
 				$entity->useMapper($this->mapper);
 				$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
-				$result = $this->insertIntoDatabase($entity);
-				$entity->markAsCreated($result, $this->getTable(), $this->connection);
+				$result = $id = $this->insertIntoDatabase($entity);
+				$entity->markAsCreated($id, $this->getTable(), $this->connection);
 				$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
 			} else {
 				$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
@@ -99,7 +102,7 @@ abstract class Repository
 		$this->persistHasManyChanges($entity);
 		$this->events->invokeCallbacks(Events::EVENT_AFTER_PERSIST, $entity);
 
-		return $result;
+		return isset($result) ? $result : null;
 	}
 
 	/**
@@ -122,43 +125,6 @@ abstract class Repository
 			$arg->detach();
 		}
 		$this->events->invokeCallbacks(Events::EVENT_AFTER_DELETE, $arg);
-	}
-
-	/**
-	 * @param Entity $entity
-	 */
-	protected function persistHasManyChanges(Entity $entity)
-	{
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
-
-		foreach ($entity->getHasManyRowDifferences() as $key => $difference) {
-			list($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable) = explode(':', $key);
-			$multiInsert = array();
-			foreach ($difference as $value => $count) {
-				if ($count > 0) {
-					for ($i = 0; $i < $count; $i++) {
-						$multiInsert[] = array(
-							$columnReferencingSourceTable => $entity->$idField,
-							$columnReferencingTargetTable => $value,
-						);
-					}
-				} else {
-					$this->connection->query(
-						'DELETE FROM %n WHERE %n = ? AND %n = ? %lmt', $relationshipTable, $columnReferencingSourceTable, $entity->$idField, $columnReferencingTargetTable, $value, - $count
-					);
-				}
-			}
-			if (!empty($multiInsert)) {
-				$this->connection->query(
-					'INSERT INTO %n %ex', $relationshipTable, $multiInsert
-				);
-			}
-		}
-	}
-
-	protected function initEvents()
-	{
 	}
 
 	/**
@@ -201,6 +167,39 @@ abstract class Repository
 		$this->connection->query(
 			'DELETE FROM %n WHERE %n = ?', $this->getTable(), $primaryKey, $id
 		);
+	}
+
+	/**
+	 * @param Entity $entity
+	 */
+	protected function persistHasManyChanges(Entity $entity)
+	{
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+
+		foreach ($entity->getHasManyRowDifferences() as $key => $difference) {
+			list($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable) = explode(':', $key);
+			$multiInsert = array();
+			foreach ($difference as $value => $count) {
+				if ($count > 0) {
+					for ($i = 0; $i < $count; $i++) {
+						$multiInsert[] = array(
+							$columnReferencingSourceTable => $entity->$idField,
+							$columnReferencingTargetTable => $value,
+						);
+					}
+				} else {
+					$this->connection->query(
+						'DELETE FROM %n WHERE %n = ? AND %n = ? %lmt', $relationshipTable, $columnReferencingSourceTable, $entity->$idField, $columnReferencingTargetTable, $value, - $count
+					);
+				}
+			}
+			if (!empty($multiInsert)) {
+				$this->connection->query(
+					'INSERT INTO %n %ex', $relationshipTable, $multiInsert
+				);
+			}
+		}
 	}
 
 	/**
@@ -278,6 +277,15 @@ abstract class Repository
 	}
 
 	/**
+	 * @param array $entities
+	 * @return array
+	 */
+	protected function createCollection(array $entities)
+	{
+		return $entities;
+	}
+
+	/**
 	 * @param Entity $entity
 	 * @throws InvalidArgumentException
 	 */
@@ -287,15 +295,6 @@ abstract class Repository
 		if (!($entity instanceof $entityClass)) {
 			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
 		}
-	}
-
-	/**
-	 * @param array $entities
-	 * @return array
-	 */
-	protected function createCollection(array $entities)
-	{
-		return $entities;
 	}
 
 	////////////////////
