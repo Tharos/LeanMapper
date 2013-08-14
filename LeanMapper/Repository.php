@@ -79,7 +79,6 @@ abstract class Repository
 	public function persist(Entity $entity)
 	{
 		$result = null;
-		$trackedEvent = null;
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
 
@@ -89,7 +88,7 @@ abstract class Repository
 			if ($entity->isDetached()) {
 				$entity->useMapper($this->mapper);
 
-				$this->events->invokeCallbacks($trackedEvent = Events::EVENT_BEFORE_CREATE, $entity);
+				$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
 				$values = $this->beforeCreate($entity->getModifiedRowData());
 				$this->connection->query(
 					'INSERT INTO %n %v', $this->getTable(), $values
@@ -107,9 +106,7 @@ abstract class Repository
 				$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
 			}
 		}
-		if ($trackedEvent === Events::EVENT_BEFORE_CREATE) {
-			$this->persistHasManyChanges($entity);
-		}
+		$this->persistHasManyChanges($entity);
 		$this->events->invokeCallbacks(Events::EVENT_AFTER_PERSIST, $entity);
 		return $result;
 	}
