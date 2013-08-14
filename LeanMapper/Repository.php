@@ -37,14 +37,14 @@ abstract class Repository
 	/** @var string */
 	protected $entityClass;
 
+	/** @var Events */
+	protected $events;
+
 	/** @var string */
 	private $docComment;
 
 	/** @var bool */
 	private $tableAnnotationChecked = false;
-
-	/** @var Events */
-	private $events;
 
 
 	/**
@@ -70,6 +70,10 @@ abstract class Repository
 		}
 	}
 
+	protected function initEvents()
+	{
+	}
+
 	/**
 	 * Stores modified fields of entity into database or creates new row in database when entity is in detached state
 	 *
@@ -78,66 +82,91 @@ abstract class Repository
 	 */
 	public function persist(Entity $entity)
 	{
-		$result = null;
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
-
 		$this->checkEntityType($entity);
+
 		$this->events->invokeCallbacks(Events::EVENT_BEFORE_PERSIST, $entity);
 		if ($entity->isModified()) {
 			if ($entity->isDetached()) {
 				$entity->useMapper($this->mapper);
-
 				$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
-				$values = $this->beforeCreate($entity->getModifiedRowData());
-				$this->connection->query(
-					'INSERT INTO %n %v', $this->getTable(), $values
-				);
-				$result = isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
-				$entity->markAsCreated($result, $this->getTable(), $this->connection);
+				$result = $id = $this->insertIntoDatabase($entity);
+				$entity->markAsCreated($id, $this->getTable(), $this->connection);
 				$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
 			} else {
 				$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
-				$values = $this->beforeUpdate($entity->getModifiedRowData());
-				$result = $this->connection->query(
-					'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $entity->$idField
-				);
+				$result = $this->updateInDatabase($entity);
 				$entity->markAsUpdated();
 				$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
 			}
 		}
 		$this->persistHasManyChanges($entity);
 		$this->events->invokeCallbacks(Events::EVENT_AFTER_PERSIST, $entity);
-		return $result;
+
+		return isset($result) ? $result : null;
 	}
 
 	/**
 	 * Removes given entity (or entity with given id) from database
 	 *
-	 * @param Entity|int $arg
+	 * @param mixed $arg
 	 * @throws InvalidStateException
 	 */
 	public function delete($arg)
 	{
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
-
-		$id = $arg;
+		$this->events->invokeCallbacks(Events::EVENT_BEFORE_DELETE, $arg);
 		if ($arg instanceof Entity) {
 			$this->checkEntityType($arg);
 			if ($arg->isDetached()) {
 				throw new InvalidStateException('Cannot delete detached entity.');
 			}
-			$this->events->invokeCallbacks(Events::EVENT_BEFORE_DELETE, $arg);
-			$id = $arg->$idField;
 		}
+		$this->deleteFromDatabase($arg);
+		if ($arg instanceof Entity) {
+			$arg->detach();
+		}
+		$this->events->invokeCallbacks(Events::EVENT_AFTER_DELETE, $arg);
+	}
+
+	/**
+	 * @param Entity $entity
+	 * @return mixed
+	 */
+	protected function insertIntoDatabase(Entity $entity)
+	{
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$values = $entity->getModifiedRowData();
+		$this->connection->query(
+			'INSERT INTO %n %v', $this->getTable(), $values
+		);
+		return isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
+	}
+
+	/**
+	 * @param Entity $entity
+	 * @return mixed
+	 */
+	protected function updateInDatabase(Entity $entity)
+	{
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+		$values = $entity->getModifiedRowData();
+		return $this->connection->query(
+			'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $entity->$idField
+		);
+	}
+
+	/**
+	 * @param mixed $arg
+	 */
+	protected function deleteFromDatabase($arg)
+	{
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+
+		$id = ($arg instanceof Entity) ? $arg->$idField : $arg;
 		$this->connection->query(
 			'DELETE FROM %n WHERE %n = ?', $this->getTable(), $primaryKey, $id
 		);
-		if ($arg instanceof Entity) {
-			$arg->detach();
-			$this->events->invokeCallbacks(Events::EVENT_AFTER_DELETE, $arg);
-		}
 	}
 
 	/**
@@ -171,43 +200,6 @@ abstract class Repository
 				);
 			}
 		}
-	}
-
-	protected function initEvents()
-	{
-	}
-
-	/**
-	 * Adjusts prepared values before database insert call
-	 *
-	 * @param array $values
-	 * @return array
-	 */
-	protected function beforeCreate(array $values)
-	{
-		return $this->beforePersist($values);
-	}
-
-	/**
-	 * Adjusts prepared values before database update call
-	 *
-	 * @param array $values
-	 * @return array
-	 */
-	protected function beforeUpdate(array $values)
-	{
-		return $this->beforePersist($values);
-	}
-
-	/**
-	 * Adjusts prepared values before database insert or update call
-	 *
-	 * @param array $values
-	 * @return array
-	 */
-	protected function beforePersist(array $values)
-	{
-		return $values;
 	}
 
 	/**
@@ -293,6 +285,18 @@ abstract class Repository
 		return $entities;
 	}
 
+	/**
+	 * @param Entity $entity
+	 * @throws InvalidArgumentException
+	 */
+	protected function checkEntityType(Entity $entity)
+	{
+		$entityClass = $this->mapper->getEntityClass($this->getTable());
+		if (!($entity instanceof $entityClass)) {
+			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
+		}
+	}
+
 	////////////////////
 	////////////////////
 
@@ -306,18 +310,6 @@ abstract class Repository
 			$this->docComment = $reflection->getDocComment();
 		}
 		return $this->docComment;
-	}
-
-	/**
-	 * @param Entity $entity
-	 * @throws InvalidArgumentException
-	 */
-	private function checkEntityType(Entity $entity)
-	{
-		$entityClass = $this->mapper->getEntityClass($this->getTable());
-		if (!($entity instanceof $entityClass)) {
-			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
-		}
 	}
 	
 }
