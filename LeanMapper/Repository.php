@@ -37,14 +37,14 @@ abstract class Repository
 	/** @var string */
 	protected $entityClass;
 
+	/** @var Events */
+	protected $events;
+
 	/** @var string */
 	private $docComment;
 
 	/** @var bool */
 	private $tableAnnotationChecked = false;
-
-	/** @var Events */
-	private $events;
 
 
 	/**
@@ -285,6 +285,18 @@ abstract class Repository
 	}
 
 	/**
+	 * @param Entity $entity
+	 * @throws InvalidArgumentException
+	 */
+	protected function checkEntityType(Entity $entity)
+	{
+		$entityClass = $this->mapper->getEntityClass($this->getTable());
+		if (!($entity instanceof $entityClass)) {
+			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
+		}
+	}
+
+	/**
 	 * @param array $entities
 	 * @return array
 	 */
@@ -306,18 +318,6 @@ abstract class Repository
 			$this->docComment = $reflection->getDocComment();
 		}
 		return $this->docComment;
-	}
-
-	/**
-	 * @param Entity $entity
-	 * @throws InvalidArgumentException
-	 */
-	private function checkEntityType(Entity $entity)
-	{
-		$entityClass = $this->mapper->getEntityClass($this->getTable());
-		if (!($entity instanceof $entityClass)) {
-			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
-		}
 	}
 	
 }
