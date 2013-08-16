@@ -358,10 +358,10 @@ class Result implements \Iterator
 	 */
 	public function getReferencedRow($id, $table, $viaColumn = null, Filtering $filtering = null)
 	{
-		$result = $this->getReferencedResult($table, $viaColumn, $filtering);
 		if ($viaColumn === null) {
 			$viaColumn = $this->mapper->getRelationshipColumn($this->table, $table);
 		}
+		$result = $this->getReferencedResult($table, $viaColumn, $filtering);
 		return $result->getRow($this->getDataEntry($id, $viaColumn));
 	}
 
@@ -378,10 +378,10 @@ class Result implements \Iterator
 	 */
 	public function getReferencingRows($id, $table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
-		$referencingResult = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
 		if ($viaColumn === null) {
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
+		$referencingResult = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
 		$originKey = $referencingResult->getOriginKey();
 		if (!isset($this->index[$originKey])) {
 			$this->index[$originKey] = array();
@@ -404,8 +404,9 @@ class Result implements \Iterator
 	 */
 	public function addToReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
 	{
-		$this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
-				->addDataEntry($values);
+		$result = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
+		$result->addDataEntry($values);
+		unset($this->index[$result->getOriginKey()]);
 	}
 
 	/**
@@ -417,8 +418,9 @@ class Result implements \Iterator
 	 */
 	public function removeFromReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
 	{
-		$this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
-				->removeDataEntry($values);
+		$result = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
+		$result->removeDataEntry($values);
+		unset($this->index[$result->getOriginKey()]);
 	}
 
 	/**
@@ -533,13 +535,10 @@ class Result implements \Iterator
 	 * @throws InvalidStateException
 	 * @return self
 	 */
-	private function getReferencedResult($table, $viaColumn = null, Filtering $filtering = null)
+	private function getReferencedResult($table, $viaColumn, Filtering $filtering = null)
 	{
 		if ($this->isDetached()) {
 			throw new InvalidStateException('Cannot get referenced result for detached result.');
-		}
-		if ($viaColumn === null) {
-			$viaColumn = $this->mapper->getRelationshipColumn($this->table, $table);
 		}
 		$key = "$table($viaColumn)";
 		$primaryKey = $this->mapper->getPrimaryKey($table);
