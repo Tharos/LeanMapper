@@ -301,7 +301,7 @@ class PropertyFactory
 				}
 				return floatval($value);
 			case 'array':
-				if (strtolower($value) !== 'array()') {
+				if (strtolower($value) !== 'array()' and $value !== '[]') {
 					throw new InvalidAnnotationException("Property of type array cannot have default value '$value'.");
 				}
 				return array();
