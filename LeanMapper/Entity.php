@@ -155,7 +155,7 @@ abstract class Entity
 					if (!$property->containsCollection()) {
 						$type = $property->getType();
 						if (!($value instanceof $type)) {
-							throw new InvalidValueException("Property '$name' is expected to contain an instance of '$type', instance of '" . get_class($value) . "' given.");
+							throw new InvalidValueException("Property '$name' is expected to contain an instance of '$type'.");
 						}
 					} else {
 						if (!is_array($value)) {
@@ -225,7 +225,7 @@ abstract class Entity
 					} else {
 						$type = $property->getType();
 						if (!($value instanceof $type)) {
-							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
+							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected.");
 						}
 						if ($property->hasRelationship()) {
 							if (!($value instanceof Entity)) {
