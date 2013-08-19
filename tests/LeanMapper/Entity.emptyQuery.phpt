@@ -29,7 +29,7 @@ $book->name = 'Test book';
 $book->author = null;
 
 $book->useMapper(new DefaultMapper);
-$book->markAsCreated(1, 'book', $connection);
+$book->markAsAttached(1, 'book', $connection);
 
 $book->getData();
 

@@ -60,7 +60,7 @@ $mapper = new Mapper;
 $author = new Author;
 $author->name = 'John Doe';
 $author->useMapper($mapper);
-$author->markAsCreated(1, 'author', $connection);
+$author->markAsAttached(1, 'author', $connection);
 
 Assert::equal(array (
 	'customid' => 1,

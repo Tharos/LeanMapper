@@ -45,7 +45,7 @@ $connection->registerFilter('second', function () use ($args) {
 
 $book = new Book;
 $book->useMapper(new Mapper);
-$book->markAsCreated(1, 'book', $connection);
+$book->markAsAttached(1, 'book', $connection);
 
 $book->getTags(1, 'argument', true);
 

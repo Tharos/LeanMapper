@@ -90,7 +90,7 @@ abstract class Repository
 				$entity->useMapper($this->mapper);
 				$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
 				$result = $id = $this->insertIntoDatabase($entity);
-				$entity->markAsCreated($id, $this->getTable(), $this->connection);
+				$entity->markAsAttached($id, $this->getTable(), $this->connection);
 				$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
 			} else {
 				$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);

@@ -465,9 +465,9 @@ abstract class Entity
 	 * @param string $table
 	 * @param Connection $connection
 	 */
-	public function markAsCreated($id, $table, Connection $connection)
+	public function markAsAttached($id, $table, Connection $connection)
 	{
-		$this->row->markAsCreated($id, $table, $connection);
+		$this->row->markAsAttached($id, $table, $connection);
 	}
 
 	/**

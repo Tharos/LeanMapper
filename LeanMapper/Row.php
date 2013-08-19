@@ -163,9 +163,9 @@ class Row
 	 * @param string $table
 	 * @param Connection $connection
 	 */
-	public function markAsCreated($id, $table, Connection $connection)
+	public function markAsAttached($id, $table, Connection $connection)
 	{
-		$this->result->markAsCreated($id, $this->id, $table, $connection);
+		$this->result->markAsAttached($id, $this->id, $table, $connection);
 		$this->id = $id;
 	}
 

@@ -322,7 +322,7 @@ class Result implements \Iterator
 	 * @param Connection $connection
 	 * @throws InvalidStateException
 	 */
-	public function markAsCreated($newId, $oldId, $table, Connection $connection)
+	public function markAsAttached($newId, $oldId, $table, Connection $connection)
 	{
 		if (!$this->isDetached()) {
 			throw new InvalidStateException('Result is not in detached state.');
