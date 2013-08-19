@@ -64,7 +64,7 @@ class PropertyFactory
 		~xi', $annotation, $matches);
 
 		if (!$matched) {
-			throw new InvalidAnnotationException("Invalid field definition given: @$annotationType $annotation");
+			throw new InvalidAnnotationException("Invalid property definition given: @$annotationType $annotation.");
 		}
 
 		$propertyType = new PropertyType($matches[2], $aliases);
@@ -110,7 +110,7 @@ class PropertyFactory
 					case 'belongsToOne':
 					case 'belongsToMany':
 						if ($relationship !== null) {
-							throw new InvalidAnnotationException("It doesn't make sense to have multiple relationship definitions in annotation: @$annotationType $annotation");
+							throw new InvalidAnnotationException("It doesn't make sense to have multiple relationship definitions in property definition: @$annotationType $annotation.");
 						}
 						$relationship = self::createRelationship(
 							$reflection->getName(),
@@ -123,28 +123,28 @@ class PropertyFactory
 						break;
 					case 'useMethods':
 						if ($propertyMethods !== null) {
-							throw new InvalidAnnotationException("Multiple m:useMethods flags found in annotation: @$annotationType $annotation");
+							throw new InvalidAnnotationException("Multiple m:useMethods flags found in property definition: @$annotationType $annotation.");
 						}
 						$propertyMethods = new PropertyMethods($name, $isWritable, $flagArgument);
 						break;
 					case 'filter':
 						if ($propertyFilters !== null) {
-							throw new InvalidAnnotationException("Multiple m:filter flags found in annotation: @$annotationType $annotation");
+							throw new InvalidAnnotationException("Multiple m:filter flags found in property definition: @$annotationType $annotation.");
 						}
 						$propertyFilters =  new PropertyFilters($flagArgument);
 						break;
 					case 'passThru':
 						if ($propertyPasses !== null) {
-							throw new InvalidAnnotationException("Multiple m:passThru flags found in annotation: @$annotationType $annotation");
+							throw new InvalidAnnotationException("Multiple m:passThru flags found in property definition: @$annotationType $annotation.");
 						}
 						$propertyPasses = new PropertyPasses($flagArgument);
 						break;
 					case 'enum':
 						if ($propertyValuesEnum !== null) {
-							throw new InvalidAnnotationException("Multiple values enumerations found in annotation: @$annotationType $annotation");
+							throw new InvalidAnnotationException("Multiple values enumerations found in property definition: @$annotationType $annotation.");
 						}
 						if ($flagArgument === null) {
-							throw new InvalidAnnotationException("Parameter of m:enum flag was not found in annotation: @$annotationType $annotation");
+							throw new InvalidAnnotationException("Parameter of m:enum flag was not found in property definition: @$annotationType $annotation");
 						}
 						if (!$propertyType->isBasicType() or $propertyType->getType() === 'array') {
 							throw new InvalidAnnotationException("Values of {$propertyType->getType()} property cannot be enumerated.");
@@ -153,7 +153,7 @@ class PropertyFactory
 						break;
 					default:
 						if (array_key_exists($flag, $customFlags)) {
-							throw new InvalidAnnotationException("Multiple m:$flag flags found in annotation: @$annotationType $annotation");
+							throw new InvalidAnnotationException("Multiple m:$flag flags found in property definition: @$annotationType $annotation");
 						}
 						$customFlags[$flag] = $flagArgument;
 				}
@@ -199,15 +199,15 @@ class PropertyFactory
 	{
 		// logic validation
 		if ($propertyType->isBasicType()) {
-			throw new InvalidAnnotationException("Invalid property annotation given: {$propertyType->getType()} property cannot have relationship.");
+			throw new InvalidAnnotationException("Invalid property definition given: {$propertyType->getType()} property cannot have relationship.");
 		}
 		if ($relationshipType === 'hasMany' or $relationshipType === 'belongsToMany') {
 			if (!$containsCollection) {
-				throw new InvalidAnnotationException("Invalid property annotation given: property with '$relationshipType' relationship type must contain collection.");
+				throw new InvalidAnnotationException("Invalid property definition given: property with '$relationshipType' relationship must contain collection.");
 			}
 		} else {
 			if ($containsCollection) {
-				throw new InvalidAnnotationException("Invalid property annotation given: property with '$relationshipType' relationship type must not contain collection.");
+				throw new InvalidAnnotationException("Invalid property definition given: property with '$relationshipType' relationship must not contain collection.");
 			}
 		}
 		if ($relationshipType !== 'hasOne') {
@@ -281,7 +281,7 @@ class PropertyFactory
 	private static function fixDefaultValue($value, PropertyType $propertyType)
 	{
 		if (!$propertyType->isBasicType()) {
-			throw new InvalidAnnotationException('Only properties of basic types may have default value specified.');
+			throw new InvalidAnnotationException('Only properties of basic types may have default values specified.');
 		}
 		switch ($propertyType->getType()) {
 			case 'boolean':

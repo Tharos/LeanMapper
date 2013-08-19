@@ -44,7 +44,7 @@ class PropertyFilters
 				$matches = array();
 				preg_match('~^([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(?:#(.*))?$~', $filter, $matches);
 				if (empty($matches)) {
-					throw new InvalidAnnotationException("Unsupported filter usage given: $filter.");
+					throw new InvalidAnnotationException("Malformed filter name given: '$filter'.");
 				}
 				$filters[] = $filterName = $matches[1];
 				if (isset($matches[2])) {

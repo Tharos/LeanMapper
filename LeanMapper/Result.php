@@ -577,7 +577,7 @@ class Result implements \Iterator
 	{
 		$strategy = $this->translateStrategy($strategy);
 		if ($this->isDetached()) {
-			throw new InvalidStateException('Cannot get referencing rows for detached result.');
+			throw new InvalidStateException('Cannot get referencing result for detached result.');
 		}
 		if ($viaColumn === null) {
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
@@ -699,7 +699,7 @@ class Result implements \Iterator
 			$strategy = self::STRATEGY_IN;
 		} else {
 			if ($strategy !== self::STRATEGY_IN and $strategy !== self::STRATEGY_UNION) {
-				throw new InvalidArgumentException("Unsupported SQL strategy given: $strategy.");
+				throw new InvalidArgumentException("Unsupported SQL strategy given: '$strategy'.");
 			}
 		}
 		return $strategy;

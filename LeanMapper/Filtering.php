@@ -48,7 +48,7 @@ class Filtering
 	{
 		if (!is_array($filters)) {
 			if (!is_string($filters)) {
-				throw new InvalidArgumentException("Argument $filters must be either string (name of filter) or array (names of filters).");
+				throw new InvalidArgumentException("Argument \$filters must contain either string (name of filter) or array (names of filters).");
 			}
 			$filters = array($filters);
 		}

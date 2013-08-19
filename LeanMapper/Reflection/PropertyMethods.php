@@ -45,19 +45,19 @@ class PropertyMethods
 		foreach (preg_split('#\s*\|\s*#', trim($definition)) as $method) {
 			$counter++;
 			if ($counter > 2) {
-				throw new InvalidAnnotationException('PropertyMethods cannot have more than two parts.');
+				throw new InvalidAnnotationException('Property methods cannot have more than two parts.');
 			}
 			if ($method === '') {
 				continue;
 			}
 			if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $method)) {
-				throw new InvalidAnnotationException('Invalid access method name given: ' . $method);
+				throw new InvalidAnnotationException("Malformed access method name given: '$method'.");
 			}
 			if ($counter === 1) {
 				$this->getter = $method;
 			} else { // $counter === 2
 				if (!$isWritable) {
-					throw new InvalidAnnotationException('PropertyMethods can have one part only in read-only property.');
+					throw new InvalidAnnotationException('Property methods can have one part only in read-only properties.');
 				}
 				$this->setter = $method;
 			}

@@ -24,7 +24,7 @@ Assert::type('DibiDateTime', $book->published);
 
 Assert::exception(function () use ($book) {
 	$book->published = new ArrayObject;
-}, 'LeanMapper\Exception\InvalidValueException', 'Unexpected value type: DateTime expected.');
+}, 'LeanMapper\Exception\InvalidValueException', 'Unexpected value type given, expected DateTime.');
 
 //////////
 
@@ -36,7 +36,7 @@ $book = new Book(Result::getInstance($dibiRow, 'book', $connection, $mapper)->ge
 
 Assert::exception(function () use ($book) {
 	$book->published;
-}, 'LeanMapper\Exception\InvalidValueException', "Property 'published' is expected to contain an instance of 'DateTime'.");
+}, 'LeanMapper\Exception\InvalidValueException', "Property 'published' is expected to contain an instance of DateTime, instance of ArrayObject given.");
 
 //////////
 

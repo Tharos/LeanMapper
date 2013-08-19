@@ -39,7 +39,7 @@ class PropertyValuesEnum
 		$matches = array();
 		preg_match('#^((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+|self|static|parent)::([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+)\*$#', $definition, $matches);
 		if (empty($matches)) {
-			throw new InvalidAnnotationException('Invalid enumeration definition given: ' . $definition);
+			throw new InvalidAnnotationException("Invalid enumeration definition given: '$definition'.");
 		}
 		list(, $class, $prefix) = $matches;
 

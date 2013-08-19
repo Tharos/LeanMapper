@@ -310,7 +310,7 @@ class Property
 	public function getCustomFlagValue($name)
 	{
 		if (!$this->hasCustomFlag($name)) {
-			throw new InvalidArgumentException("Property doesn't have custom flag $name.");
+			throw new InvalidArgumentException("Property doesn't have custom flag '$name'.");
 		}
 		return $this->customFlags[$name];
 	}
@@ -323,7 +323,7 @@ class Property
 	private function checkContainsEnumeration()
 	{
 		if (!$this->containsEnumeration()) {
-			throw new InvalidMethodCallException("It doesn't make sense to call this method on property that doesn't contain enumeration");
+			throw new InvalidMethodCallException("It doesn't make sense to call this method on property that doesn't contain enumeration.");
 		}
 	}
 

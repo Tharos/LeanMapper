@@ -71,7 +71,8 @@ abstract class Entity
 			$this->initDefaults();
 			if ($arg !== null) {
 				if (!is_array($arg) and !($arg instanceof Traversable)) {
-					throw new InvalidArgumentException('Argument $arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, ' . gettype($arg) . ' given.');
+					$type = gettype($arg) !== 'object' ? gettype($arg) : 'instance of ' . get_class($arg);
+					throw new InvalidArgumentException("Argument \$arg in LeanMapper\\Entity::__construct must contain either null, array, instance of LeanMapper\\Row or instance of Traversable, $type given.");
 				}
 				$this->assign($arg);
 			}
@@ -97,7 +98,7 @@ abstract class Entity
 		}
 		$property = $reflection->getEntityProperty($name);
 		if ($property === null) {
-			throw new MemberAccessException("Undefined property: $name");
+			throw new MemberAccessException("Cannot access undefined property '$name'.");
 		}
 		$customGetter = $property->getGetter();
 		if ($customGetter !== null) {
@@ -120,7 +121,7 @@ abstract class Entity
 					throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
 				}
 				if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
-					throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
+					throw new InvalidValueException("Given value is not from possible values enumeration.");
 				}
 			}
 		} else {
@@ -155,11 +156,11 @@ abstract class Entity
 					if (!$property->containsCollection()) {
 						$type = $property->getType();
 						if (!($value instanceof $type)) {
-							throw new InvalidValueException("Property '$name' is expected to contain an instance of '$type'.");
+							throw new InvalidValueException("Property '$name' is expected to contain an instance of $type, instance of " . get_class($value) . " given.");
 						}
 					} else {
 						if (!is_array($value)) {
-							throw new InvalidValueException("Property '$name' is expected to contain an array of '{$property->getType()}' instances.");
+							throw new InvalidValueException("Property '$name' is expected to contain an array of {$property->getType()} instances.");
 						}
 					}
 				}
@@ -189,7 +190,7 @@ abstract class Entity
 		} else {
 			$property = $reflection->getEntityProperty($name);
 			if ($property === null) {
-				throw new MemberAccessException("Undefined property: $name");
+				throw new MemberAccessException("Cannot access undefined property '$name'.");
 			}
 			if (!$property->isWritable()) {
 				throw new MemberAccessException("Cannot write to read only property '$name'.");
@@ -211,33 +212,33 @@ abstract class Entity
 					$relationship = $property->getRelationship();
 					if ($relationship !== null) {
 						if (!($relationship instanceof Relationship\HasOne)) {
-							throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set to null.');
+							throw new InvalidMethodCallException('Only properties with m:hasOne relationship can be set to null.');
 						}
 					}
 				} else {
 					if ($property->isBasicType()) {
 						if (!settype($value, $property->getType())) {
-							throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
+							throw new InvalidValueException("Cannot convert given value to {$property->getType()}.");
 						}
 						if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
-							throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
+							throw new InvalidValueException("Given value is not from possible values enumeration.");
 						}
 					} else {
 						$type = $property->getType();
 						if (!($value instanceof $type)) {
-							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected.");
+							throw new InvalidValueException("Unexpected value type given, expected {$property->getType()}.");
 						}
 						if ($property->hasRelationship()) {
 							if (!($value instanceof Entity)) {
-								throw new InvalidValueException("Only entities can be set via magic __set on field with relationships.");
+								throw new InvalidValueException("Unexpected value type given, expected {$property->getType()}.");
 							}
 							$relationship = $property->getRelationship();
 							if (!($relationship instanceof Relationship\HasOne)) {
-								throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set via magic __set.');
+								throw new InvalidMethodCallException('Only properties with m:hasOne relationship can be set via magic __set.');
 							}
 							$column = $relationship->getColumnReferencingTargetTable();
 							if ($value->isDetached()) {
-								throw new InvalidValueException('Detached entity must be stored in database before use in relationships.');
+								throw new InvalidValueException('Detached entity cannot be assigned to property with relationship.');
 							}
 							$mapper = $value->mapper; // mapper stealing :)
 							$table = $mapper->getTable(get_class($value));
@@ -304,7 +305,8 @@ abstract class Entity
 			$whitelist = array_flip($whitelist);
 		}
 		if (!is_array($values) and !($values instanceof Traversable)) {
-			throw new InvalidArgumentException('Argument $values must be either array or instance of Traversable, ' . gettype($values) . ' given.');
+			$type = gettype($values) !== 'object' ? gettype($values) : 'instance of ' . get_class($values);
+			throw new InvalidArgumentException("Argument \$values must contain either array or instance of Traversable, $type given.");
 		}
 		foreach ($values as $field => $value) {
 			if ($whitelist === null or isset($whitelist[$field])) {
@@ -443,7 +445,7 @@ abstract class Entity
 			if ($oldColumn !== null) {
 				$name = $oldProperty->getName();
 				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
-					throw new InvalidStateException('Inconsistent sets of properties.');
+					throw new InvalidStateException('Inconsistent sets of properties detected.');
 				}
 				if (isset($this->row->$oldColumn)) {
 					$newColumn = $newProperties[$name]->getColumn();
@@ -651,7 +653,7 @@ abstract class Entity
 			}
 			$type = $property->getType();
 			if (!($arg instanceof $type)) {
-				throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($arg) . " given.");
+				throw new InvalidValueException("Unexpected value type: instance of " . $property->getType() . " expected, instance of " . get_class($arg) . " given.");
 			}
 			$data = $arg->getRowData();
 			$arg = $data[$this->mapper->getPrimaryKey($relationship->getTargetTable())];
@@ -675,7 +677,7 @@ abstract class Entity
 	{
 		$type = $property->getType();
 		if (!($entity instanceof $type)) {
-			throw new InvalidValueException("Inconsistency found: property '{$property->getName()}' is supposed to contain an instance of '$type' (due to type hint), but mapper maps it to '$mapperClass'. Please fix getEntityClass() method in mapper, property annotation or entities inheritance.");
+			throw new InvalidValueException("Inconsistency found: property '{$property->getName()}' is supposed to contain an instance of '$type' (due to type hint), but mapper maps it to '$mapperClass'. Please fix getEntityClass method in mapper, property annotation or entities inheritance.");
 		}
 	}
 

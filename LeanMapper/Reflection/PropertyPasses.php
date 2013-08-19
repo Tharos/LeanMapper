@@ -38,13 +38,13 @@ class PropertyPasses
 		foreach (preg_split('#\s*\|\s*#', trim($definition)) as $pass) {
 			$counter++;
 			if ($counter > 2) {
-				throw new InvalidAnnotationException('PropertyPasses cannot have more than two parts.');
+				throw new InvalidAnnotationException('Property passes cannot have more than two parts.');
 			}
 			if ($pass === '') {
 				continue;
 			}
 			if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $pass)) {
-				throw new InvalidAnnotationException('Invalid method pass name given: ' . $pass);
+				throw new InvalidAnnotationException("Malformed method pass name given: '$pass'.");
 			}
 			if ($counter === 1) {
 				$this->getterPass = $pass;

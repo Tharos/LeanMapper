@@ -91,7 +91,7 @@ class Events
 	private function checkEventType($event)
 	{
 		if (!isset($this->events[$event])) {
-			throw new InvalidArgumentException("Unknown event type give: $event");
+			throw new InvalidArgumentException("Unknown event type given: '$event'.");
 		}
 	}
 

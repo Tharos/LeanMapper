@@ -54,7 +54,7 @@ class DataDifference
 		$result = array();
 		foreach ($this->added as $entry) {
 			if (!isset($entry[$pivot])) {
-				throw new InvalidArgumentException("Invalid pivot given ($pivot).");
+				throw new InvalidArgumentException("Invalid pivot given: '$pivot'.");
 			}
 			if (isset($result[$entry[$pivot]])) {
 				$result[$entry[$pivot]]++;
@@ -64,7 +64,7 @@ class DataDifference
 		}
 		foreach ($this->removed as $entry) {
 			if (!isset($entry[$pivot])) {
-				throw new InvalidArgumentException("Invalid pivot $pivot given.");
+				throw new InvalidArgumentException("Invalid pivot given: '$pivot'.");
 			}
 			if (isset($result[$entry[$pivot]])) {
 				$result[$entry[$pivot]]--;
