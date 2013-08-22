@@ -49,6 +49,20 @@ abstract class Entity
 
 
 	/**
+	 * @param IMapper|null $mapper
+	 * @return EntityReflection
+	 */
+	public static function getReflection(IMapper $mapper = null)
+	{
+		$class = get_called_class();
+		$mapperClass = $mapper !== null ? get_class($mapper) : '';
+		if (!isset(static::$reflections[$class][$mapperClass])) {
+			static::$reflections[$class][$mapperClass] = new EntityReflection($class, $mapper);
+		}
+		return static::$reflections[$class][$mapperClass];
+	}
+
+	/**
 	 * @param Row|Traversable|array|null $arg
 	 * @throws InvalidArgumentException
 	 */
@@ -478,21 +492,6 @@ abstract class Entity
 	public function markAsUpdated()
 	{
 		$this->row->markAsUpdated();
-	}
-
-	/**
-	 * @param IMapper|null $mapper
-	 * @return EntityReflection
-	 */
-	protected static function getReflection(IMapper $mapper = null)
-	{
-		$class = get_called_class();
-		$mapperClass = $mapper !== null ? get_class($mapper) : '';
-		if (!isset(static::$reflections[$class][$mapperClass])) {
-			static::$reflections[$class][$mapperClass] = new EntityReflection($class, $mapper);
-		}
-
-		return static::$reflections[$class][$mapperClass];
 	}
 
 	/**
