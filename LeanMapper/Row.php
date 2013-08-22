@@ -37,7 +37,7 @@ class Row
 	}
 
 	/**
-	 * Returns value of given field
+	 * Returns value of given column
 	 *
 	 * @param string $name
 	 * @return mixed
@@ -48,7 +48,7 @@ class Row
 	}
 
 	/**
-	 * Sets value of given field
+	 * Sets value of given column
 	 *
 	 * @param string $name
 	 * @param mixed $value
@@ -59,18 +59,18 @@ class Row
 	}
 
 	/**
-	 * Tells whether Row has given field
+	 * Tells whether Row has given column
 	 *
 	 * @param string $name
 	 * @return bool
 	 */
-	public function __isset($name)
+	public function hasColumn($name)
 	{
 		return $this->result->hasDataEntry($this->id, $name);
 	}
 
 	/**
-	 * Unsets given field
+	 * Unsets given column
 	 *
 	 * @param string $name
 	 */
@@ -96,7 +96,7 @@ class Row
 	}
 
 	/**
-	 * Returns array of fields with values
+	 * Returns array of columns with values
 	 *
 	 * @return array
 	 */
@@ -106,7 +106,7 @@ class Row
 	}
 
 	/**
-	 * Returns array of modified fields with new values
+	 * Returns array of modified columns with new values
 	 *
 	 * @return array
 	 */

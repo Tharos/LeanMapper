@@ -276,6 +276,19 @@ abstract class Entity
 	}
 
 	/**
+	 * @param string $name
+	 * @return bool
+	 */
+	public function __isset($name)
+	{
+		try {
+			return $this->$name !== null;
+		} catch (MemberAccessException $e) {
+			return false;
+		}
+	}
+
+	/**
 	 * Calls __get() or __set() method when get<$name> or set<$name> methods don't exist
 	 *
 	 * @param string $name
@@ -461,7 +474,7 @@ abstract class Entity
 				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
 					throw new InvalidStateException('Inconsistent sets of properties detected.');
 				}
-				if (isset($this->row->$oldColumn)) {
+				if ($this->row->hasColumn($oldColumn)) {
 					$newColumn = $newProperties[$name]->getColumn();
 					$value = $this->row->$oldColumn;
 					unset($this->row->$oldColumn);
