@@ -11,8 +11,6 @@
 
 namespace LeanMapper;
 
-use dibi;
-use DibiConnection;
 use DibiRow;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidStateException;
@@ -20,18 +18,18 @@ use LeanMapper\Reflection\AnnotationsParser;
 use ReflectionClass;
 
 /**
- * Base class for custom repositories
+ * Base class for concrete repositories
  *
  * @author Vojtěch Kohout
  */
 abstract class Repository
 {
 
-	/** @var string */
-	protected $defaultEntityNamespace = 'Model\Entity';
-
-	/** @var DibiConnection */
+	/** @var Connection */
 	protected $connection;
+
+	/** @var IMapper */
+	protected $mapper;
 
 	/** @var string */
 	protected $table;
@@ -39,150 +37,237 @@ abstract class Repository
 	/** @var string */
 	protected $entityClass;
 
+	/** @var Events */
+	protected $events;
+
 	/** @var string */
 	private $docComment;
 
+	/** @var bool */
+	private $tableAnnotationChecked = false;
+
 
 	/**
-	 * @param DibiConnection $connection
+	 * @param Connection $connection
+	 * @param IMapper $mapper
 	 */
-	public function __construct(DibiConnection $connection)
+	public function __construct(Connection $connection, IMapper $mapper)
 	{
 		$this->connection = $connection;
+		$this->mapper = $mapper;
+		$this->events = new Events;
+		$this->initEvents();
 	}
 
 	/**
-	 * Stores modified fields of entity into database or creates new row in database when entity is in detached state
+	 * @param string $name
+	 * @return array|null
+	 */
+	public function &__get($name)
+	{
+		if (preg_match('#^on[A-Z]#', $name)) {
+			return $this->events->getCallbacksReference(lcfirst(substr($name, 2)));
+		}
+	}
+
+	/**
+	 * Allows initialize repository's events
+	 */
+	protected function initEvents()
+	{
+	}
+
+	/**
+	 * Stores values of entity's modified properties into database (inserts new row when entity is in detached state)
 	 *
 	 * @param Entity $entity
-	 * @return int
+	 * @return mixed
 	 */
 	public function persist(Entity $entity)
 	{
 		$this->checkEntityType($entity);
+
+		$this->events->invokeCallbacks(Events::EVENT_BEFORE_PERSIST, $entity);
 		if ($entity->isModified()) {
-			$values = $entity->getModifiedRowData();
 			if ($entity->isDetached()) {
-				$values = $this->beforeCreate($values);
-				$this->connection->insert($this->getTable(), $values)
-						->execute(); // dibi::IDENTIFIER would lead to exception when there is no column with AUTO_INCREMENT
-				$id = isset($values['id']) ? $values['id'] : $this->connection->getInsertId();
-				$entity->markAsCreated($id, $this->getTable(), $this->connection);
-
-				return $id;
+				$entity->useMapper($this->mapper);
+				$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
+				$result = $id = $this->insertIntoDatabase($entity);
+				$entity->markAsAttached($id, $this->getTable(), $this->connection);
+				$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
 			} else {
-				$values = $this->beforeUpdate($values);
-				$result = $this->connection->update($this->getTable(), $values)
-						->where('[id] = %i', $entity->id)
-						->execute();
+				$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
+				$result = $this->updateInDatabase($entity);
 				$entity->markAsUpdated();
-
-				return $result;
+				$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
 			}
 		}
+		$this->persistHasManyChanges($entity);
+		$this->events->invokeCallbacks(Events::EVENT_AFTER_PERSIST, $entity);
+
+		return isset($result) ? $result : null;
 	}
 
 	/**
 	 * Removes given entity (or entity with given id) from database
 	 *
-	 * @param Entity|int $arg
+	 * @param mixed $arg
 	 * @throws InvalidStateException
 	 */
 	public function delete($arg)
 	{
-		$id = $arg;
+		$this->events->invokeCallbacks(Events::EVENT_BEFORE_DELETE, $arg);
 		if ($arg instanceof Entity) {
 			$this->checkEntityType($arg);
 			if ($arg->isDetached()) {
 				throw new InvalidStateException('Cannot delete detached entity.');
 			}
-			$id = $arg->id;
+		}
+		$this->deleteFromDatabase($arg);
+		if ($arg instanceof Entity) {
 			$arg->detach();
 		}
-		$this->connection->delete($this->getTable())
-				->where('[id] = %i', $id)
-				->execute();
+		$this->events->invokeCallbacks(Events::EVENT_AFTER_DELETE, $arg);
 	}
 
 	/**
-	 * Adjusts prepared values before database insert call
+	 * Performs database insert (can be customized)
 	 *
-	 * @param array $values
-	 * @return array
+	 * @param Entity $entity
+	 * @return mixed
 	 */
-	protected function beforeCreate(array $values)
+	protected function insertIntoDatabase(Entity $entity)
 	{
-		return $this->beforePersist($values);
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$values = $entity->getModifiedRowData();
+		$this->connection->query(
+			'INSERT INTO %n %v', $this->getTable(), $values
+		);
+		return isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
 	}
 
 	/**
-	 * Adjusts prepared values before database update call
+	 * Performs database update (can be customized)
 	 *
-	 * @param array $values
-	 * @return array
+	 * @param Entity $entity
+	 * @return mixed
 	 */
-	protected function beforeUpdate(array $values)
+	protected function updateInDatabase(Entity $entity)
 	{
-		return $this->beforePersist($values);
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+		$values = $entity->getModifiedRowData();
+		return $this->connection->query(
+			'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $entity->$idField
+		);
 	}
 
 	/**
-	 * Adjusts prepared values before database insert or update call
+	 * Performs database delete (can be customized)
 	 *
-	 * @param array $values
-	 * @return array
+	 * @param mixed $arg
 	 */
-	protected function beforePersist(array $values)
+	protected function deleteFromDatabase($arg)
 	{
-		return $values;
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+
+		$id = ($arg instanceof Entity) ? $arg->$idField : $arg;
+		$this->connection->query(
+			'DELETE FROM %n WHERE %n = ?', $this->getTable(), $primaryKey, $id
+		);
 	}
 
 	/**
-	 * Helps to create entity instance from given DibiRow instance
+	 * Persists changes in M:N relationships
 	 *
-	 * @param DibiRow $row
+	 * @param Entity $entity
+	 */
+	protected function persistHasManyChanges(Entity $entity)
+	{
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+
+		foreach ($entity->getHasManyRowDifferences() as $key => $difference) {
+			list($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable) = explode(':', $key);
+			$multiInsert = array();
+			foreach ($difference as $value => $count) {
+				if ($count > 0) {
+					for ($i = 0; $i < $count; $i++) {
+						$multiInsert[] = array(
+							$columnReferencingSourceTable => $entity->$idField,
+							$columnReferencingTargetTable => $value,
+						);
+					}
+				} else {
+					$this->connection->query(
+						'DELETE FROM %n WHERE %n = ? AND %n = ? %lmt', $relationshipTable, $columnReferencingSourceTable, $entity->$idField, $columnReferencingTargetTable, $value, -$count
+					);
+				}
+			}
+			if (!empty($multiInsert)) {
+				$this->connection->query(
+					'INSERT INTO %n %ex', $relationshipTable, $multiInsert
+				);
+			}
+		}
+	}
+
+	/**
+	 * Creates new Entity instance from given DibiRow instance
+	 *
+	 * @param DibiRow $dibiRow
 	 * @param string|null $entityClass
 	 * @param string|null $table
 	 * @return mixed
 	 */
-	protected function createEntity(DibiRow $row, $entityClass = null, $table = null)
+	protected function createEntity(DibiRow $dibiRow, $entityClass = null, $table = null)
 	{
-		if ($entityClass === null) {
-			$entityClass = $this->getEntityClass();
-		}
 		if ($table === null) {
 			$table = $this->getTable();
 		}
-		$result = Result::getInstance($row, $table, $this->connection);
-		return new $entityClass($result->getRow($row->id));
+		$result = Result::getInstance($dibiRow, $table, $this->connection, $this->mapper);
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+
+		$row = $result->getRow($dibiRow->$primaryKey);
+		if ($entityClass === null) {
+			$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
+		}
+		return new $entityClass($row);
 	}
 
 	/**
-	 * Helps to create array of entities from given array of DibiRow instances
+	 * Creates new set of Entity's instances from given array of DibiRow instances
 	 *
-	 * @param array $rows
+	 * @param DibiRow[] $rows
 	 * @param string|null $entityClass
 	 * @param string|null $table
 	 * @return array
 	 */
 	protected function createEntities(array $rows, $entityClass = null, $table = null)
 	{
-		if ($entityClass === null) {
-			$entityClass = $this->getEntityClass();
-		}
 		if ($table === null) {
 			$table = $this->getTable();
 		}
 		$entities = array();
-		$collection = Result::getInstance($rows, $table, $this->connection);
-		foreach ($rows as $row) {
-			$entities[$row->id] = new $entityClass($collection->getRow($row->id));
+		$collection = Result::getInstance($rows, $table, $this->connection, $this->mapper);
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		if ($entityClass !== null) {
+			foreach ($rows as $dibiRow) {
+				$entities[$dibiRow->$primaryKey] = new $entityClass($collection->getRow($dibiRow->$primaryKey));
+			}
+		} else {
+			foreach ($rows as $dibiRow) {
+				$row = $collection->getRow($dibiRow->$primaryKey);
+				$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
+				$entities[$dibiRow->$primaryKey] = new $entityClass($row);
+			}
 		}
 		return $this->createCollection($entities);
 	}
 
 	/**
-	 * Returns name of database table related to entity which repository can handle
+	 * Gets name of (main) database table related to entity that repository can handle
 	 *
 	 * @return string
 	 * @throws InvalidStateException
@@ -190,64 +275,41 @@ abstract class Repository
 	protected function getTable()
 	{
 		if ($this->table === null) {
-			$name = AnnotationsParser::parseSimpleAnnotationValue('table', $this->getDocComment());
-			if ($name !== null) {
-				$this->table = $name;
-			} else {
-				$matches = array();
-				if (preg_match('#([a-z0-9]+)repository$#i', get_called_class(), $matches)) {
-					$this->table = strtolower($matches[1]);
-				} else {
-					throw new InvalidStateException('Cannot determine table name.');
+			if (!$this->tableAnnotationChecked) {
+				$this->tableAnnotationChecked = true;
+				$table = AnnotationsParser::parseSimpleAnnotationValue('table', $this->getDocComment());
+				if ($table !== null) {
+					return $this->table = $table;
 				}
 			}
+			return $this->mapper->getTableByRepositoryClass(get_called_class());
 		}
 		return $this->table;
 	}
 
 	/**
-	 * Returns fully qualified name of entity class which repository can handle
+	 * Allows encapsulate set of entities in custom collection
 	 *
-	 * @return string
-	 * @throws InvalidStateException
-	 */
-	protected function getEntityClass()
-	{
-		if ($this->entityClass === null) {
-			$entityClass = AnnotationsParser::parseSimpleAnnotationValue('entity', $this->getDocComment());
-			if ($entityClass !== null) {
-				$this->entityClass = $entityClass;
-			} else {
-				$matches = array();
-				if (preg_match('#([a-z0-9]+)repository$#i', get_called_class(), $matches)) {
-					$this->entityClass = $matches[1];
-				} else {
-					throw new InvalidStateException('Cannot determine entity class name.');
-				}
-			}
-		}
-		return $this->getFullyQualifiedClass($this->entityClass);
-	}
-
-	/**
-	 * @param Entity $entity
-	 * @throws InvalidArgumentException
-	 */
-	protected function checkEntityType(Entity $entity)
-	{
-		$entityClass = $this->getEntityClass();
-		if (!($entity instanceof $entityClass)) {
-			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
-		}
-	}
-
-	/**
 	 * @param array $entities
 	 * @return array
 	 */
 	protected function createCollection(array $entities)
 	{
 		return $entities;
+	}
+
+	/**
+	 * Checks whether give entity is instance of required type
+	 *
+	 * @param Entity $entity
+	 * @throws InvalidArgumentException
+	 */
+	protected function checkEntityType(Entity $entity)
+	{
+		$entityClass = $this->mapper->getEntityClass($this->getTable());
+		if (!($entity instanceof $entityClass)) {
+			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
+		}
 	}
 
 	////////////////////
@@ -265,19 +327,4 @@ abstract class Repository
 		return $this->docComment;
 	}
 
-	/**
-	 * @param string $entityClass
-	 * @return string
-	 */
-	private function getFullyQualifiedClass($entityClass)
-	{
-		if (substr($entityClass, 0, 1) === '\\') {
-			return substr($entityClass, 1);
-		}
-		if ($this->defaultEntityNamespace === null) {
-			return $entityClass;
-		}
-		return $this->defaultEntityNamespace . '\\' . $entityClass;
-	}
-	
 }

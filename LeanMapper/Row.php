@@ -11,11 +11,8 @@
 
 namespace LeanMapper;
 
-use Closure;
-use DibiConnection;
-
 /**
- * Pointer to specific position inside LeanMapper\Result instance
+ * Pointer to specific position within Result instance
  *
  * @author Vojtěch Kohout
  */
@@ -40,7 +37,7 @@ class Row
 	}
 
 	/**
-	 * Returns value of given field
+	 * Gets value of given column
 	 *
 	 * @param string $name
 	 * @return mixed
@@ -51,7 +48,7 @@ class Row
 	}
 
 	/**
-	 * Sets value of given field
+	 * Sets value of given column
 	 *
 	 * @param string $name
 	 * @param mixed $value
@@ -62,56 +59,44 @@ class Row
 	}
 
 	/**
-	 * Tells whether row is in modified state
+	 * Tells whether Row has given column
 	 *
+	 * @param string $name
 	 * @return bool
 	 */
-	public function isModified()
+	public function hasColumn($name)
 	{
-		return $this->result->isModified($this->id);
+		return $this->result->hasDataEntry($this->id, $name);
 	}
 
 	/**
-	 * Tells whether row is in detached state
+	 * Unsets given column
 	 *
-	 * @return bool
+	 * @param string $name
 	 */
-	public function isDetached()
+	public function __unset($name)
 	{
-		return $this->result->isDetached($this->id);
+		$this->result->unsetDataEntry($this->id, $name);
 	}
 
 	/**
-	 * Marks row as detached (it means non-persisted)
+	 * @param IMapper $mapper
 	 */
-	public function detach()
+	public function setMapper(IMapper $mapper)
 	{
-		$this->result->detach($this->id);
+		$this->result->setMapper($mapper);
 	}
 
 	/**
-	 * Marks row as non-updated (isModified() returns false right after this method call)
+	 * @return IMapper|null
 	 */
-	public function markAsUpdated()
+	public function getMapper()
 	{
-		$this->result->markAsUpdated($this->id);
+		return $this->result->getMapper();
 	}
 
 	/**
-	 * Marks row as persisted
-	 *
-	 * @param int $id
-	 * @param string $table
-	 * @param DibiConnection $connection
-	 */
-	public function markAsCreated($id, $table, DibiConnection $connection)
-	{
-		$this->result->markAsCreated($id, $this->id, $table, $connection);
-		$this->id = $id;
-	}
-
-	/**
-	 * Returns array of fields with values
+	 * Returns values of columns
 	 *
 	 * @return array
 	 */
@@ -121,7 +106,7 @@ class Row
 	}
 
 	/**
-	 * Returns array of modified fields with new values
+	 * Returns values of columns that were modified
 	 *
 	 * @return array
 	 */
@@ -131,7 +116,128 @@ class Row
 	}
 
 	/**
-	 * Clean in-memory cache of referenced rows
+	 * Tells whether Row is in modified state
+	 *
+	 * @return bool
+	 */
+	public function isModified()
+	{
+		return $this->result->isModified($this->id);
+	}
+
+	/**
+	 * Tells whether Row is in detached state
+	 *
+	 * @return bool
+	 */
+	public function isDetached()
+	{
+		return $this->result->isDetached();
+	}
+
+	/**
+	 * Detaches Row (it means mark it as non-persisted)
+	 */
+	public function detach()
+	{
+		$data = $this->result->getData($this->id);
+		$this->result = Result::getDetachedInstance();
+		foreach ($data as $key => $value) {
+			$this->result->setDataEntry(0, $key, $value);
+		}
+		$this->id = 0;
+	}
+
+	/**
+	 * Marks Row as non-modified (isModified returns false right after this method call)
+	 */
+	public function markAsUpdated()
+	{
+		$this->result->markAsUpdated($this->id);
+	}
+
+	/**
+	 * Marks Row as attached
+	 *
+	 * @param int $id
+	 * @param string $table
+	 * @param Connection $connection
+	 */
+	public function markAsAttached($id, $table, Connection $connection)
+	{
+		$this->result->markAsAttached($id, $this->id, $table, $connection);
+		$this->id = $id;
+	}
+
+	/**
+	 * Gets referenced Row instance
+	 *
+	 * @param string $table
+	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
+	 * @return Row|null
+	 */
+	public function referenced($table, $viaColumn = null, Filtering $filtering = null)
+	{
+		return $this->result->getReferencedRow($this->id, $table, $viaColumn, $filtering);
+	}
+
+	/**
+	 * Gets array of Row instances referencing current Row
+	 *
+	 * @param string $table
+	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
+	 * @param string|null $strategy
+	 * @return Row[]
+	 */
+	public function referencing($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
+	{
+		return $this->result->getReferencingRows($this->id, $table, $viaColumn, $filtering, $strategy);
+	}
+
+	/**
+	 * Adds new data entry to referencing Result
+	 *
+	 * @param array $values
+	 * @param string $table
+	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
+	 * @param string|null $strategy
+	 */
+	public function addToReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
+	{
+		$this->result->addToReferencing($values, $table, $viaColumn, $filtering, $strategy);
+	}
+
+	/**
+	 * Remove given data entry from referencing Result
+	 *
+	 * @param array $values
+	 * @param string $table
+	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
+	 * @param string|null $strategy
+	 */
+	public function removeFromReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
+	{
+		$this->result->removeFromReferencing($values, $table, $viaColumn, $filtering, $strategy);
+	}
+
+	/**
+	 * @param string $table
+	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
+	 * @param string|null $strategy
+	 * @return DataDifference
+	 */
+	public function createReferencingDataDifference($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
+	{
+		return $this->result->createReferencingDataDifference($table, $viaColumn, $filtering, $strategy);
+	}
+
+	/**
+	 * Cleans in-memory cache with referenced rows
 	 *
 	 * @param string|null $table
 	 * @param string|null $column
@@ -142,30 +248,14 @@ class Row
 	}
 
 	/**
-	 * Returns referenced LeanMapper\Row instance
-	 *
 	 * @param string $table
-	 * @param Closure|null $filter
 	 * @param string|null $viaColumn
-	 * @return Row|null
-	 */
-	public function referenced($table, Closure $filter = null, $viaColumn = null)
-	{
-		return $this->result->getReferencedRow($this->id, $table, $filter, $viaColumn);
-	}
-
-	/**
-	 * Returns array of LeanMapper\Row instances referencing current row
-	 *
-	 * @param string $table
-	 * @param Closure|null $filter
-	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
 	 * @param string|null $strategy
-	 * @return Row[]
 	 */
-	public function referencing($table, Closure $filter = null, $viaColumn = null, $strategy = null)
+	public function cleanReferencingAddedAndRemovedMeta($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
-		return $this->result->getReferencingRows($this->id, $table, $filter, $viaColumn, $strategy);
+		$this->result->cleanReferencingAddedAndRemovedMeta($table, $viaColumn, $filtering, $strategy);
 	}
 
 }

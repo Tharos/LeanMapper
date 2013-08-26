@@ -11,6 +11,7 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Relationship\BelongsToMany;
 use LeanMapper\Relationship\BelongsToOne;
@@ -18,7 +19,7 @@ use LeanMapper\Relationship\HasMany;
 use LeanMapper\Relationship\HasOne;
 
 /**
- * Entity property (field) reflection
+ * Reflection of entity's property
  *
  * @author Vojtěch Kohout
  */
@@ -40,20 +41,29 @@ class Property
 	/** @var bool */
 	private $isNullable;
 
+	/** @var mixed|null */
+	private $defaultValue;
+
 	/** @var bool */
 	private $containsCollection;
 
 	/** @var HasOne|HasMany|BelongsToOne|BelongsToMany|null */
 	private $relationship;
 
+	/** @var PropertyMethods|null */
+	private $propertyMethods;
+
 	/** @var PropertyFilters|null */
 	private $propertyFilters;
+
+	/** @var PropertyPasses|null */
+	private $propertyPasses;
 
 	/** @var PropertyValuesEnum|null */
 	private $propertyValuesEnum;
 
-	/** @var string|null */
-	private $extra;
+	/** @var array */
+	private $customFlags;
 
 
 	/**
@@ -63,27 +73,38 @@ class Property
 	 * @param bool $isWritable
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
+	 * @param mixed|null $defaultValue
 	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
+	 * @param PropertyMethods|null $propertyMethods
 	 * @param PropertyFilters|null $propertyFilters
+	 * @param PropertyPasses|null $propertyPasses
 	 * @param PropertyValuesEnum|null $propertyValuesEnum
-	 * @param string|null $extra
+	 * @param array|null $customFlags
+	 * @throws InvalidArgumentException
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $relationship = null, PropertyFilters $propertyFilters = null, PropertyValuesEnum $propertyValuesEnum = null, $extra = null)
+	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $defaultValue = null, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
 	{
+		if ($propertyFilters !== null and $relationship === null) {
+			throw new InvalidArgumentException('Cannot bind filter to property without relationship.');
+		}
 		$this->name = $name;
 		$this->column = $column;
 		$this->type = $type;
 		$this->isWritable = $isWritable;
 		$this->isNullable = $isNullable;
 		$this->containsCollection = $containsCollection;
+		$this->defaultValue = $defaultValue;
 		$this->relationship = $relationship;
+		$this->propertyMethods = $propertyMethods;
 		$this->propertyFilters = $propertyFilters;
+		$this->propertyPasses = $propertyPasses;
 		$this->propertyValuesEnum = $propertyValuesEnum;
-		$this->extra = $extra;
+		$this->customFlags = $customFlags;
+
 	}
 
 	/**
-	 * Returns property name
+	 * Gets property name
 	 *
 	 * @return string
 	 */
@@ -93,7 +114,7 @@ class Property
 	}
 
 	/**
-	 * Returns property column
+	 * Gets name of column holding low-level value
 	 *
 	 * @return string|null
 	 */
@@ -113,7 +134,27 @@ class Property
 	}
 
 	/**
-	 * Returns property type
+	 * Tells whether property has default value (defined in annotation)
+	 *
+	 * @return bool
+	 */
+	public function hasDefaultValue()
+	{
+		return $this->defaultValue !== null;
+	}
+
+	/**
+	 * Gets default value of property (as defined in annotation)
+	 *
+	 * @return mixed|null
+	 */
+	public function getDefaultValue()
+	{
+		return $this->defaultValue;
+	}
+
+	/**
+	 * Gets property type
 	 *
 	 * @return string
 	 */
@@ -173,14 +214,65 @@ class Property
 	}
 
 	/**
-	 * Returns property filters
+	 * Gets getter method
 	 *
-	 * @param int|null $index
-	 * @return string[]|null
+	 * @return string|null
 	 */
-	public function getFilters($index = null)
+	public function getGetter()
+	{
+		return $this->propertyMethods !== null ? $this->propertyMethods->getGetter() : null;
+	}
+
+	/**
+	 * Gets setter method
+	 *
+	 * @return string|null
+	 */
+	public function getSetter()
+	{
+		return $this->propertyMethods !== null ? $this->propertyMethods->getSetter() : null;
+	}
+
+	/**
+	 * Gets property filters
+	 *
+	 * @param int $index
+	 * @return array|null
+	 */
+	public function getFilters($index = 0)
 	{
 		return $this->propertyFilters !== null ? $this->propertyFilters->getFilters($index) : null;
+	}
+
+	/**
+	 * Gets filters arguments hard-coded in annotation
+	 *
+	 * @param int $index
+	 * @return array|string|null
+	 */
+	public function getFiltersAnnotationArgs($index = 0)
+	{
+		return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersAnnotationArgs($index) : null;
+	}
+
+	/**
+	 * Gets getter pass
+	 *
+	 * @return string|null
+	 */
+	public function getGetterPass()
+	{
+		return $this->propertyPasses !== null ? $this->propertyPasses->getGetterPass() : null;
+	}
+
+	/**
+	 * Gets setter pass
+	 *
+	 * @return string|null
+	 */
+	public function getSetterPass()
+	{
+		return $this->propertyPasses !== null ? $this->propertyPasses->getSetterPass() : null;
 	}
 
 	/**
@@ -194,7 +286,7 @@ class Property
 	}
 
 	/**
-	 * Tells wheter given value is from enumeration of possible values
+	 * Tells wheter given value is from enumeration
 	 *
 	 * @param mixed $value
 	 * @return bool
@@ -202,20 +294,57 @@ class Property
 	 */
 	public function isValueFromEnum($value)
 	{
-		if (!$this->containsEnumeration()) {
-			throw new InvalidMethodCallException("It doesn't make sense to call this method on property that doesn't contain enumeration");
-		}
+		$this->checkContainsEnumeration();
 		return $this->propertyValuesEnum->isValueFromEnum($value);
 	}
 
 	/**
-	 * Returns value of m:extra flag (if given)
+	 * Gets possible enumeration values
 	 *
-	 * @return string|null
+	 * @return array
 	 */
-	public function getExtra()
+	public function getEnumValues()
 	{
-		return $this->extra;
+		$this->checkContainsEnumeration();
+		return $this->propertyValuesEnum->getValues();
+	}
+
+	/**
+	 * Tells whether property has custom flag
+	 *
+	 * @param string $name
+	 * @return bool
+	 */
+	public function hasCustomFlag($name)
+	{
+		return array_key_exists($name, $this->customFlags);
+	}
+
+	/**
+	 * Gets value of requested custom flag
+	 *
+	 * @param string $name
+	 * @return string
+	 * @throws InvalidArgumentException
+	 */
+	public function getCustomFlagValue($name)
+	{
+		if (!$this->hasCustomFlag($name)) {
+			throw new InvalidArgumentException("Property doesn't have custom flag '$name'.");
+		}
+		return $this->customFlags[$name];
+	}
+
+	//////////
+
+	/**
+	 * @throws InvalidMethodCallException
+	 */
+	private function checkContainsEnumeration()
+	{
+		if (!$this->containsEnumeration()) {
+			throw new InvalidMethodCallException("It doesn't make sense to call this method on property that doesn't contain enumeration.");
+		}
 	}
 
 }

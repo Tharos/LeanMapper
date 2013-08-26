@@ -1,5 +1,8 @@
 <?php
 
+use LeanMapper\Connection;
+use LeanMapper\DefaultMapper;
+
 if (@!include __DIR__ . '/../vendor/autoload.php') {
 	echo 'Install Nette Tester using `composer update --dev`';
 	exit(1);
@@ -24,7 +27,16 @@ if (!copy(__DIR__ . '/db/library-ref.sq3', __DIR__ . '/db/library.sq3')) {
 	exit(1);
 }
 
-$connection = new DibiConnection(array(
+class TestMapper extends DefaultMapper
+{
+
+	protected $defaultEntityNamespace = null;
+
+}
+
+$connection = new Connection(array(
 	'driver' => 'sqlite3',
 	'database' => __DIR__ . '/db/library.sq3',
 ));
+
+$mapper = new TestMapper;

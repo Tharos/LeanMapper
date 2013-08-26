@@ -50,7 +50,7 @@ Assert::equal(array('name' => 'John Doe', 'web' => 'http://example.org'), $autho
 
 //////////
 
-$authorRepository = new AuthorRepository($connection);
+$authorRepository = new AuthorRepository($connection, $mapper);
 
 $author = $authorRepository->find(3);
 

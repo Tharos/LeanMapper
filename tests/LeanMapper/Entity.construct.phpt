@@ -40,7 +40,7 @@ Assert::equal($data, $book->getData());
 //////////
 
 $dibiRow = new DibiRow($data);
-$row = new Row(Result::getInstance($dibiRow, 'book', $connection), 1);
+$row = new Row(Result::getInstance($dibiRow, 'book', $connection, $mapper), 1);
 $book = new Book($row);
 
 Assert::type('Book', $book);
@@ -49,7 +49,7 @@ Assert::equal($data, $book->getData());
 //////////
 
 $dibiRow = new DibiRow($data);
-$row = Result::getInstance($dibiRow, 'book', $connection)->getRow(1);
+$row = Result::getInstance($dibiRow, 'book', $connection, $mapper)->getRow(1);
 $book = new Book($row);
 
 Assert::type('Book', $book);
@@ -66,16 +66,16 @@ Assert::equal($data, $book->getData());
 
 Assert::exception(function () {
 	new Book(false);
-}, 'LeanMapper\Exception\InvalidArgumentException', 'Argument $arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, boolean given.');
+}, 'LeanMapper\Exception\InvalidArgumentException', 'Argument $arg in LeanMapper\Entity::__construct must contain either null, array, instance of LeanMapper\Row or instance of Traversable, boolean given.');
 
 Assert::exception(function () {
 	new Book('hello');
-}, 'LeanMapper\Exception\InvalidArgumentException', 'Argument $arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, string given.');
+}, 'LeanMapper\Exception\InvalidArgumentException', 'Argument $arg in LeanMapper\Entity::__construct must contain either null, array, instance of LeanMapper\Row or instance of Traversable, string given.');
 
 //////////
 
 $dibiRow = new DibiRow($data);
-$row = new Row(Result::getInstance($dibiRow, 'book', $connection), 1);
+$row = new Row(Result::getInstance($dibiRow, 'book', $connection, $mapper), 1);
 $row->detach();
 
 Assert::exception(function () use ($row) {

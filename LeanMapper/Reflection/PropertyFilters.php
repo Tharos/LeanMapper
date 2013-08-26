@@ -21,60 +21,67 @@ use LeanMapper\Exception\InvalidAnnotationException;
 class PropertyFilters
 {
 
-	/** @var string[] */
+	/** @var array */
 	private $filters = array();
 
+	/** @var array */
+	private $annotationArgs = array();
 
-	public function __construct($definition, Aliases $aliases)
+
+	/**
+	 * @param string $definition
+	 * @throws InvalidAnnotationException
+	 */
+	public function __construct($definition)
 	{
 		foreach (preg_split('#\s*\|\s*#', trim($definition)) as $set) {
-			$filters = array();
+			if ($set === '') {
+				$this->filters[] = $this->annotationArgs[] = array();
+				continue;
+			}
+			$filters = $annotationArgs = array();
 			foreach (preg_split('#\s*,\s*#', $set) as $filter) {
-				if ($filter === '') {
-					throw new InvalidAnnotationException('Empty filter definition given.');
-				}
 				$matches = array();
-				preg_match('#^(?:((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+)::)?((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+)$#', $filter, $matches);
-				if (empty($matches) or ($matches[1] !== '' and strpos($matches[2], '\\') !== false)) {
-					throw new InvalidAnnotationException('Invalid filter definition given: ' . $filter);
+				preg_match('~^([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(?:#(.*))?$~', $filter, $matches);
+				if (empty($matches)) {
+					throw new InvalidAnnotationException("Malformed filter name given: '$filter'.");
 				}
-				$function = $matches[2];
-				if ($matches[1] !== '') {
-					$class = $matches[1];
-					if (substr($class, 0, 1) === '\\') {
-						$class = substr($class, 1);
-					} else {
-						$class = $aliases->translate($class);
-					}
-					$filters[] = $class . '::' . $function;
-				} else {
-					if (substr($function, 0, 1) === '\\') {
-						$function = substr($function, 1);
-					} else {
-						$function = $aliases->translate($function);
-					}
-					$filters[] = $function;
+				$filters[] = $filterName = $matches[1];
+				if (isset($matches[2])) {
+					$annotationArgs[$filterName] = $matches[2];
 				}
 			}
 			$this->filters[] = $filters;
+			$this->annotationArgs[] = $annotationArgs;
 		}
 	}
 
 	/**
-	 * Returns array of entity filters (array of callable strings)
+	 * Gets array of entity's filters (array of filter names)
 	 *
-	 * @param int|null $index
-	 * @return string[]
+	 * @param int $index
+	 * @return array
 	 */
-	public function getFilters($index = null)
+	public function getFilters($index = 0)
 	{
-		if ($index === null) {
-			return $this->filters;
-		}
 		if (!isset($this->filters[$index])) {
 			return array();
 		}
 		return $this->filters[$index];
+	}
+
+	/**
+	 * Gets filters arguments hard-coded in annotation
+	 *
+	 * @param int $index
+	 * @return array
+	 */
+	public function getFiltersAnnotationArgs($index = 0)
+	{
+		if (!isset($this->annotationArgs[$index])) {
+			return array();
+		}
+		return $this->annotationArgs[$index];
 	}
 
 }

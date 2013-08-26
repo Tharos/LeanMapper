@@ -52,7 +52,7 @@ class PropertyType
 	}
 
 	/**
-	 * Returns type
+	 * Gets type
 	 *
 	 * @return string
 	 */

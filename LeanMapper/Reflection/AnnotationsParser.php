@@ -44,7 +44,7 @@ class AnnotationsParser
 	}
 
 	/**
-	 * Parse value parts of requested annotation from given doc comment
+	 * Parse value pieces of requested annotation from given doc comment
 	 *
 	 * @param string $annotation
 	 * @param string $docComment
@@ -56,5 +56,5 @@ class AnnotationsParser
 		preg_match_all("#@$annotation\\s+([^@\\n\\r]*)#", $docComment, $matches);
 		return $matches[1];
 	}
-	
+
 }

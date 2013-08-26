@@ -11,11 +11,9 @@
 
 namespace LeanMapper;
 
-use Closure;
-use DibiConnection;
-use DibiFluent;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
+use LeanMapper\Exception\InvalidStateException;
 use LeanMapper\Exception\InvalidValueException;
 use LeanMapper\Exception\MemberAccessException;
 use LeanMapper\Exception\RuntimeException;
@@ -23,26 +21,48 @@ use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
 use LeanMapper\Relationship;
 use LeanMapper\Row;
-use ReflectionMethod;
 use Traversable;
 
 /**
- * Base class for custom entities
+ * Base class for concrete entities
  *
  * @author Vojtěch Kohout
  */
 abstract class Entity
 {
 
+	const ACTION_ADD = 'add';
+
+	const ACTION_REMOVE = 'remove';
+
 	/** @var Row */
 	protected $row;
+
+	/** @var IMapper */
+	protected $mapper;
 
 	/** @var EntityReflection[] */
 	protected static $reflections = array();
 
-	/** @var array */
-	private $internalGetters = array('getData', 'getRowData', 'getModifiedRowData', 'getReflection');
+	/** @var EntityReflection */
+	private $currentReflection;
 
+
+	/**
+	 * Gets reflection of current entity
+	 *
+	 * @param IMapper|null $mapper
+	 * @return EntityReflection
+	 */
+	public static function getReflection(IMapper $mapper = null)
+	{
+		$class = get_called_class();
+		$mapperClass = $mapper !== null ? get_class($mapper) : '';
+		if (!isset(static::$reflections[$class][$mapperClass])) {
+			static::$reflections[$class][$mapperClass] = new EntityReflection($class, $mapper);
+		}
+		return static::$reflections[$class][$mapperClass];
+	}
 
 	/**
 	 * @param Row|Traversable|array|null $arg
@@ -55,11 +75,20 @@ abstract class Entity
 				throw new InvalidArgumentException('It is not allowed to create entity from detached instance of LeanMapper\Row.');
 			}
 			$this->row = $arg;
+			$this->mapper = $arg->getMapper();
 		} else {
 			$this->row = Result::getDetachedInstance()->getRow();
+			foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
+				if ($property->hasDefaultValue()) {
+					$propertyName = $property->getName();
+					$this->$propertyName = $property->getDefaultValue();
+				}
+			}
+			$this->initDefaults();
 			if ($arg !== null) {
 				if (!is_array($arg) and !($arg instanceof Traversable)) {
-					throw new InvalidArgumentException('Argument $arg in entity constructor must be either null, array, instance of LeanMapper\Row or instance of Traversable, ' . gettype($arg) . ' given.');
+					$type = gettype($arg) !== 'object' ? gettype($arg) : 'instance of ' . get_class($arg);
+					throw new InvalidArgumentException("Argument \$arg in LeanMapper\\Entity::__construct must contain either null, array, instance of LeanMapper\\Row or instance of Traversable, $type given.");
 				}
 				$this->assign($arg);
 			}
@@ -67,80 +96,100 @@ abstract class Entity
 	}
 
 	/**
-	 * Returns value of given field
+	 * Gets value of given property
 	 *
 	 * @param string $name
 	 * @return mixed
 	 * @throws InvalidValueException
 	 * @throws MemberAccessException
 	 * @throws RuntimeException
+	 * @throws InvalidMethodCallException
 	 */
-	public function __get($name/*, array $filterArgs*/)
+	public function __get($name /*, array $filterArgs*/)
 	{
-		$property = $this->getReflection()->getEntityProperty($name);
-		if ($property === null) {
-			$method = 'get' . ucfirst($name);
-			$internalGetters = array_flip($this->internalGetters);
-			if (method_exists($this, $method) and !isset($internalGetters[$method])) {  // TODO: find better solution (using reflection)
-				return call_user_func(array($this, $method)); // $filterArgs are not relevant here
-			}
-			throw new MemberAccessException("Undefined property: $name");
+		$reflection = $this->getCurrentReflection();
+		$nativeGetter = $reflection->getGetter('get' . ucfirst($name));
+		if ($nativeGetter !== null) {
+			return $nativeGetter->invoke($this); // filters are not relevant here
 		}
-		$column = $property->getColumn();
+		$property = $reflection->getEntityProperty($name);
+		if ($property === null) {
+			throw new MemberAccessException("Cannot access undefined property '$name'.");
+		}
+		$customGetter = $property->getGetter();
+		if ($customGetter !== null) {
+			$customGetterReflection = $reflection->getGetter($customGetter);
+			if ($customGetterReflection === null) {
+				throw new InvalidMethodCallException("Missing getter method '$customGetter'.");
+			}
+			return $customGetterReflection->invoke($this); // filters are not relevant here
+		}
+		$pass = $property->getGetterPass();
 		if ($property->isBasicType()) {
+			$column = $property->getColumn();
 			$value = $this->row->$column;
 			if ($value === null) {
 				if (!$property->isNullable()) {
 					throw new InvalidValueException("Property '$name' cannot be null.");
 				}
-				return null;
-			}
-			if (!settype($value, $property->getType())) {
-				throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
-			}
-			if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
-				throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
+			} else {
+				if (!settype($value, $property->getType())) {
+					throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
+				}
+				if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
+					throw new InvalidValueException("Given value is not from possible values enumeration.");
+				}
 			}
 		} else {
 			if ($property->hasRelationship()) {
-
-				$filter = ($set = $property->getFilters(0)) ? $this->getFilterCallback($set, func_get_args()) : null;
 				$relationship = $property->getRelationship();
 
 				$method = explode('\\', get_class($relationship));
-				$method = 'get' . array_pop($method) . 'Value';
-				$args = array($property, $filter);
+				$method = 'get' . end($method) . 'Value';
 
+				$args = array($property);
+				$firstFilters = $property->getFilters(0);
 				if ($method === 'getHasManyValue') {
-					$args[] = ($set = $property->getFilters(1)) ? $this->getFilterCallback($set, func_get_args()) : null;
+					$secondFilters = $property->getFilters(1);
+				}
+				if (!empty($firstFilters) or !empty($secondFilters)) {
+					$funcArgs = func_get_args();
+					$filterArgs = isset($funcArgs[1]) ? $funcArgs[1] : array();
+					$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, $property->getFiltersAnnotationArgs(0)) : null;
+					if (!empty($secondFilters)) {
+						$args[] = new Filtering($secondFilters, $filterArgs, $this, $property, $property->getFiltersAnnotationArgs(1));
+					}
 				}
 				$value = call_user_func_array(array($this, $method), $args);
-
 			} else {
+				$column = $property->getColumn();
 				$value = $this->row->$column;
 				if ($value === null) {
 					if (!$property->isNullable()) {
 						throw new InvalidValueException("Property '$name' cannot be null.");
 					}
-					return null;
-				}
-				if (!$property->containsCollection()) {
-					$type = $property->getType();
-					if (!($value instanceof $type)) {
-						throw new InvalidValueException("Property '$name' is expected to contain an instance of '{$property->getType()}', instance of '" . get_class($value) . "' given.");
-					}
 				} else {
-					if (!is_array($value)) {
-						throw new InvalidValueException("Property '$name' is expected to contain an array of '{$property->getType()}' instances.");
+					if (!$property->containsCollection()) {
+						$type = $property->getType();
+						if (!($value instanceof $type)) {
+							throw new InvalidValueException("Property '$name' is expected to contain an instance of $type, instance of " . get_class($value) . " given.");
+						}
+					} else {
+						if (!is_array($value)) {
+							throw new InvalidValueException("Property '$name' is expected to contain an array of {$property->getType()} instances.");
+						}
 					}
 				}
 			}
+		}
+		if ($pass !== null) {
+			$value = $this->$pass($value);
 		}
 		return $value;
 	}
 
 	/**
-	 * Sets value of given field
+	 * Sets value of given property
 	 *
 	 * @param string $name
 	 * @param mixed $value
@@ -150,70 +199,101 @@ abstract class Entity
 	 */
 	function __set($name, $value)
 	{
-		$property = $this->getReflection()->getEntityProperty($name);
-		if ($property === null) {
-			$method = 'set' . ucfirst($name);
-			if (method_exists($this, $method)) { // TODO: find better solution (using reflection)
-				call_user_func(array($this, $method), $value);
-			} else {
-				throw new MemberAccessException("Undefined property: $name");
-			}
+		$reflection = $this->getCurrentReflection();
+		$nativeSetter = $reflection->getSetter('set' . ucfirst($name));
+		if ($nativeSetter !== null) {
+			$nativeSetter->invoke($this, $value);
 		} else {
+			$property = $reflection->getEntityProperty($name);
+			if ($property === null) {
+				throw new MemberAccessException("Cannot access undefined property '$name'.");
+			}
 			if (!$property->isWritable()) {
 				throw new MemberAccessException("Cannot write to read only property '$name'.");
 			}
-			$column = $property->getColumn();
-			if ($value === null) {
-				if (!$property->isNullable()) {
-					throw new InvalidValueException("Property '$name' cannot be null.");
+			$customSetter = $property->getSetter();
+			if ($customSetter !== null) {
+				$customSetterReflection = $reflection->getSetter($customSetter);
+				if ($customSetterReflection === null) {
+					throw new InvalidMethodCallException("Missing setter method '$customSetter'.");
 				}
-				$this->row->$column = null;
+				$customSetterReflection->invoke($this, $value);
 			} else {
-				if ($property->isBasicType()) {
-					if (!settype($value, $property->getType())) {
-						throw new InvalidValueException("Cannot convert value '$value' to " . $property->getType() . '.');
+				$pass = $property->getSetterPass();
+				$column = $property->getColumn();
+				if ($value === null) {
+					if (!$property->isNullable()) {
+						throw new InvalidValueException("Property '$name' cannot be null.");
 					}
-					if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
-						throw new InvalidValueException("Value '$value' is not from possible values enumeration.");
-					}
-					$this->row->$column = $value;
-				} else {
-					if ($property->hasRelationship()) {
-						if (!($value instanceof Entity)) {
-							throw new InvalidValueException("Only entities can be set via magic __set on field with relationships.");
-						}
-						$relationship = $property->getRelationship();
+					$relationship = $property->getRelationship();
+					if ($relationship !== null) {
 						if (!($relationship instanceof Relationship\HasOne)) {
-							throw new InvalidMethodCallException('Only fields with m:hasOne relationship can be set via magic __set.');
+							throw new InvalidMethodCallException('Only properties with m:hasOne relationship can be set to null.');
 						}
-						$column = $relationship->getColumnReferencingTargetTable();
-						$table = $relationship->getTargetTable();
-
-						if ($value->isDetached()) {
-							throw new InvalidValueException('Detached entity must be stored in database before use in relationships.');
+					}
+				} else {
+					if ($property->isBasicType()) {
+						if (!settype($value, $property->getType())) {
+							throw new InvalidValueException("Cannot convert given value to {$property->getType()}.");
 						}
-						$this->row->$column = $value->id;
-						$this->row->cleanReferencedRowsCache($table, $column);
+						if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
+							throw new InvalidValueException("Given value is not from possible values enumeration.");
+						}
 					} else {
-						if (!is_object($value)) {
-							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . gettype($value) . " given.");
-						}
 						$type = $property->getType();
 						if (!($value instanceof $type)) {
-							throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . get_class($value) . " given.");
+							throw new InvalidValueException("Unexpected value type given, expected {$property->getType()}.");
 						}
-						$this->row->$column = $value;
+						if ($property->hasRelationship()) {
+							if (!($value instanceof Entity)) {
+								throw new InvalidValueException("Unexpected value type given, expected {$property->getType()}.");
+							}
+							$relationship = $property->getRelationship();
+							if (!($relationship instanceof Relationship\HasOne)) {
+								throw new InvalidMethodCallException('Only properties with m:hasOne relationship can be set via magic __set.');
+							}
+							$column = $relationship->getColumnReferencingTargetTable();
+							if ($value->isDetached()) {
+								throw new InvalidValueException('Detached entity cannot be assigned to property with relationship.');
+							}
+							$mapper = $value->mapper; // mapper stealing :)
+							$table = $mapper->getTable(get_class($value));
+							$idProperty = $mapper->getEntityField($table, $mapper->getPrimaryKey($table));
+
+							$value = $value->$idProperty;
+							$this->row->cleanReferencedRowsCache($table, $column);
+						} else {
+							if (!is_object($value)) {
+								throw new InvalidValueException("Unexpected value type: " . $property->getType() . " expected, " . gettype($value) . " given.");
+							}
+						}
 					}
 				}
+				if ($pass !== null) {
+					$value = $this->$pass($value);
+				}
+				$this->row->$column = $value;
 			}
 		}
 	}
 
 	/**
-	 * Calls __get() or __set() method when get<$name> or set<$name> methods don't exist
+	 * Tells whether given property exists and is not null
 	 *
 	 * @param string $name
-	 * @param array $arguments
+	 * @return bool
+	 */
+	public function __isset($name)
+	{
+		try {
+			return $this->$name !== null;
+		} catch (MemberAccessException $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * @param string $name
 	 * @param array $arguments
 	 * @return mixed
 	 * @throws InvalidMethodCallException
@@ -224,18 +304,25 @@ abstract class Entity
 		if (strlen($name) < 4) {
 			throw $e;
 		}
-		$prefix = substr($name, 0, 3);
-		if ($prefix === 'get') {
+		if (substr($name, 0, 3) === 'get') {
 			return $this->__get(lcfirst(substr($name, 3)), $arguments);
-		} elseif ($prefix === 'set') {
+
+		} elseif (substr($name, 0, 3) === 'set') {
 			$this->__set(lcfirst(substr($name, 3)), $arguments);
+
+		} elseif (substr($name, 0, 5) === 'addTo' and strlen($name) > 5) {
+			$this->addToOrRemoveFrom(self::ACTION_ADD, lcfirst(substr($name, 5)), array_shift($arguments));
+
+		} elseif (substr($name, 0, 10) === 'removeFrom' and strlen($name) > 10) {
+			$this->addToOrRemoveFrom(self::ACTION_REMOVE, lcfirst(substr($name, 10)), array_shift($arguments));
+
 		} else {
 			throw $e;
 		}
 	}
 
 	/**
-	 * Performs a mass value assignment (using setters)
+	 * Performs mass value assignment (using setters)
 	 *
 	 * @param array|Traversable $values
 	 * @param array|null $whitelist
@@ -247,23 +334,138 @@ abstract class Entity
 			$whitelist = array_flip($whitelist);
 		}
 		if (!is_array($values) and !($values instanceof Traversable)) {
-			throw new InvalidArgumentException('Argument $values must be either array or instance of Traversable, ' . gettype($values) . ' given.');
+			$type = gettype($values) !== 'object' ? gettype($values) : 'instance of ' . get_class($values);
+			throw new InvalidArgumentException("Argument \$values must contain either array or instance of Traversable, $type given.");
 		}
-		foreach ($values as $field => $value) {
-			if ($whitelist === null or isset($whitelist[$field])) {
-				$this->__set($field, $value);
+		foreach ($values as $property => $value) {
+			if ($whitelist === null or isset($whitelist[$property])) {
+				$this->__set($property, $value);
 			}
 		}
 	}
 
 	/**
-	 * Tells whether entity is in modified state
+	 * Gets high-level values of properties
+	 *
+	 * @param array|null $whitelist
+	 * @return array
+	 */
+	public function getData(array $whitelist = null)
+	{
+
+		$data = array();
+		if ($whitelist !== null) {
+			$whitelist = array_flip($whitelist);
+		}
+		$reflection = $this->getCurrentReflection();
+		$usedGetters = array();
+		foreach ($reflection->getEntityProperties() as $property) {
+			$field = $property->getName();
+			if ($whitelist !== null and !isset($whitelist[$field])) {
+				continue;
+			}
+			$data[$field] = $this->__get($property->getName());
+			$getter = $property->getGetter();
+			if ($getter !== null) {
+				$usedGetters[$getter] = true;
+			}
+		}
+		foreach ($reflection->getGetters() as $name => $getter) {
+			if (isset($usedGetters[$getter->getName()])) {
+				continue;
+			}
+			$field = lcfirst(substr($name, 3));
+			if ($whitelist !== null and !isset($whitelist[$field])) {
+				continue;
+			}
+			if ($getter->getNumberOfRequiredParameters() === 0) {
+				$data[$field] = $getter->invoke($this);
+			}
+		}
+		return $data;
+	}
+
+	/**
+	 * Gets low-level values of underlying Row columns
+	 *
+	 * @return array
+	 */
+	public function getRowData()
+	{
+		return $this->row->getData();
+	}
+
+	/**
+	 * Gets low-level values of underlying Row columns that were modified
+	 *
+	 * @return array
+	 */
+	public function getModifiedRowData()
+	{
+		return $this->row->getModifiedData();
+	}
+
+	/**
+	 * Gets current M:N differences
+	 *
+	 * @return array
+	 */
+	public function getHasManyRowDifferences()
+	{
+		$differences = array();
+		foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
+			if ($property->hasRelationship() and ($property->getRelationship() instanceof Relationship\HasMany)) {
+				$relationship = $property->getRelationship();
+				$difference = $this->row->createReferencingDataDifference(
+					$relationship->getRelationshipTable(),
+					$relationship->getColumnReferencingSourceTable(),
+					null,
+					$relationship->getStrategy()
+				);
+				if ($difference->mayHaveAny()) {
+					$differences[$relationship->getColumnReferencingSourceTable() . ':' . $relationship->getRelationshipTable() . ':' . $relationship->getColumnReferencingTargetTable()] = $difference->getByPivot($relationship->getColumnReferencingTargetTable());
+				}
+			}
+		}
+		return $differences;
+	}
+
+	/**
+	 * Tells whether entity was modified
 	 *
 	 * @return bool
 	 */
 	public function isModified()
 	{
 		return $this->row->isModified();
+	}
+
+	/**
+	 * Marks entity as non-modified (isModified returns false right after this method call)
+	 */
+	public function markAsUpdated()
+	{
+		$this->row->markAsUpdated();
+	}
+
+	/**
+	 * Marks entity as attached
+	 *
+	 * @param int $id
+	 * @param string $table
+	 * @param Connection $connection
+	 */
+	public function markAsAttached($id, $table, Connection $connection)
+	{
+		$this->row->markAsAttached($id, $table, $connection);
+	}
+
+	/**
+	 * Marks entity as detached
+	 */
+	public function detach()
+	{
+		$this->row->detach();
 	}
 
 	/**
@@ -277,90 +479,54 @@ abstract class Entity
 	}
 
 	/**
-	 * Marks entity as detached (it means non-persisted)
-	 */
-	public function detach()
-	{
-		$this->row->detach();
-	}
-
-	/**
-	 * Returns array of high-level fields with values
+	 * Provides an mapper for entity
 	 *
-	 * @return array
+	 * @param IMapper $mapper
+	 * @throws InvalidMethodCallException
+	 * @throws InvalidStateException
 	 */
-	public function getData()
+	public function useMapper(IMapper $mapper)
 	{
-		$data = array();
-		foreach ($this->getReflection()->getEntityProperties() as $property) {
-			$data[$property->getName()] = $this->__get($property->getName());
+		if (!$this->isDetached()) {
+			throw new InvalidMethodCallException('Mapper can only be provided to detached entity.');
 		}
-		$internalGetters = array_flip($this->internalGetters);
-		foreach ($this->getReflection()->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-			$name = $method->getName();
-			if (substr($name, 0, 3) === 'get' and !isset($internalGetters[$name])) {
-				if ($method->getNumberOfRequiredParameters() === 0) {
-					$data[lcfirst(substr($name, 3))] = $method->invoke($this);
+		$newProperties = $this->getReflection($mapper)->getEntityProperties();
+		foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
+			$oldColumn = $oldProperty->getColumn();
+			if ($oldColumn !== null) {
+				$name = $oldProperty->getName();
+				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
+					throw new InvalidStateException('Inconsistent sets of properties detected.');
+				}
+				if ($this->row->hasColumn($oldColumn)) {
+					$newColumn = $newProperties[$name]->getColumn();
+					$value = $this->row->$oldColumn;
+					unset($this->row->$oldColumn);
+					$this->row->$newColumn = $value;
 				}
 			}
 		}
-		return $data;
+		$this->mapper = $mapper;
+		$this->row->setMapper($mapper);
+		$this->currentReflection = null;
 	}
 
 	/**
-	 * Returns array of low-level fields with values
+	 * Gets current entity's reflection (cached in memory)
 	 *
-	 * @return array
-	 */
-	public function getRowData()
-	{
-		return $this->row->getData();
-	}
-
-	/**
-	 * Returns array of modified low-level fields with new values
-	 *
-	 * @return array
-	 */
-	public function getModifiedRowData()
-	{
-		return $this->row->getModifiedData();
-	}
-
-	/**
-	 * Marks entity as non-updated (isModified() returns false right after this method call)
-	 */
-	public function markAsUpdated()
-	{
-		$this->row->markAsUpdated();
-	}
-
-	/**
-	 * Marks entity as persisted
-	 *
-	 * @param int $id
-	 * @param string $table
-	 * @param DibiConnection $connection
-	 */
-	public function markAsCreated($id, $table, DibiConnection $connection)
-	{
-		$this->row->markAsCreated($id, $table, $connection);
-	}
-
-	/**
 	 * @return EntityReflection
 	 */
-	protected static function getReflection()
+	protected function getCurrentReflection()
 	{
-		$class = get_called_class();
-		if (!isset(static::$reflections[$class])) {
-			static::$reflections[$class] = new EntityReflection($class);
+		if ($this->currentReflection === null) {
+			$this->currentReflection = $this->getReflection($this->mapper);
 		}
-
-		return static::$reflections[$class];
+		return $this->currentReflection;
 	}
 
 	/**
+	 * Allows encapsulate set of entities in custom collection
+	 *
 	 * @param array $entities
 	 * @return array
 	 */
@@ -369,19 +535,27 @@ abstract class Entity
 		return $entities;
 	}
 
+	/**
+	 * Allows initialize properties' default values
+	 */
+	protected function initDefaults()
+	{
+	}
+
 	////////////////////
 	////////////////////
 
 	/**
 	 * @param Property $property
-	 * @param Closure|null $filter
-	 * @return mixed
+	 * @param Filtering|null $filtering
+	 * @return Entity
 	 * @throws InvalidValueException
 	 */
-	private function getHasOneValue(Property $property, Closure $filter = null)
+	private function getHasOneValue(Property $property, Filtering $filtering = null)
 	{
 		$relationship = $property->getRelationship();
-		$row = $this->row->referenced($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingTargetTable());
+		$targetTable = $relationship->getTargetTable();
+		$row = $this->row->referenced($targetTable, $relationship->getColumnReferencingTargetTable(), $filtering);
 		if ($row === null) {
 			if (!$property->isNullable()) {
 				$name = $property->getName();
@@ -389,27 +563,34 @@ abstract class Entity
 			}
 			return null;
 		} else {
-			$class = $property->getType();
-			return new $class($row);
+			$class = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = new $class($row);
+			$this->checkConsistency($property, $class, $entity);
+			return $entity;
 		}
 	}
 
 	/**
 	 * @param Property $property
-	 * @param Closure|null $relTableFilter
-	 * @param Closure|null $targetTableFilter
-	 * @return array
+	 * @param Filtering|null $relTableFiltering
+	 * @param Filtering|null $targetTableFiltering
+	 * @return Entity[]
+	 * @throws InvalidValueException
 	 */
-	private function getHasManyValue(Property $property, Closure $relTableFilter = null, Closure $targetTableFilter = null)
+	private function getHasManyValue(Property $property, Filtering $relTableFiltering = null, Filtering $targetTableFiltering = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relTableFilter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
-		$class = $property->getType();
+		$targetTable = $relationship->getTargetTable();
+		$columnReferencingTargetTable = $relationship->getColumnReferencingTargetTable();
+		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), $relTableFiltering, $relationship->getStrategy());
 		$value = array();
 		foreach ($rows as $row) {
-			$valueRow = $row->referenced($relationship->getTargetTable(), $targetTableFilter, $relationship->getColumnReferencingTargetTable());
+			$valueRow = $row->referenced($targetTable, $columnReferencingTargetTable, $targetTableFiltering);
 			if ($valueRow !== null) {
-				$value[] = new $class($valueRow);
+				$class = $this->mapper->getEntityClass($targetTable, $valueRow);
+				$entity = new $class($valueRow);
+				$this->checkConsistency($property, $class, $entity);
+				$value[] = $entity;
 			}
 		}
 		return $this->createCollection($value);
@@ -417,14 +598,15 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param Closure|null $filter
-	 * @return mixed
+	 * @param Filtering|null $filtering
+	 * @return Entity
 	 * @throws InvalidValueException
 	 */
-	private function getBelongsToOneValue(Property $property, Closure $filter = null)
+	private function getBelongsToOneValue(Property $property, Filtering $filtering = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
+		$targetTable = $relationship->getTargetTable();
+		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$count = count($rows);
 		if ($count > 1) {
 			throw new InvalidValueException('There cannot be more than one entity referencing to entity with m:belongToOne relationship.');
@@ -436,45 +618,90 @@ abstract class Entity
 			return null;
 		} else {
 			$row = reset($rows);
-			$class = $property->getType();
-			return new $class($row);
+			$class = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = new $class($row);
+			$this->checkConsistency($property, $class, $entity);
+			return $entity;
 		}
 	}
 
 	/**
 	 * @param Property $property
-	 * @param Closure|null $filter
-	 * @return array
+	 * @param Filtering|null $filtering
+	 * @return Entity[]
 	 */
-	private function getBelongsToManyValue(Property $property, Closure $filter = null)
+	private function getBelongsToManyValue(Property $property, Filtering $filtering = null)
 	{
 		$relationship = $property->getRelationship();
-		$rows = $this->row->referencing($relationship->getTargetTable(), $filter, $relationship->getColumnReferencingSourceTable(), $relationship->getStrategy());
-		$class = $property->getType();
+		$targetTable = $relationship->getTargetTable();
+		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$value = array();
 		foreach ($rows as $row) {
-			$value[] = new $class($row);
+			$class = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = new $class($row);
+			$this->checkConsistency($property, $class, $entity);
+			$value[] = $entity;
 		}
 		return $this->createCollection($value);
 	}
 
 	/**
-	 * @param array $propertyFilters
-	 * @param array $filterArgs
-	 * @return callable|null
+	 * @param string $action
+	 * @param string $name
+	 * @param mixed $arg
+	 * @throws InvalidMethodCallException
+	 * @throws InvalidArgumentException
+	 * @throws InvalidValueException
 	 */
-	private function getFilterCallback(array $propertyFilters, array $filterArgs)
+	private function addToOrRemoveFrom($action, $name, $arg)
 	{
-		$filterCallback = null;
-		if (!empty($propertyFilters)) {
-			$filterArgs = isset($filterArgs[1]) ? $filterArgs[1] : array();
-			$filterCallback = function (DibiFluent $statement) use ($propertyFilters, $filterArgs) {
-				foreach ($propertyFilters as $propertyFilter) {
-					call_user_func_array($propertyFilter, array_merge(array($statement), $filterArgs));
-				}
-			};
+		if ($this->isDetached()) {
+			throw new InvalidMethodCallException('Cannot add or remove related entity to detached entity.');
 		}
-		return $filterCallback;
+		$method = $action === self::ACTION_ADD ? 'addTo' : 'removeFrom';
+		if ($arg === null) {
+			throw new InvalidArgumentException("Invalid argument given.");
+		}
+		$property = $this->getCurrentReflection()->getEntityProperty($name);
+		if ($property === null or !$property->hasRelationship() or !($property->getRelationship() instanceof Relationship\HasMany)) {
+			throw new InvalidMethodCallException("Cannot call $method method with $name property. Only properties with m:hasMany relationship can be managed this way.");
+		}
+		if ($property->getFilters()) {
+			throw new InvalidMethodCallException("Cannot call $method method with $name property. Only properties with no filters can be managed this way."); // deliberate restriction
+		}
+		$relationship = $property->getRelationship();
+		if ($arg instanceof Entity) {
+			if ($arg->isDetached()) {
+				throw new InvalidArgumentException('Cannot add or remove detached entity ' . get_class($arg) . '.');
+			}
+			$type = $property->getType();
+			if (!($arg instanceof $type)) {
+				throw new InvalidValueException("Unexpected value type: instance of " . $property->getType() . " expected, instance of " . get_class($arg) . " given.");
+			}
+			$data = $arg->getRowData();
+			$arg = $data[$this->mapper->getPrimaryKey($relationship->getTargetTable())];
+		}
+		$table = $this->mapper->getTable($this->getCurrentReflection()->getName());
+		$values = array(
+			$relationship->getColumnReferencingSourceTable() => $this->row->{$this->mapper->getPrimaryKey($table)},
+			$relationship->getColumnReferencingTargetTable() => $arg,
+		);
+		$method .= 'Referencing';
+		$this->row->$method($values, $relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), null, $relationship->getStrategy());
 	}
-	
+
+	/**
+	 * @param Property $property
+	 * @param string $mapperClass
+	 * @param Entity $entity
+	 * @throws InvalidValueException
+	 */
+	private function checkConsistency(Property $property, $mapperClass, Entity $entity)
+	{
+		$type = $property->getType();
+		if (!($entity instanceof $type)) {
+			throw new InvalidValueException("Inconsistency found: property '{$property->getName()}' is supposed to contain an instance of '$type' (due to type hint), but mapper maps it to '$mapperClass'. Please fix getEntityClass method in mapper, property annotation or entities inheritance.");
+		}
+	}
+
 }

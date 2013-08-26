@@ -39,7 +39,7 @@ class AliasesParser
 	}
 
 	/**
-	 * Returns LeanMapper\Reflection\Aliases instance valid for given class source code
+	 * Creates Aliases instance relevant to given class source code
 	 *
 	 * @param string $source
 	 * @param string $namespace

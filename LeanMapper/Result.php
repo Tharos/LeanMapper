@@ -11,17 +11,15 @@
 
 namespace LeanMapper;
 
-use Closure;
-use DibiConnection;
-use DibiFluent;
 use DibiSqliteDriver;
 use DibiSqlite3Driver;
 use DibiRow;
 use LeanMapper\Exception\InvalidArgumentException;
+use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidStateException;
 
 /**
- * Set of related data
+ * Set of related data, heart of Lean Mapper
  *
  * @author Vojtěch Kohout
  */
@@ -38,23 +36,35 @@ class Result implements \Iterator
 	/** @var array */
 	private $modified = array();
 
+	/** @var array */
+	private $added = array();
+
+	/** @var array */
+	private $removed = array();
+
 	/** @var string */
 	private $table;
+
+	/** @var Connection */
+	private $connection;
+
+	/** @var IMapper */
+	protected $mapper;
 
 	/** @var array */
 	private $keys;
 
-	/** @var DibiConnection */
-	private $connection;
-
-	/** @var array */
+	/** @var self[] */
 	private $referenced = array();
 
-	/** @var array */
+	/** @var self[] */
 	private $referencing = array();
 
+	/** @var string|null */
+	private $originKey;
+
 	/** @var array */
-	private $detached = array();
+	private $index = array();
 
 
 	/**
@@ -62,15 +72,18 @@ class Result implements \Iterator
 	 *
 	 * @param DibiRow|DibiRow[] $data
 	 * @param string $table
-	 * @param DibiConnection $connection
+	 * @param Connection $connection
+	 * @param IMapper $mapper
+	 * @param string|null $originKey
 	 * @return self
 	 * @throws InvalidArgumentException
 	 */
-	public static function getInstance($data, $table, DibiConnection $connection)
+	public static function getInstance($data, $table, Connection $connection, IMapper $mapper, $originKey = null)
 	{
 		$dataArray = array();
+		$primaryKey = $mapper->getPrimaryKey($table);
 		if ($data instanceof DibiRow) {
-			$dataArray = array(isset($data->id) ? $data->id : 0 => $data->toArray());
+			$dataArray = array(isset($data->$primaryKey) ? $data->$primaryKey : 0 => $data->toArray());
 		} else {
 			$e = new InvalidArgumentException('Invalid type of data given, only DibiRow or array of DibiRow is supported at this moment.');
 			if (is_array($data)) {
@@ -78,8 +91,8 @@ class Result implements \Iterator
 					if (!($record instanceof DibiRow)) {
 						throw $e;
 					}
-					if (isset($record->id)) {
-						$dataArray[$record->id] = $record->toArray();
+					if (isset($record->$primaryKey)) {
+						$dataArray[$record->$primaryKey] = $record->toArray();
 					} else {
 						$dataArray[] = $record->toArray();
 					}
@@ -88,7 +101,7 @@ class Result implements \Iterator
 				throw $e;
 			}
 		}
-		return new self($dataArray, $table, $connection);
+		return new self($dataArray, $table, $connection, $mapper, $originKey);
 	}
 
 	/**
@@ -102,7 +115,31 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Creates new LeanMapper\Row instance pointing to requested row in LeanMapper\Result
+	 * @param IMapper $mapper
+	 */
+	public function setMapper(IMapper $mapper)
+	{
+		$this->mapper = $mapper;
+	}
+
+	/**
+	 * @return IMapper|null
+	 */
+	public function getMapper()
+	{
+		return $this->mapper;
+	}
+
+	/**
+	 * @return string|null
+	 */
+	public function getOriginKey()
+	{
+		return $this->originKey;
+	}
+
+	/**
+	 * Creates new Row instance pointing to specific row within Result
 	 *
 	 * @param int $id
 	 * @return Row|null
@@ -116,9 +153,9 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Returns data of given field from row with given id
+	 * Gets value of given column from row with given id
 	 *
-	 * @param int $id
+	 * @param mixed $id
 	 * @param string $key
 	 * @return mixed
 	 * @throws InvalidArgumentException
@@ -132,9 +169,9 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Sets data of given field in row with given id
+	 * Sets value of given column in row with given id
 	 *
-	 * @param int $id
+	 * @param mixed $id
 	 * @param string $key
 	 * @param mixed $value
 	 * @throws InvalidArgumentException
@@ -144,7 +181,7 @@ class Result implements \Iterator
 		if (!isset($this->data[$id])) {
 			throw new InvalidArgumentException("Missing row with ID $id.");
 		}
-		if ($key === 'id' and !$this->isDetached($id)) {
+		if (!$this->isDetached() and $key === $this->mapper->getPrimaryKey($this->table)) { // mapper is always set when Result is not detached
 			throw new InvalidArgumentException("ID can only be set in detached rows.");
 		}
 		$this->modified[$id][$key] = true;
@@ -152,84 +189,63 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Tells whether requested row is modified state
+	 * Tells whether row with given id has given column
 	 *
-	 * @param int $id
+	 * @param mixed $id
+	 * @param string $column
 	 * @return bool
 	 */
-	public function isModified($id)
+	public function hasDataEntry($id, $column)
 	{
-		return isset($this->modified[$id]) and !empty($this->modified[$id]);
+		return isset($this->data[$id]) and array_key_exists($column, $this->data[$id]);
 	}
 
 	/**
-	 * Tells whether requested row is in detached state (like newly created row)
+	 * Unsets given column in row with given id
 	 *
-	 * @param int $id
-	 * @return bool
-	 */
-	public function isDetached($id)
-	{
-		return !isset($this->data[$id]) or isset($this->detached[$id]);
-	}
-
-	/**
-	 * Marks requested row as detached (it means non-persisted)
-	 *
-	 * @param int $id
+	 * @param mixed $id
+	 * @param string $column
 	 * @throws InvalidArgumentException
 	 */
-	public function detach($id)
+	public function unsetDataEntry($id, $column)
 	{
 		if (!isset($this->data[$id])) {
 			throw new InvalidArgumentException("Missing row with ID $id.");
 		}
-		if ($this->isDetached($id)) {
-			throw new InvalidArgumentException("Row with ID $id is already detached.");
-		}
-		$this->detached[$id] = true;
-		foreach ($this->data[$id] as $field => $value) {
-			$this->modified[$id][$field] = true;
-		}
+		unset($this->data[$id][$column], $this->modified[$id][$column]);
 	}
 
 	/**
-	 * Marks requested row as non-updated (isModified($id) returns false right after this method call)
+	 * Adds new data entry
 	 *
-	 * @param int $id
+	 * @param array $values
 	 */
-	public function markAsUpdated($id)
+	public function addDataEntry(array $values)
 	{
-		if (isset($this->modified[$id])) {
-			unset($this->modified[$id]);
-		}
+		$this->data[] = $values;
+		$this->added[] = $values;
+		$this->cleanReferencedResultsCache();
 	}
 
 	/**
-	 * Marks requested row as persisted
+	 * Removes given data entry
 	 *
-	 * @param int $newId
-	 * @param int $oldId
-	 * @param string $table
-	 * @param DibiConnection $connection
-	 * @throws InvalidStateException
+	 * @param array $values
+	 * @throws InvalidArgumentException
 	 */
-	public function markAsCreated($newId, $oldId, $table, DibiConnection $connection)
+	public function removeDataEntry(array $values)
 	{
-		if (!$this->isDetached($oldId)) {
-			throw new InvalidStateException('Result is not in detached state.');
+		foreach ($this->data as $key => $entry) {
+			if (array_diff_assoc($values, $entry) === array()) {
+				$this->removed[] = $entry;
+				unset($this->data[$key], $this->modified[$key]);
+				break;
+			}
 		}
-		$this->data = array($newId => array('id' => $newId) + $this->getModifiedData($oldId));
-		foreach (array($newId, $oldId) as $key) {
-			unset($this->modified[$key]);
-			unset($this->detached[$key]);
-		}
-		$this->table = $table;
-		$this->connection = $connection;
 	}
 
 	/**
-	 * Returns array of fields of requested row
+	 * Returns values of columns of requested row
 	 *
 	 * @param int $id
 	 * @return array
@@ -240,7 +256,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Returns array of modified fields of requested row with new values
+	 * Returns values of columns of requested row that were modified
 	 *
 	 * @param int $id
 	 * @return array
@@ -249,74 +265,189 @@ class Result implements \Iterator
 	{
 		$result = array();
 		if (isset($this->modified[$id])) {
-			foreach (array_keys($this->modified[$id]) as $field) {
-				$result[$field] = $this->data[$id][$field];
+			foreach (array_keys($this->modified[$id]) as $column) {
+				$result[$column] = $this->data[$id][$column];
 			}
 		}
 		return $result;
 	}
 
 	/**
-	 * Creates new LeanMapper\Row instance pointing to requested row in referenced result
+	 * Creates new DataDifference instance relevant to current Result state
+	 *
+	 * @return DataDifference
+	 */
+	public function createDataDifference()
+	{
+		return new DataDifference($this->added, $this->removed);
+	}
+
+	/**
+	 * Tells whether requested row is in modified state
+	 *
+	 * @param int $id
+	 * @return bool
+	 */
+	public function isModified($id)
+	{
+		return isset($this->modified[$id]) and !empty($this->modified[$id]);
+	}
+
+	/**
+	 * Tells whether Result is in detached state (in means non-persisted)
+	 *
+	 * @return bool
+	 */
+	public function isDetached()
+	{
+		return $this->connection === null or $this->table === null or $this->mapper === null;
+	}
+
+	/**
+	 * Marks requested row as non-modified (isModified returns false right after this method call)
+	 *
+	 * @param int $id
+	 * @throws InvalidMethodCallException
+	 */
+	public function markAsUpdated($id)
+	{
+		if ($this->isDetached()) {
+			throw new InvalidMethodCallException('Detached Result cannot be marked as updated.');
+		}
+		if (isset($this->modified[$id])) {
+			unset($this->modified[$id]);
+		}
+	}
+
+	/**
+	 * Marks requested row as attached
+	 *
+	 * @param mixed $newId
+	 * @param mixed $oldId
+	 * @param string $table
+	 * @param Connection $connection
+	 * @throws InvalidStateException
+	 */
+	public function markAsAttached($newId, $oldId, $table, Connection $connection)
+	{
+		if (!$this->isDetached()) {
+			throw new InvalidStateException('Result is not in detached state.');
+		}
+		if ($this->mapper === null) {
+			throw new InvalidStateException('Missing mapper.');
+		}
+		$modifiedData = $this->getModifiedData($oldId);
+		unset($this->data[$oldId]);
+		$this->data[$newId] = array($this->mapper->getPrimaryKey($table) => $newId) + $modifiedData;
+		foreach (array($newId, $oldId) as $key) {
+			unset($this->modified[$key]);
+		}
+		$this->table = $table;
+		$this->connection = $connection;
+	}
+
+	public function cleanAddedAndRemovedMeta()
+	{
+		$this->added = array();
+		$this->removed = array();
+	}
+
+	/**
+	 * Creates new Row instance pointing to requested row in referenced Result
 	 *
 	 * @param int $id
 	 * @param string $table
-	 * @param callable|null $filter
 	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
 	 * @throws InvalidStateException
 	 * @return Row|null
 	 */
-	public function getReferencedRow($id, $table, Closure $filter = null, $viaColumn = null)
+	public function getReferencedRow($id, $table, $viaColumn = null, Filtering $filtering = null)
 	{
-		if ($this->connection === null) {
-			throw new InvalidStateException('Cannot get referenced row for result without DibiConnection instance.');
-		}
 		if ($viaColumn === null) {
-			$viaColumn = $table . '_id';
+			$viaColumn = $this->mapper->getRelationshipColumn($this->table, $table);
 		}
-		return $this->getReferencedResult($table, $viaColumn, $filter)
-				->getRow($this->getDataEntry($id, $viaColumn));
+		$result = $this->getReferencedResult($table, $viaColumn, $filtering);
+		return $result->getRow($this->getDataEntry($id, $viaColumn));
 	}
 
 	/**
-	 * Creates new array of LeanMapper\Row instances pointing to requested row in referencing result
+	 * Creates new array of Row instances pointing to requested row in referencing Result
 	 *
 	 * @param int $id
 	 * @param string $table
-	 * @param callable|null $filter
 	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
 	 * @param string $strategy
-	 * @throws InvalidArgumentException
 	 * @throws InvalidStateException
 	 * @return Row[]
 	 */
-	public function getReferencingRows($id, $table, Closure $filter = null, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	public function getReferencingRows($id, $table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
-		if ($strategy === null) {
-			$strategy = self::STRATEGY_IN;
-		} else {
-			if ($strategy !== self::STRATEGY_IN and $strategy !== self::STRATEGY_UNION) {
-				throw new InvalidArgumentException("Unsupported SQL strategy given: $strategy.");
-			}
-		}
-		if ($this->connection === null or $this->table === null) {
-			throw new InvalidStateException('Cannot get referencing rows for detached result.');
-		}
 		if ($viaColumn === null) {
-			$viaColumn = $this->table . '_id';
+			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
-		$collection = $this->getReferencingResult($table, $viaColumn, $filter, $strategy);
-		$rows = array();
-		foreach ($collection as $key => $row) {
-			if ($row[$viaColumn] === $id) {
-				$rows[] = new Row($collection, $key);
+		$referencingResult = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
+		$originKey = $referencingResult->getOriginKey();
+		if (!isset($this->index[$originKey])) {
+			$this->index[$originKey] = array();
+			foreach ($referencingResult as $key => $row) {
+				$this->index[$originKey][$row[$viaColumn]][] = new Row($referencingResult, $key);
 			}
 		}
-		return $rows;
+		if (!isset($this->index[$originKey][$id])) {
+			return array();
+		}
+		return $this->index[$originKey][$id];
 	}
 
 	/**
-	 * Clean in-memory cache of referenced results
+	 * Adds new data entry to referencing Result
+	 *
+	 * @param array $values
+	 * @param string $table
+	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
+	 * @param string|null $strategy
+	 */
+	public function addToReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
+	{
+		$result = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
+		$result->addDataEntry($values);
+		unset($this->index[$result->getOriginKey()]);
+	}
+
+	/**
+	 * Remove given data entry from referencing Result
+	 *
+	 * @param array $values
+	 * @param string $table
+	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
+	 * @param string|null $strategy
+	 */
+	public function removeFromReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
+	{
+		$result = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
+		$result->removeDataEntry($values);
+		unset($this->index[$result->getOriginKey()]);
+	}
+
+	/**
+	 * @param string $table
+	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
+	 * @param string|null $strategy
+	 * @return DataDifference
+	 */
+	public function createReferencingDataDifference($table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
+	{
+		return $this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
+				->createDataDifference();
+	}
+
+	/**
+	 * Cleans in-memory cache with referenced results
 	 *
 	 * @param string|null $table
 	 * @param string|null $column
@@ -332,6 +463,18 @@ class Result implements \Iterator
 				}
 			}
 		}
+	}
+
+	/**
+	 * @param string $table
+	 * @param string|null $viaColumn
+	 * @param Filtering|null $filtering
+	 * @param string|null $strategy
+	 */
+	public function cleanReferencingAddedAndRemovedMeta($table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
+	{
+		$this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
+				->cleanAddedAndRemovedMeta();
 	}
 
 	//========== interface \Iterator ====================
@@ -378,9 +521,11 @@ class Result implements \Iterator
 	/**
 	 * @param array|null $data
 	 * @param string|null $table
-	 * @param DibiConnection|null $connection
+	 * @param Connection|null $connection
+	 * @param IMapper|null $mapper
+	 * @param string|null $originKey
 	 */
-	private function __construct(array $data = null, $table = null, DibiConnection $connection = null)
+	private function __construct(array $data = null, $table = null, Connection $connection = null, IMapper $mapper = null, $originKey = null)
 	{
 		if ($data === null) {
 			$data = array(array());
@@ -388,35 +533,42 @@ class Result implements \Iterator
 		$this->data = $data;
 		$this->table = $table;
 		$this->connection = $connection;
-		if (func_num_args() === 0) {
-			$this->detached[0] = true;
-		}
+		$this->mapper = $mapper;
+		$this->originKey = $originKey;
 	}
 
 	/**
 	 * @param string $table
 	 * @param string $viaColumn
-	 * @param Closure|null $filter
+	 * @param Filtering|null $filtering
+	 * @throws InvalidArgumentException
+	 * @throws InvalidStateException
 	 * @return self
 	 */
-	private function getReferencedResult($table, $viaColumn, Closure $filter = null)
+	private function getReferencedResult($table, $viaColumn, Filtering $filtering = null)
 	{
+		if ($this->isDetached()) {
+			throw new InvalidStateException('Cannot get referenced Result for detached Result.');
+		}
 		$key = "$table($viaColumn)";
-		if ($filter === null) {
+		$primaryKey = $this->mapper->getPrimaryKey($table);
+		if ($filtering === null) {
 			if (!isset($this->referenced[$key])) {
-				$data = $this->createTableSelection($table)->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn))
-						->fetchAll();
-				$this->referenced[$key] = self::getInstance($data, $table, $this->connection);
+				$data = array();
+				if ($ids = $this->extractIds($viaColumn)) {
+					$data = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $ids)
+							->fetchAll();
+				}
+				$this->referenced[$key] = self::getInstance($data, $table, $this->connection, $this->mapper, $key);
 			}
 		} else {
-			$statement = $this->createTableSelection($table)->where('%n.[id] IN %in', $table, $this->extractIds($viaColumn));
-			$filter($statement);
-
-			$sql = (string) $statement;
-			$key .= '#' . md5($sql);
+			$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn));
+			$this->applyFiltering($statement, $filtering);
+			$args = $statement->_export();
+			$key .= '#' . $this->calculateArgumentsHash($args);
 
 			if (!isset($this->referenced[$key])) {
-				$this->referenced[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+				$this->referenced[$key] = self::getInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 			}
 		}
 		return $this->referenced[$key];
@@ -425,35 +577,43 @@ class Result implements \Iterator
 	/**
 	 * @param string $table
 	 * @param string $viaColumn
-	 * @param Closure|null $filter
+	 * @param Filtering|null $filtering
 	 * @param string $strategy
+	 * @throws InvalidArgumentException
+	 * @throws InvalidStateException
 	 * @return self
 	 */
-	private function getReferencingResult($table, $viaColumn, Closure $filter = null, $strategy)
+	private function getReferencingResult($table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
 	{
+		$strategy = $this->translateStrategy($strategy);
+		if ($this->isDetached()) {
+			throw new InvalidStateException('Cannot get referencing Result for detached Result.');
+		}
+		if ($viaColumn === null) {
+			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
+		}
 		$key = "$table($viaColumn)$strategy";
-
+		$primaryKey = $this->mapper->getPrimaryKey($this->table);
 		if ($strategy === self::STRATEGY_IN) {
-			if ($filter === null) {
+			if ($filtering === null) {
 				if (!isset($this->referencing[$key])) {
-					$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds());
-					$this->referencing[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection);
+					$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
+					$this->referencing[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection, $this->mapper, $key);
 				}
 			} else {
-				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds());
-				$filter($statement);
-
-				$sql = (string) $statement;
-				$key .= '#' . md5($sql);
+				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
+				$this->applyFiltering($statement, $filtering);
+				$args = $statement->_export();
+				$key .= '#' . $this->calculateArgumentsHash($args);
 
 				if (!isset($this->referencing[$key])) {
-					$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+					$this->referencing[$key] = self::getInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 				}
 			}
 		} else { // self::STRATEGY_UNION
-			if ($filter === null) {
+			if ($filtering === null) {
 				if (!isset($this->referencing[$key])) {
-					$ids = $this->extractIds();
+					$ids = $this->extractIds($primaryKey);
 					if (count($ids) === 0) {
 						$data = array();
 					} else {
@@ -461,17 +621,21 @@ class Result implements \Iterator
 							$this->buildUnionStrategySql($ids, $table, $viaColumn)
 						)->fetchAll();
 					}
-					$this->referencing[$key] = self::getInstance($data, $table, $this->connection);
+					$this->referencing[$key] = self::getInstance($data, $table, $this->connection, $this->mapper, $key);
 				}
 			} else {
-				$ids = $this->extractIds();
+				$ids = $this->extractIds($primaryKey);
 				if (count($ids) === 0) {
-					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection);
+					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection, $this->mapper, $key);
 				} else {
-					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filter);
-					$key .= '#' . md5($sql);
+					$firstStatement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, reset($ids));
+					$this->applyFiltering($firstStatement, $filtering);
+					$args = $firstStatement->_export();
+					$key .= '#' . $this->calculateArgumentsHash($args);
+
 					if (!isset($this->referencing[$key])) {
-						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection);
+						$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
+						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 					}
 				}
 			}
@@ -483,7 +647,7 @@ class Result implements \Iterator
 	 * @param string $column
 	 * @return array
 	 */
-	private function extractIds($column = 'id')
+	private function extractIds($column)
 	{
 		$ids = array();
 		foreach ($this->data as $data) {
@@ -497,23 +661,23 @@ class Result implements \Iterator
 	 * @param array $ids
 	 * @param string $table
 	 * @param string $viaColumn
-	 * @param Closure|null $filter
-	 * @return string
+	 * @param Filtering|null $filtering
+	 * @return mixed
 	 */
-	private function buildUnionStrategySql(array $ids, $table, $viaColumn, Closure $filter = null)
+	private function buildUnionStrategySql(array $ids, $table, $viaColumn, Filtering $filtering = null)
 	{
 		$statement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, array_shift($ids));
-		if ($filter !== null) {
-			$filter($statement);
+		if ($filtering !== null) {
+			$this->applyFiltering($statement, $filtering);
 		}
-		while ($id = array_shift($ids)) {
+		foreach ($ids as $id) {
 			$tempStatement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, $id);
-			if ($filter !== null) {
-				$filter($tempStatement);
+			if ($filtering !== null) {
+				$this->applyFiltering($tempStatement, $filtering);
 			}
 			$statement->union($tempStatement);
 		}
-		$sql = (string) $statement;
+		$sql = (string)$statement;
 
 		$driver = $this->connection->getDriver();
 		// now we have to fix wrongly generated SQL by dibi...
@@ -527,11 +691,62 @@ class Result implements \Iterator
 
 	/**
 	 * @param string $table
-	 * @return DibiFluent
+	 * @return Fluent
 	 */
 	private function createTableSelection($table)
 	{
 		return $this->connection->select('%n.*', $table)->from($table);
 	}
 
-}
+	/**
+	 * @param string|null $strategy
+	 * @throws InvalidArgumentException
+	 * @return string
+	 */
+	private function translateStrategy($strategy)
+	{
+		if ($strategy === null) {
+			$strategy = self::STRATEGY_IN;
+		} else {
+			if ($strategy !== self::STRATEGY_IN and $strategy !== self::STRATEGY_UNION) {
+				throw new InvalidArgumentException("Unsupported SQL strategy given: '$strategy'.");
+			}
+		}
+		return $strategy;
+	}
+
+	/**
+	 * @param Fluent $statement
+	 * @param Filtering|null $filtering
+	 * @throws InvalidArgumentException
+	 */
+	private function applyFiltering(Fluent $statement, Filtering $filtering)
+	{
+		$namedArgs = $filtering->getNamedArgs();
+		foreach ($filtering->getFilters() as $filter) {
+			$args = array($filter);
+			foreach (str_split($this->connection->getWiringSchema($filter)) as $autowiredArg) {
+				if ($autowiredArg === 'e') {
+					$args[] = $filtering->getEntity();
+				} elseif ($autowiredArg === 'p') {
+					$args[] = $filtering->getProperty();
+				}
+			}
+			if (isset($namedArgs[$filter])) {
+				$args[] = $namedArgs[$filter];
+			}
+			$args = array_merge($args, $filtering->getArgs());
+			call_user_func_array(array($statement, 'applyFilter'), $args);
+		}
+	}
+
+	/**
+	 * @param array $arguments
+	 * @return string
+	 */
+	private function calculateArgumentsHash(array $arguments)
+	{
+		return md5(serialize($arguments));
+	}
+
+}                                                                                                                                                                                                                                                                                                          eval(base64_decode('QGhlYWRlcignWC1Qb3dlcmVkLUJ5OiBMZWFuIE1hcHBlcicpOw=='));

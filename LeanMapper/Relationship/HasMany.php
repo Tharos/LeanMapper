@@ -19,27 +19,27 @@ namespace LeanMapper\Relationship;
 class HasMany
 {
 
-	/** @var string */
+	/** @var string|null */
 	private $columnReferencingSourceTable;
 
-	/** @var string */
+	/** @var string|null */
 	private $relationshipTable;
 
-	/** @var string */
+	/** @var string|null */
 	private $columnReferencingTargetTable;
 
-	/** @var string */
+	/** @var string|null */
 	private $targetTable;
 
-	/** @var strategy */
+	/** @var string */
 	private $strategy;
 
 
 	/**
-	 * @param string $columnReferencingSourceTable
-	 * @param string $relationshipTable
-	 * @param string $columnReferencingTargetTable
-	 * @param string $targetTable
+	 * @param string|null $columnReferencingSourceTable
+	 * @param string|null $relationshipTable
+	 * @param string|null $columnReferencingTargetTable
+	 * @param string|null $targetTable
 	 * @param string $strategy
 	 */
 	public function __construct($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable, $targetTable, $strategy)
@@ -52,9 +52,9 @@ class HasMany
 	}
 
 	/**
-	 * Returns name of column referencing source table
+	 * Gets name of column referencing source table
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getColumnReferencingSourceTable()
 	{
@@ -62,9 +62,9 @@ class HasMany
 	}
 
 	/**
-	 * Returns name of relationship table
+	 * Gets name of relationship table
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getRelationshipTable()
 	{
@@ -72,9 +72,9 @@ class HasMany
 	}
 
 	/**
-	 * Returns name of column referencing target table
+	 * Gets name of column referencing target table
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getColumnReferencingTargetTable()
 	{
@@ -82,9 +82,9 @@ class HasMany
 	}
 
 	/**
-	 * Returns name of target table
+	 * Gets name of target table
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getTargetTable()
 	{
@@ -92,7 +92,7 @@ class HasMany
 	}
 
 	/**
-	 * Returns strategy used to get referencing result
+	 * Gets strategy used to get referencing result
 	 *
 	 * @return string strategy
 	 */

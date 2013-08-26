@@ -19,10 +19,10 @@ namespace LeanMapper\Relationship;
 abstract class BelongsTo
 {
 
-	/** @var string */
+	/** @var string|null */
 	private $columnReferencingSourceTable;
 
-	/** @var string */
+	/** @var string|null */
 	private $targetTable;
 
 	/** @var string */
@@ -30,8 +30,8 @@ abstract class BelongsTo
 
 
 	/**
-	 * @param string $columnReferencingSourceTable
-	 * @param string $targetTable
+	 * @param string|null $columnReferencingSourceTable
+	 * @param string|null $targetTable
 	 * @param string $strategy
 	 */
 	public function __construct($columnReferencingSourceTable, $targetTable, $strategy)
@@ -42,9 +42,9 @@ abstract class BelongsTo
 	}
 
 	/**
-	 * Returns name of column referencing source table
+	 * Gets name of column referencing source table
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getColumnReferencingSourceTable()
 	{
@@ -52,9 +52,9 @@ abstract class BelongsTo
 	}
 
 	/**
-	 * Returns name of target table
+	 * Gets name of target table
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getTargetTable()
 	{
@@ -62,7 +62,7 @@ abstract class BelongsTo
 	}
 
 	/**
-	 * Returns strategy used to get referencing result
+	 * Gets strategy used to get referencing result
 	 *
 	 * @return string strategy
 	 */

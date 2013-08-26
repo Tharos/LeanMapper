@@ -15,15 +15,18 @@ use LeanMapper\Exception\InvalidAnnotationException;
 use ReflectionClass;
 
 /**
- * Enumeration of property possible values
+ * Enumeration of possible property values
  *
  * @author Vojtěch Kohout
  */
 class PropertyValuesEnum
 {
 
-	/** @var string[] */
+	/** @var array */
 	private $values = array();
+
+	/** @var array */
+	private $index = array();
 
 
 	/**
@@ -36,10 +39,9 @@ class PropertyValuesEnum
 		$matches = array();
 		preg_match('#^((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+|self|static|parent)::([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+)\*$#', $definition, $matches);
 		if (empty($matches)) {
-			throw new InvalidAnnotationException('Invalid enumeration definition given: ' . $definition);
+			throw new InvalidAnnotationException("Invalid enumeration definition given: '$definition'.");
 		}
-		$class = $matches[1];
-		$prefix = substr($matches[2], 0, -1);
+		list(, $class, $prefix) = $matches;
 
 		if ($class === 'self' or $class === 'static') {
 			$constants = $reflection->getConstants();
@@ -52,20 +54,31 @@ class PropertyValuesEnum
 		}
 		foreach ($constants as $name => $value) {
 			if (substr($name, 0, strlen($prefix)) === $prefix) {
-				$this->values[$value] = true;
+				$this->values[$name] = $value;
+				$this->index[$value] = true;
 			}
 		}
 	}
 
 	/**
-	 * Tells whether value is in list of possible property values
+	 * Tells wheter given value is from enumeration
 	 *
 	 * @param mixed $value
 	 * @return bool
 	 */
 	public function isValueFromEnum($value)
 	{
-		return isset($this->values[$value]);
+		return isset($this->index[$value]);
+	}
+
+	/**
+	 * Gets possible enumeration values
+	 *
+	 * @return array
+	 */
+	public function getValues()
+	{
+		return $this->values;
 	}
 
 }
