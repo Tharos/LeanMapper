@@ -52,7 +52,7 @@ class HasMany
 	}
 
 	/**
-	 * Returns name of column referencing source table
+	 * Gets name of column referencing source table
 	 *
 	 * @return string|null
 	 */
@@ -62,7 +62,7 @@ class HasMany
 	}
 
 	/**
-	 * Returns name of relationship table
+	 * Gets name of relationship table
 	 *
 	 * @return string|null
 	 */
@@ -72,7 +72,7 @@ class HasMany
 	}
 
 	/**
-	 * Returns name of column referencing target table
+	 * Gets name of column referencing target table
 	 *
 	 * @return string|null
 	 */
@@ -82,7 +82,7 @@ class HasMany
 	}
 
 	/**
-	 * Returns name of target table
+	 * Gets name of target table
 	 *
 	 * @return string|null
 	 */
@@ -92,7 +92,7 @@ class HasMany
 	}
 
 	/**
-	 * Returns strategy used to get referencing result
+	 * Gets strategy used to get referencing result
 	 *
 	 * @return string strategy
 	 */

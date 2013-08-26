@@ -37,7 +37,7 @@ class HasOne
 	}
 
 	/**
-	 * Returns name of column referencing target table
+	 * Gets name of column referencing target table
 	 *
 	 * @return string|null
 	 */
@@ -47,7 +47,7 @@ class HasOne
 	}
 
 	/**
-	 * Returns name of target table
+	 * Gets name of target table
 	 *
 	 * @return string|null
 	 */

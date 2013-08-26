@@ -18,7 +18,7 @@ use LeanMapper\Exception\InvalidArgumentException;
  */
 class Events
 {
-	
+
 	const EVENT_BEFORE_PERSIST = 'beforePersist';
 
 	const EVENT_BEFORE_CREATE = 'beforeCreate';
@@ -49,6 +49,8 @@ class Events
 
 
 	/**
+	 * Registers new callback for given event
+	 *
 	 * @param string $event
 	 * @param mixed $callback
 	 */
@@ -59,6 +61,8 @@ class Events
 	}
 
 	/**
+	 * Invokes callbacks registered for given event
+	 *
 	 * @param string $event
 	 * @param mixed $arg
 	 * @throws InvalidArgumentException
@@ -72,6 +76,8 @@ class Events
 	}
 
 	/**
+	 * Gets reference to array of registered events
+	 *
 	 * @param string $event
 	 * @return array
 	 */

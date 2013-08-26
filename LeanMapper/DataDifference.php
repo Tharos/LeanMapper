@@ -14,6 +14,8 @@ namespace LeanMapper;
 use LeanMapper\Exception\InvalidArgumentException;
 
 /**
+ * Represents changes in M:N relationship
+ *
  * @author Vojtěch Kohout
  */
 class DataDifference
@@ -37,6 +39,8 @@ class DataDifference
 	}
 
 	/**
+	 * Performs quick lookup whether current instance may have any differences
+	 *
 	 * @return bool
 	 */
 	public function mayHaveAny()
@@ -45,6 +49,8 @@ class DataDifference
 	}
 
 	/**
+	 * Gets differences by given pivot
+	 *
 	 * @param mixed $pivot
 	 * @return array
 	 * @throws InvalidArgumentException

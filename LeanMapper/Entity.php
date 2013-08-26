@@ -24,7 +24,7 @@ use LeanMapper\Row;
 use Traversable;
 
 /**
- * Base class for custom entities
+ * Base class for concrete entities
  *
  * @author Vojtěch Kohout
  */
@@ -49,6 +49,8 @@ abstract class Entity
 
 
 	/**
+	 * Gets reflection of current entity
+	 *
 	 * @param IMapper|null $mapper
 	 * @return EntityReflection
 	 */
@@ -94,7 +96,7 @@ abstract class Entity
 	}
 
 	/**
-	 * Returns value of given field
+	 * Gets value of given property
 	 *
 	 * @param string $name
 	 * @return mixed
@@ -103,7 +105,7 @@ abstract class Entity
 	 * @throws RuntimeException
 	 * @throws InvalidMethodCallException
 	 */
-	public function __get($name/*, array $filterArgs*/)
+	public function __get($name /*, array $filterArgs*/)
 	{
 		$reflection = $this->getCurrentReflection();
 		$nativeGetter = $reflection->getGetter('get' . ucfirst($name));
@@ -187,7 +189,7 @@ abstract class Entity
 	}
 
 	/**
-	 * Sets value of given field
+	 * Sets value of given property
 	 *
 	 * @param string $name
 	 * @param mixed $value
@@ -256,9 +258,9 @@ abstract class Entity
 							}
 							$mapper = $value->mapper; // mapper stealing :)
 							$table = $mapper->getTable(get_class($value));
-							$idField = $mapper->getEntityField($table, $mapper->getPrimaryKey($table));
+							$idProperty = $mapper->getEntityField($table, $mapper->getPrimaryKey($table));
 
-							$value = $value->$idField;
+							$value = $value->$idProperty;
 							$this->row->cleanReferencedRowsCache($table, $column);
 						} else {
 							if (!is_object($value)) {
@@ -276,6 +278,8 @@ abstract class Entity
 	}
 
 	/**
+	 * Tells whether given property exists and is not null
+	 *
 	 * @param string $name
 	 * @return bool
 	 */
@@ -289,8 +293,6 @@ abstract class Entity
 	}
 
 	/**
-	 * Calls __get() or __set() method when get<$name> or set<$name> methods don't exist
-	 *
 	 * @param string $name
 	 * @param array $arguments
 	 * @return mixed
@@ -320,7 +322,7 @@ abstract class Entity
 	}
 
 	/**
-	 * Performs a mass value assignment (using setters)
+	 * Performs mass value assignment (using setters)
 	 *
 	 * @param array|Traversable $values
 	 * @param array|null $whitelist
@@ -335,15 +337,15 @@ abstract class Entity
 			$type = gettype($values) !== 'object' ? gettype($values) : 'instance of ' . get_class($values);
 			throw new InvalidArgumentException("Argument \$values must contain either array or instance of Traversable, $type given.");
 		}
-		foreach ($values as $field => $value) {
-			if ($whitelist === null or isset($whitelist[$field])) {
-				$this->__set($field, $value);
+		foreach ($values as $property => $value) {
+			if ($whitelist === null or isset($whitelist[$property])) {
+				$this->__set($property, $value);
 			}
 		}
 	}
 
 	/**
-	 * Returns array of high-level fields with values
+	 * Gets high-level values of properties
 	 *
 	 * @param array|null $whitelist
 	 * @return array
@@ -384,7 +386,7 @@ abstract class Entity
 	}
 
 	/**
-	 * Returns array of low-level fields with values
+	 * Gets low-level values of underlying Row columns
 	 *
 	 * @return array
 	 */
@@ -394,7 +396,7 @@ abstract class Entity
 	}
 
 	/**
-	 * Returns array of modified low-level fields with new values
+	 * Gets low-level values of underlying Row columns that were modified
 	 *
 	 * @return array
 	 */
@@ -404,6 +406,8 @@ abstract class Entity
 	}
 
 	/**
+	 * Gets current M:N differences
+	 *
 	 * @return array
 	 */
 	public function getHasManyRowDifferences()
@@ -427,13 +431,41 @@ abstract class Entity
 	}
 
 	/**
-	 * Tells whether entity is in modified state
+	 * Tells whether entity was modified
 	 *
 	 * @return bool
 	 */
 	public function isModified()
 	{
 		return $this->row->isModified();
+	}
+
+	/**
+	 * Marks entity as non-modified (isModified returns false right after this method call)
+	 */
+	public function markAsUpdated()
+	{
+		$this->row->markAsUpdated();
+	}
+
+	/**
+	 * Marks entity as attached
+	 *
+	 * @param int $id
+	 * @param string $table
+	 * @param Connection $connection
+	 */
+	public function markAsAttached($id, $table, Connection $connection)
+	{
+		$this->row->markAsAttached($id, $table, $connection);
+	}
+
+	/**
+	 * Marks entity as detached
+	 */
+	public function detach()
+	{
+		$this->row->detach();
 	}
 
 	/**
@@ -444,14 +476,6 @@ abstract class Entity
 	public function isDetached()
 	{
 		return $this->row->isDetached();
-	}
-
-	/**
-	 * Marks entity as detached (it means non-persisted)
-	 */
-	public function detach()
-	{
-		$this->row->detach();
 	}
 
 	/**
@@ -488,26 +512,8 @@ abstract class Entity
 	}
 
 	/**
-	 * Marks entity as persisted
+	 * Gets current entity's reflection (cached in memory)
 	 *
-	 * @param int $id
-	 * @param string $table
-	 * @param Connection $connection
-	 */
-	public function markAsAttached($id, $table, Connection $connection)
-	{
-		$this->row->markAsAttached($id, $table, $connection);
-	}
-
-	/**
-	 * Marks entity as non-updated (isModified() returns false right after this method call)
-	 */
-	public function markAsUpdated()
-	{
-		$this->row->markAsUpdated();
-	}
-
-	/**
 	 * @return EntityReflection
 	 */
 	protected function getCurrentReflection()
@@ -519,6 +525,8 @@ abstract class Entity
 	}
 
 	/**
+	 * Allows encapsulate set of entities in custom collection
+	 *
 	 * @param array $entities
 	 * @return array
 	 */
@@ -527,6 +535,9 @@ abstract class Entity
 		return $entities;
 	}
 
+	/**
+	 * Allows initialize properties' default values
+	 */
 	protected function initDefaults()
 	{
 	}
@@ -566,7 +577,7 @@ abstract class Entity
 	 * @return Entity[]
 	 * @throws InvalidValueException
 	 */
-	private function getHasManyValue(Property $property,  Filtering $relTableFiltering = null,  Filtering $targetTableFiltering = null)
+	private function getHasManyValue(Property $property, Filtering $relTableFiltering = null, Filtering $targetTableFiltering = null)
 	{
 		$relationship = $property->getRelationship();
 		$targetTable = $relationship->getTargetTable();

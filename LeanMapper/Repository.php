@@ -18,7 +18,7 @@ use LeanMapper\Reflection\AnnotationsParser;
 use ReflectionClass;
 
 /**
- * Base class for custom repositories
+ * Base class for concrete repositories
  *
  * @author Vojtěch Kohout
  */
@@ -70,12 +70,15 @@ abstract class Repository
 		}
 	}
 
+	/**
+	 * Allows initialize repository's events
+	 */
 	protected function initEvents()
 	{
 	}
 
 	/**
-	 * Stores modified fields of entity into database or creates new row in database when entity is in detached state
+	 * Stores values of entity's modified properties into database (inserts new row when entity is in detached state)
 	 *
 	 * @param Entity $entity
 	 * @return mixed
@@ -128,6 +131,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Performs database insert (can be customized)
+	 *
 	 * @param Entity $entity
 	 * @return mixed
 	 */
@@ -142,6 +147,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Performs database update (can be customized)
+	 *
 	 * @param Entity $entity
 	 * @return mixed
 	 */
@@ -156,6 +163,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Performs database delete (can be customized)
+	 *
 	 * @param mixed $arg
 	 */
 	protected function deleteFromDatabase($arg)
@@ -170,6 +179,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Persists changes in M:N relationships
+	 *
 	 * @param Entity $entity
 	 */
 	protected function persistHasManyChanges(Entity $entity)
@@ -190,7 +201,7 @@ abstract class Repository
 					}
 				} else {
 					$this->connection->query(
-						'DELETE FROM %n WHERE %n = ? AND %n = ? %lmt', $relationshipTable, $columnReferencingSourceTable, $entity->$idField, $columnReferencingTargetTable, $value, - $count
+						'DELETE FROM %n WHERE %n = ? AND %n = ? %lmt', $relationshipTable, $columnReferencingSourceTable, $entity->$idField, $columnReferencingTargetTable, $value, -$count
 					);
 				}
 			}
@@ -203,7 +214,7 @@ abstract class Repository
 	}
 
 	/**
-	 * Helps to create entity instance from given DibiRow instance
+	 * Creates new Entity instance from given DibiRow instance
 	 *
 	 * @param DibiRow $dibiRow
 	 * @param string|null $entityClass
@@ -226,7 +237,7 @@ abstract class Repository
 	}
 
 	/**
-	 * Helps to create array of entities from given array of DibiRow instances
+	 * Creates new set of Entity's instances from given array of DibiRow instances
 	 *
 	 * @param DibiRow[] $rows
 	 * @param string|null $entityClass
@@ -256,7 +267,7 @@ abstract class Repository
 	}
 
 	/**
-	 * Returns name of database table related to entity which repository can handle
+	 * Gets name of (main) database table related to entity that repository can handle
 	 *
 	 * @return string
 	 * @throws InvalidStateException
@@ -277,6 +288,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Allows encapsulate set of entities in custom collection
+	 *
 	 * @param array $entities
 	 * @return array
 	 */
@@ -286,6 +299,8 @@ abstract class Repository
 	}
 
 	/**
+	 * Checks whether give entity is instance of required type
+	 *
 	 * @param Entity $entity
 	 * @throws InvalidArgumentException
 	 */
@@ -311,5 +326,5 @@ abstract class Repository
 		}
 		return $this->docComment;
 	}
-	
+
 }

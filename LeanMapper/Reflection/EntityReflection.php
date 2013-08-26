@@ -58,7 +58,7 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
-	 * Gets requested entity property
+	 * Gets requested entity's property
 	 *
 	 * @param string $name
 	 * @return Property|null
@@ -69,7 +69,7 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
-	 * Gets array of entity properties
+	 * Gets array of all entity's properties
 	 *
 	 * @return Property[]
 	 */
@@ -79,7 +79,7 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
-	 * Gets LeanMapper\Reflection\Aliases instance valid for current class
+	 * Gets Aliases instance relevant to current class
 	 *
 	 * @return Aliases
 	 */
@@ -92,7 +92,7 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
-	 * Returns parent entity reflection
+	 * Gets parent entity's reflection
 	 *
 	 * @return self|null
 	 */
@@ -102,7 +102,7 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
-	 * Returns doc comment of current class
+	 * Gets doc comment of current class
 	 *
 	 * @return string
 	 */
@@ -115,7 +115,7 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
-	 * Gets requested getter reflection
+	 * Gets requested getter's reflection
 	 *
 	 * @param string $name
 	 * @return ReflectionMethod|null
@@ -126,7 +126,7 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
-	 * Gets array of getter reflections
+	 * Gets array of getter's reflections
 	 *
 	 * @return ReflectionMethod[]
 	 */
@@ -136,7 +136,7 @@ class EntityReflection extends \ReflectionClass
 	}
 
 	/**
-	 * Gets requested setter reflection
+	 * Gets requested setter's reflection
 	 *
 	 * @param string $name
 	 * @return ReflectionMethod|null
@@ -149,6 +149,9 @@ class EntityReflection extends \ReflectionClass
 	////////////////////
 	////////////////////
 
+	/**
+	 * @throws InvalidStateException
+	 */
 	private function parseProperties()
 	{
 		$this->properties = array();

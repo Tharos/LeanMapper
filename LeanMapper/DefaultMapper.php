@@ -28,15 +28,15 @@ class DefaultMapper implements IMapper
 	protected $relationshipTableGlue = '_';
 
 
-	/**
-	 * @inheritdoc TODO: fix comments
+	/*
+	 * @inheritdoc
 	 */
 	public function getPrimaryKey($table)
 	{
 		return 'id';
 	}
 
-	/**
+	/*
 	 * @inheritdoc
 	 */
 	public function getTable($entityClass)
@@ -44,7 +44,7 @@ class DefaultMapper implements IMapper
 		return strtolower($this->trimNamespace($entityClass));
 	}
 
-	/**
+	/*
 	 * @inheritdoc
 	 */
 	public function getEntityClass($table, Row $row = null)
@@ -52,7 +52,7 @@ class DefaultMapper implements IMapper
 		return $this->defaultEntityNamespace . '\\' . ucfirst($table);
 	}
 
-	/**
+	/*
 	 * @inheritdoc
 	 */
 	public function getColumn($entityClass, $field)
@@ -60,7 +60,7 @@ class DefaultMapper implements IMapper
 		return $field;
 	}
 
-	/**
+	/*
 	 * @inheritdoc
 	 */
 	public function getEntityField($table, $column)
@@ -68,7 +68,7 @@ class DefaultMapper implements IMapper
 		return $column;
 	}
 
-	/**
+	/*
 	 * @inheritdoc
 	 */
 	public function getRelationshipTable($sourceTable, $targetTable)
@@ -76,7 +76,7 @@ class DefaultMapper implements IMapper
 		return $sourceTable . $this->relationshipTableGlue . $targetTable;
 	}
 
-	/**
+	/*
 	 * @inheritdoc
 	 */
 	public function getRelationshipColumn($sourceTable, $targetTable)
@@ -84,7 +84,7 @@ class DefaultMapper implements IMapper
 		return $targetTable . '_' . $this->getPrimaryKey($targetTable);
 	}
 
-	/**
+	/*
 	 * @inheritdoc
 	 */
 	public function getTableByRepositoryClass($repositoryClass)
@@ -97,6 +97,8 @@ class DefaultMapper implements IMapper
 	}
 
 	/**
+	 * Trims namespace part from fully qualified class name
+	 *
 	 * @param $class
 	 * @return string
 	 */

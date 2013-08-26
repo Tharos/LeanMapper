@@ -33,6 +33,8 @@ class Connection extends DibiConnection
 
 
 	/**
+	 * Registers new filter
+	 *
 	 * @param string $name
 	 * @param mixed $callback
 	 * @param string|int|null $wiringSchema
@@ -53,6 +55,8 @@ class Connection extends DibiConnection
 	}
 
 	/**
+	 * Gets callable filter's callback
+	 *
 	 * @param string $name
 	 * @return callable
 	 */
@@ -63,6 +67,8 @@ class Connection extends DibiConnection
 	}
 
 	/**
+	 * Gets wiring schema
+	 *
 	 * @param string $filterName
 	 * @return string
 	 */
@@ -73,6 +79,8 @@ class Connection extends DibiConnection
 	}
 
 	/**
+	 * Creates new instance of Fluent
+	 *
 	 * @return Fluent
 	 */
 	public function command()

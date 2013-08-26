@@ -15,7 +15,7 @@ use LeanMapper\Exception\InvalidAnnotationException;
 use ReflectionClass;
 
 /**
- * Enumeration of property possible values
+ * Enumeration of possible property values
  *
  * @author Vojtěch Kohout
  */
@@ -61,7 +61,7 @@ class PropertyValuesEnum
 	}
 
 	/**
-	 * Tells whether value is in list of possible property values
+	 * Tells wheter given value is from enumeration
 	 *
 	 * @param mixed $value
 	 * @return bool
@@ -72,6 +72,8 @@ class PropertyValuesEnum
 	}
 
 	/**
+	 * Gets possible enumeration values
+	 *
 	 * @return array
 	 */
 	public function getValues()

@@ -18,8 +18,6 @@ use LeanMapper\Relationship;
 use LeanMapper\Result;
 
 /**
- * Property factory
- *
  * @author Vojtěch Kohout
  */
 class PropertyFactory
@@ -34,7 +32,7 @@ class PropertyFactory
 	}
 
 	/**
-	 * Creates new LeanMapper\Reflection\Property instance from given annotation
+	 * Creates new Property instance from given annotation
 	 *
 	 * @param string $annotationType
 	 * @param string $annotation

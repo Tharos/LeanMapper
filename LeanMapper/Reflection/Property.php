@@ -19,7 +19,7 @@ use LeanMapper\Relationship\HasMany;
 use LeanMapper\Relationship\HasOne;
 
 /**
- * Entity property (field) reflection
+ * Reflection of entity's property
  *
  * @author Vojtěch Kohout
  */
@@ -104,7 +104,7 @@ class Property
 	}
 
 	/**
-	 * Returns property name
+	 * Gets property name
 	 *
 	 * @return string
 	 */
@@ -114,7 +114,7 @@ class Property
 	}
 
 	/**
-	 * Returns property column
+	 * Gets name of column holding low-level value
 	 *
 	 * @return string|null
 	 */
@@ -134,6 +134,8 @@ class Property
 	}
 
 	/**
+	 * Tells whether property has default value (defined in annotation)
+	 *
 	 * @return bool
 	 */
 	public function hasDefaultValue()
@@ -142,6 +144,8 @@ class Property
 	}
 
 	/**
+	 * Gets default value of property (as defined in annotation)
+	 *
 	 * @return mixed|null
 	 */
 	public function getDefaultValue()
@@ -150,7 +154,7 @@ class Property
 	}
 
 	/**
-	 * Returns property type
+	 * Gets property type
 	 *
 	 * @return string
 	 */
@@ -210,6 +214,8 @@ class Property
 	}
 
 	/**
+	 * Gets getter method
+	 *
 	 * @return string|null
 	 */
 	public function getGetter()
@@ -218,6 +224,8 @@ class Property
 	}
 
 	/**
+	 * Gets setter method
+	 *
 	 * @return string|null
 	 */
 	public function getSetter()
@@ -226,7 +234,7 @@ class Property
 	}
 
 	/**
-	 * Returns property filters
+	 * Gets property filters
 	 *
 	 * @param int $index
 	 * @return array|null
@@ -237,6 +245,8 @@ class Property
 	}
 
 	/**
+	 * Gets filters arguments hard-coded in annotation
+	 *
 	 * @param int $index
 	 * @return array|string|null
 	 */
@@ -246,6 +256,8 @@ class Property
 	}
 
 	/**
+	 * Gets getter pass
+	 *
 	 * @return string|null
 	 */
 	public function getGetterPass()
@@ -254,6 +266,8 @@ class Property
 	}
 
 	/**
+	 * Gets setter pass
+	 *
 	 * @return string|null
 	 */
 	public function getSetterPass()
@@ -272,7 +286,7 @@ class Property
 	}
 
 	/**
-	 * Tells wheter given value is from enumeration of possible values
+	 * Tells wheter given value is from enumeration
 	 *
 	 * @param mixed $value
 	 * @return bool
@@ -285,6 +299,8 @@ class Property
 	}
 
 	/**
+	 * Gets possible enumeration values
+	 *
 	 * @return array
 	 */
 	public function getEnumValues()
@@ -294,6 +310,8 @@ class Property
 	}
 
 	/**
+	 * Tells whether property has custom flag
+	 *
 	 * @param string $name
 	 * @return bool
 	 */
@@ -303,6 +321,8 @@ class Property
 	}
 
 	/**
+	 * Gets value of requested custom flag
+	 *
 	 * @param string $name
 	 * @return string
 	 * @throws InvalidArgumentException

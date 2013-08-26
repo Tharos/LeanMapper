@@ -58,6 +58,8 @@ class PropertyPasses
 	}
 
 	/**
+	 * Gets getter pass
+	 *
 	 * @return string|null
 	 */
 	public function getGetterPass()
@@ -66,6 +68,8 @@ class PropertyPasses
 	}
 
 	/**
+	 * Gets setter pass
+	 *
 	 * @return string|null
 	 */
 	public function getSetterPass()

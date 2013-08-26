@@ -42,7 +42,7 @@ abstract class BelongsTo
 	}
 
 	/**
-	 * Returns name of column referencing source table
+	 * Gets name of column referencing source table
 	 *
 	 * @return string|null
 	 */
@@ -52,7 +52,7 @@ abstract class BelongsTo
 	}
 
 	/**
-	 * Returns name of target table
+	 * Gets name of target table
 	 *
 	 * @return string|null
 	 */
@@ -62,7 +62,7 @@ abstract class BelongsTo
 	}
 
 	/**
-	 * Returns strategy used to get referencing result
+	 * Gets strategy used to get referencing result
 	 *
 	 * @return string strategy
 	 */

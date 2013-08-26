@@ -65,6 +65,8 @@ class PropertyMethods
 	}
 
 	/**
+	 * Gets getter method
+	 *
 	 * @return string|null
 	 */
 	public function getGetter()
@@ -73,6 +75,8 @@ class PropertyMethods
 	}
 
 	/**
+	 * Gets setter method
+	 *
 	 * @return string|null
 	 */
 	public function getSetter()

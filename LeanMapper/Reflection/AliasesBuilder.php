@@ -12,8 +12,6 @@
 namespace LeanMapper\Reflection;
 
 /**
- * Behaves like factory of LeanMapper\Reflection\Aliases
- *
  * @author Vojtěch Kohout
  */
 class AliasesBuilder
@@ -30,7 +28,7 @@ class AliasesBuilder
 
 
 	/**
-	 * Reset current definition
+	 * Sets current definition to empty string
 	 */
 	public function resetCurrent()
 	{
@@ -70,7 +68,7 @@ class AliasesBuilder
 	}
 
 	/**
-	 * Creates new LeanMapper\Reflection\Aliases instance
+	 * Creates new Aliases instance
 	 *
 	 * @param string $namespace
 	 * @return Aliases

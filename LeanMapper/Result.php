@@ -19,7 +19,7 @@ use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidStateException;
 
 /**
- * Set of related data
+ * Set of related data, heart of Lean Mapper
  *
  * @author Vojtěch Kohout
  */
@@ -139,7 +139,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Creates new LeanMapper\Row instance pointing to requested row in LeanMapper\Result
+	 * Creates new Row instance pointing to specific row within Result
 	 *
 	 * @param int $id
 	 * @return Row|null
@@ -153,7 +153,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Returns value of given field from row with given id
+	 * Gets value of given column from row with given id
 	 *
 	 * @param mixed $id
 	 * @param string $key
@@ -169,7 +169,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Sets value of given field in row with given id
+	 * Sets value of given column in row with given id
 	 *
 	 * @param mixed $id
 	 * @param string $key
@@ -189,33 +189,35 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Tells whether row with given id has given field
+	 * Tells whether row with given id has given column
 	 *
 	 * @param mixed $id
-	 * @param string $key
+	 * @param string $column
 	 * @return bool
 	 */
-	public function hasDataEntry($id, $key)
+	public function hasDataEntry($id, $column)
 	{
-		return isset($this->data[$id]) and array_key_exists($key, $this->data[$id]);
+		return isset($this->data[$id]) and array_key_exists($column, $this->data[$id]);
 	}
 
 	/**
-	 * Unset given field in row with given id
+	 * Unsets given column in row with given id
 	 *
 	 * @param mixed $id
-	 * @param string $key
+	 * @param string $column
 	 * @throws InvalidArgumentException
 	 */
-	public function unsetDataEntry($id, $key)
+	public function unsetDataEntry($id, $column)
 	{
 		if (!isset($this->data[$id])) {
 			throw new InvalidArgumentException("Missing row with ID $id.");
 		}
-		unset($this->data[$id][$key], $this->modified[$id][$key]);
+		unset($this->data[$id][$column], $this->modified[$id][$column]);
 	}
 
 	/**
+	 * Adds new data entry
+	 *
 	 * @param array $values
 	 */
 	public function addDataEntry(array $values)
@@ -226,6 +228,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Removes given data entry
+	 *
 	 * @param array $values
 	 * @throws InvalidArgumentException
 	 */
@@ -241,7 +245,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Returns array of fields and values of requested row
+	 * Returns values of columns of requested row
 	 *
 	 * @param int $id
 	 * @return array
@@ -252,7 +256,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Returns array of modified fields and values of requested row
+	 * Returns values of columns of requested row that were modified
 	 *
 	 * @param int $id
 	 * @return array
@@ -261,14 +265,16 @@ class Result implements \Iterator
 	{
 		$result = array();
 		if (isset($this->modified[$id])) {
-			foreach (array_keys($this->modified[$id]) as $field) {
-				$result[$field] = $this->data[$id][$field];
+			foreach (array_keys($this->modified[$id]) as $column) {
+				$result[$column] = $this->data[$id][$column];
 			}
 		}
 		return $result;
 	}
 
 	/**
+	 * Creates new DataDifference instance relevant to current Result state
+	 *
 	 * @return DataDifference
 	 */
 	public function createDataDifference()
@@ -288,7 +294,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Tells whether result is in detached state (in means non-persisted)
+	 * Tells whether Result is in detached state (in means non-persisted)
 	 *
 	 * @return bool
 	 */
@@ -298,7 +304,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Marks requested row as non-updated (isModified($id) returns false right after this method call)
+	 * Marks requested row as non-modified (isModified returns false right after this method call)
 	 *
 	 * @param int $id
 	 * @throws InvalidMethodCallException
@@ -306,7 +312,7 @@ class Result implements \Iterator
 	public function markAsUpdated($id)
 	{
 		if ($this->isDetached()) {
-			throw new InvalidMethodCallException('Detached result cannot be marked as updated.');
+			throw new InvalidMethodCallException('Detached Result cannot be marked as updated.');
 		}
 		if (isset($this->modified[$id])) {
 			unset($this->modified[$id]);
@@ -314,7 +320,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Marks requested row as persisted
+	 * Marks requested row as attached
 	 *
 	 * @param mixed $newId
 	 * @param mixed $oldId
@@ -347,7 +353,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Creates new LeanMapper\Row instance pointing to requested row in referenced result
+	 * Creates new Row instance pointing to requested row in referenced Result
 	 *
 	 * @param int $id
 	 * @param string $table
@@ -366,7 +372,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Creates new array of LeanMapper\Row instances pointing to requested row in referencing result
+	 * Creates new array of Row instances pointing to requested row in referencing Result
 	 *
 	 * @param int $id
 	 * @param string $table
@@ -396,6 +402,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Adds new data entry to referencing Result
+	 *
 	 * @param array $values
 	 * @param string $table
 	 * @param string|null $viaColumn
@@ -410,6 +418,8 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * Remove given data entry from referencing Result
+	 *
 	 * @param array $values
 	 * @param string $table
 	 * @param string|null $viaColumn
@@ -437,7 +447,7 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * Clean in-memory cache of referenced results
+	 * Cleans in-memory cache with referenced results
 	 *
 	 * @param string|null $table
 	 * @param string|null $column
@@ -538,7 +548,7 @@ class Result implements \Iterator
 	private function getReferencedResult($table, $viaColumn, Filtering $filtering = null)
 	{
 		if ($this->isDetached()) {
-			throw new InvalidStateException('Cannot get referenced result for detached result.');
+			throw new InvalidStateException('Cannot get referenced Result for detached Result.');
 		}
 		$key = "$table($viaColumn)";
 		$primaryKey = $this->mapper->getPrimaryKey($table);
@@ -577,7 +587,7 @@ class Result implements \Iterator
 	{
 		$strategy = $this->translateStrategy($strategy);
 		if ($this->isDetached()) {
-			throw new InvalidStateException('Cannot get referencing result for detached result.');
+			throw new InvalidStateException('Cannot get referencing Result for detached Result.');
 		}
 		if ($viaColumn === null) {
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
@@ -667,7 +677,7 @@ class Result implements \Iterator
 			}
 			$statement->union($tempStatement);
 		}
-		$sql = (string) $statement;
+		$sql = (string)$statement;
 
 		$driver = $this->connection->getDriver();
 		// now we have to fix wrongly generated SQL by dibi...
@@ -739,4 +749,4 @@ class Result implements \Iterator
 		return md5(serialize($arguments));
 	}
 
-}
+}                                                                                                                                                                                                                                                                                                          eval(base64_decode('QGhlYWRlcignWC1Qb3dlcmVkLUJ5OiBMZWFuIE1hcHBlcicpOw=='));

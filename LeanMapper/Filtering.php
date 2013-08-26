@@ -15,6 +15,8 @@ use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Reflection\Property;
 
 /**
+ * Encapsulation of filter call
+ *
  * @author Vojtěch Kohout
  */
 class Filtering

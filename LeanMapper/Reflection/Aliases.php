@@ -37,7 +37,7 @@ class Aliases
 	}
 
 	/**
-	 * Returns fully qualified class name
+	 * Determines fully qualified class name
 	 *
 	 * @param string $identifier
 	 * @return string

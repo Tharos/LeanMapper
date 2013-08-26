@@ -12,7 +12,7 @@
 namespace LeanMapper;
 
 /**
- * Interface for custom mappings
+ * Mapper interface
  *
  * @author Vojtěch Kohout
  */
@@ -20,7 +20,7 @@ interface IMapper
 {
 
 	/**
-	 * Returns primary key name from given table name
+	 * Gets primary key name from given table name
 	 *
 	 * @param string $table
 	 * @return string
@@ -28,7 +28,7 @@ interface IMapper
 	public function getPrimaryKey($table);
 
 	/**
-	 * Returns table name from given fully qualified entity class name
+	 * Gets table name from given fully qualified entity class name
 	 *
 	 * @param string $entityClass
 	 * @return string
@@ -36,7 +36,7 @@ interface IMapper
 	public function getTable($entityClass);
 
 	/**
-	 * Returns fully qualified entity class name from given table name
+	 * Gets fully qualified entity class name from given table name
 	 *
 	 * @param string $table
 	 * @param Row|null $row
@@ -45,7 +45,7 @@ interface IMapper
 	public function getEntityClass($table, Row $row = null);
 
 	/**
-	 * Returns table column name from given fully qualified entity class name and entity field name
+	 * Gets table column name from given fully qualified entity class name and entity field name
 	 *
 	 * @param string $entityClass
 	 * @param string $field
@@ -54,7 +54,7 @@ interface IMapper
 	public function getColumn($entityClass, $field);
 
 	/**
-	 * Returns entity field name from given table name and table column
+	 * Gets entity field (property) name from given table name and table column
 	 *
 	 * @param string $table
 	 * @param string $column
@@ -63,7 +63,7 @@ interface IMapper
 	public function getEntityField($table, $column);
 
 	/**
-	 * Returns relationship table name from given source table name and target table name
+	 * Gets relationship table name from given source table name and target table name
 	 *
 	 * @param string $sourceTable
 	 * @param string $targetTable
@@ -72,7 +72,7 @@ interface IMapper
 	public function getRelationshipTable($sourceTable, $targetTable);
 
 	/**
-	 * Returns name of column that contains foreign key from given source table name and target table name
+	 * Gets name of column that contains foreign key from given source table name and target table name
 	 *
 	 * @param string $sourceTable
 	 * @param string $targetTable
@@ -81,7 +81,7 @@ interface IMapper
 	public function getRelationshipColumn($sourceTable, $targetTable);
 
 	/**
-	 * Returns table name from repository class name
+	 * Gets table name from repository class name
 	 *
 	 * @param string $repositoryClass
 	 * @return string

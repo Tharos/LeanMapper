@@ -12,7 +12,7 @@
 namespace LeanMapper;
 
 /**
- * Pointer to specific position inside LeanMapper\Result instance
+ * Pointer to specific position within Result instance
  *
  * @author Vojtěch Kohout
  */
@@ -37,7 +37,7 @@ class Row
 	}
 
 	/**
-	 * Returns value of given column
+	 * Gets value of given column
 	 *
 	 * @param string $name
 	 * @return mixed
@@ -96,7 +96,7 @@ class Row
 	}
 
 	/**
-	 * Returns array of columns with values
+	 * Returns values of columns
 	 *
 	 * @return array
 	 */
@@ -106,7 +106,7 @@ class Row
 	}
 
 	/**
-	 * Returns array of modified columns with new values
+	 * Returns values of columns that were modified
 	 *
 	 * @return array
 	 */
@@ -116,7 +116,7 @@ class Row
 	}
 
 	/**
-	 * Tells whether row is in modified state
+	 * Tells whether Row is in modified state
 	 *
 	 * @return bool
 	 */
@@ -126,7 +126,7 @@ class Row
 	}
 
 	/**
-	 * Tells whether row is in detached state
+	 * Tells whether Row is in detached state
 	 *
 	 * @return bool
 	 */
@@ -136,7 +136,7 @@ class Row
 	}
 
 	/**
-	 * Detach row (it means mark it as non-persisted)
+	 * Detaches Row (it means mark it as non-persisted)
 	 */
 	public function detach()
 	{
@@ -149,7 +149,7 @@ class Row
 	}
 
 	/**
-	 * Marks row as non-updated (isModified() returns false right after this method call)
+	 * Marks Row as non-modified (isModified returns false right after this method call)
 	 */
 	public function markAsUpdated()
 	{
@@ -157,7 +157,7 @@ class Row
 	}
 
 	/**
-	 * Marks row as persisted
+	 * Marks Row as attached
 	 *
 	 * @param int $id
 	 * @param string $table
@@ -170,7 +170,7 @@ class Row
 	}
 
 	/**
-	 * Returns referenced LeanMapper\Row instance
+	 * Gets referenced Row instance
 	 *
 	 * @param string $table
 	 * @param string|null $viaColumn
@@ -183,7 +183,7 @@ class Row
 	}
 
 	/**
-	 * Returns array of LeanMapper\Row instances referencing current row
+	 * Gets array of Row instances referencing current Row
 	 *
 	 * @param string $table
 	 * @param string|null $viaColumn
@@ -197,6 +197,8 @@ class Row
 	}
 
 	/**
+	 * Adds new data entry to referencing Result
+	 *
 	 * @param array $values
 	 * @param string $table
 	 * @param string|null $viaColumn
@@ -209,11 +211,12 @@ class Row
 	}
 
 	/**
+	 * Remove given data entry from referencing Result
+	 *
 	 * @param array $values
 	 * @param string $table
 	 * @param string|null $viaColumn
 	 * @param Filtering|null $filtering
-
 	 * @param string|null $strategy
 	 */
 	public function removeFromReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
@@ -234,7 +237,7 @@ class Row
 	}
 
 	/**
-	 * Clean in-memory cache of referenced rows
+	 * Cleans in-memory cache with referenced rows
 	 *
 	 * @param string|null $table
 	 * @param string|null $column
@@ -248,7 +251,6 @@ class Row
 	 * @param string $table
 	 * @param string|null $viaColumn
 	 * @param Filtering|null $filtering
-
 	 * @param string|null $strategy
 	 */
 	public function cleanReferencingAddedAndRemovedMeta($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)

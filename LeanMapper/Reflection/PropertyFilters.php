@@ -57,7 +57,7 @@ class PropertyFilters
 	}
 
 	/**
-	 * Returns array of entity filters (array of filter names)
+	 * Gets array of entity's filters (array of filter names)
 	 *
 	 * @param int $index
 	 * @return array
@@ -71,6 +71,8 @@ class PropertyFilters
 	}
 
 	/**
+	 * Gets filters arguments hard-coded in annotation
+	 *
 	 * @param int $index
 	 * @return array
 	 */

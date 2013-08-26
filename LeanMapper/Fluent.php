@@ -22,6 +22,8 @@ class Fluent extends DibiFluent
 {
 
 	/**
+	 * Applies given filter to current statement
+	 *
 	 * @param string $name
 	 * @param mixed|null $args
 	 * @return $this
@@ -35,6 +37,8 @@ class Fluent extends DibiFluent
 	}
 
 	/**
+	 * Exports current state
+	 *
 	 * @param string|null $clause
 	 * @param array|null $args
 	 * @return string
