@@ -308,7 +308,10 @@ abstract class Entity
 			return $this->__get(lcfirst(substr($name, 3)), $arguments);
 
 		} elseif (substr($name, 0, 3) === 'set') {
-			$this->__set(lcfirst(substr($name, 3)), $arguments);
+			if (count($arguments) !== 1) {
+				throw new InvalidMethodCallException("Method '$name' expects exactly one argument.");
+			}
+			$this->__set(lcfirst(substr($name, 3)), reset($arguments));
 
 		} elseif (substr($name, 0, 5) === 'addTo' and strlen($name) > 5) {
 			$this->addToOrRemoveFrom(self::ACTION_ADD, lcfirst(substr($name, 5)), array_shift($arguments));
