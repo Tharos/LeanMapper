@@ -28,8 +28,6 @@ use Traversable;
  *
  * @author Vojtěch Kohout
  */
-/** @noinspection PhpInconsistentReturnPointsInspection */
-/** @noinspection PhpInconsistentReturnPointsInspection */
 abstract class Entity
 {
 
