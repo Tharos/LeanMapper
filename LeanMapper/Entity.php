@@ -295,8 +295,9 @@ abstract class Entity
 	/**
 	 * @param string $name
 	 * @param array $arguments
-	 * @return mixed
+	 * @return mixed|void
 	 * @throws InvalidMethodCallException
+	 * @throws InvalidArgumentException
 	 */
 	public function __call($name, array $arguments)
 	{
@@ -304,17 +305,41 @@ abstract class Entity
 		if (strlen($name) < 4) {
 			throw $e;
 		}
-		if (substr($name, 0, 3) === 'get') {
+		if (substr($name, 0, 3) === 'get') { // get<Name>
 			return $this->__get(lcfirst(substr($name, 3)), $arguments);
 
-		} elseif (substr($name, 0, 3) === 'set') {
-			$this->__set(lcfirst(substr($name, 3)), $arguments);
+		} elseif (substr($name, 0, 3) === 'set') { // set<Name>
+			if (count($arguments) !== 1) {
+				throw new InvalidMethodCallException("Method '$name' expects exactly one argument.");
+			}
+			$this->__set(lcfirst(substr($name, 3)), reset($arguments));
 
-		} elseif (substr($name, 0, 5) === 'addTo' and strlen($name) > 5) {
-			$this->addToOrRemoveFrom(self::ACTION_ADD, lcfirst(substr($name, 5)), array_shift($arguments));
+		} elseif (substr($name, 0, 5) === 'addTo' and strlen($name) > 5) { // addTo<Name>
+			$this->checkMethodArgumentsCount(1, $arguments, $name);
+			$this->addToOrRemoveFrom(self::ACTION_ADD, lcfirst(substr($name, 5)), reset($arguments));
 
-		} elseif (substr($name, 0, 10) === 'removeFrom' and strlen($name) > 10) {
-			$this->addToOrRemoveFrom(self::ACTION_REMOVE, lcfirst(substr($name, 10)), array_shift($arguments));
+		} elseif (substr($name, 0, 10) === 'removeFrom' and strlen($name) > 10) { // removeFrom<Name>
+			$this->checkMethodArgumentsCount(1, $arguments, $name);
+			$this->addToOrRemoveFrom(self::ACTION_REMOVE, lcfirst(substr($name, 10)), reset($arguments));
+
+		} elseif (substr($name, 0, 9) === 'removeAll' and strlen($name) > 9) { // removeAll<Name>
+			$this->checkMethodArgumentsCount(0, $arguments, $name);
+			$property = lcfirst(substr($name, 9));
+			foreach ($this->$property as $value) {
+				$this->addToOrRemoveFrom(self::ACTION_REMOVE, $property, $value);
+			}
+
+		} elseif (substr($name, 0, 10) === 'replaceAll' and strlen($name) > 10) { // replaceAll<Name>
+			$this->checkMethodArgumentsCount(1, $arguments, $name);
+			$arg = reset($arguments);
+			if (!is_array($arg) and (!($arg instanceof Traversable) or ($arg instanceof Entity))) {
+				throw new InvalidArgumentException("Argument of method '$name' must contain either array or instance of Traversable which is not Entity.");
+			}
+			$property = lcfirst(substr($name, 10));
+			foreach ($this->$property as $value) {
+				$this->addToOrRemoveFrom(self::ACTION_REMOVE, $property, $value);
+			}
+			$this->addToOrRemoveFrom(self::ACTION_ADD, $property, reset($arguments));
 
 		} else {
 			throw $e;
@@ -658,36 +683,42 @@ abstract class Entity
 		if ($this->isDetached()) {
 			throw new InvalidMethodCallException('Cannot add or remove related entity to detached entity.');
 		}
-		$method = $action === self::ACTION_ADD ? 'addTo' : 'removeFrom';
 		if ($arg === null) {
 			throw new InvalidArgumentException("Invalid argument given.");
 		}
-		$property = $this->getCurrentReflection()->getEntityProperty($name);
-		if ($property === null or !$property->hasRelationship() or !($property->getRelationship() instanceof Relationship\HasMany)) {
-			throw new InvalidMethodCallException("Cannot call $method method with $name property. Only properties with m:hasMany relationship can be managed this way.");
-		}
-		if ($property->getFilters()) {
-			throw new InvalidMethodCallException("Cannot call $method method with $name property. Only properties with no filters can be managed this way."); // deliberate restriction
-		}
-		$relationship = $property->getRelationship();
-		if ($arg instanceof Entity) {
-			if ($arg->isDetached()) {
-				throw new InvalidArgumentException('Cannot add or remove detached entity ' . get_class($arg) . '.');
+		if (is_array($arg) or ($arg instanceof Traversable and !($arg instanceof Entity))) {
+			foreach ($arg as $value) {
+				$this->addToOrRemoveFrom($action, $name, $value);
 			}
-			$type = $property->getType();
-			if (!($arg instanceof $type)) {
-				throw new InvalidValueException("Unexpected value type: instance of " . $property->getType() . " expected, instance of " . get_class($arg) . " given.");
+		} else {
+			$method = $action === self::ACTION_ADD ? 'addTo' : 'removeFrom';
+			$property = $this->getCurrentReflection()->getEntityProperty($name);
+			if ($property === null or !$property->hasRelationship() or !($property->getRelationship() instanceof Relationship\HasMany)) {
+				throw new InvalidMethodCallException("Cannot call $method method with $name property. Only properties with m:hasMany relationship can be managed this way.");
 			}
-			$data = $arg->getRowData();
-			$arg = $data[$this->mapper->getPrimaryKey($relationship->getTargetTable())];
+			if ($property->getFilters()) {
+				throw new InvalidMethodCallException("Cannot call $method method with $name property. Only properties with no filters can be managed this way."); // deliberate restriction
+			}
+			$relationship = $property->getRelationship();
+			if ($arg instanceof Entity) {
+				if ($arg->isDetached()) {
+					throw new InvalidArgumentException('Cannot add or remove detached entity ' . get_class($arg) . '.');
+				}
+				$type = $property->getType();
+				if (!($arg instanceof $type)) {
+					throw new InvalidValueException("Unexpected value type: instance of " . $property->getType() . " expected, instance of " . get_class($arg) . " given.");
+				}
+				$data = $arg->getRowData();
+				$arg = $data[$this->mapper->getPrimaryKey($relationship->getTargetTable())];
+			}
+			$table = $this->mapper->getTable($this->getCurrentReflection()->getName());
+			$values = array(
+				$relationship->getColumnReferencingSourceTable() => $this->row->{$this->mapper->getPrimaryKey($table)},
+				$relationship->getColumnReferencingTargetTable() => $arg,
+			);
+			$method .= 'Referencing';
+			$this->row->$method($values, $relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), null, $relationship->getStrategy());
 		}
-		$table = $this->mapper->getTable($this->getCurrentReflection()->getName());
-		$values = array(
-			$relationship->getColumnReferencingSourceTable() => $this->row->{$this->mapper->getPrimaryKey($table)},
-			$relationship->getColumnReferencingTargetTable() => $arg,
-		);
-		$method .= 'Referencing';
-		$this->row->$method($values, $relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), null, $relationship->getStrategy());
 	}
 
 	/**
@@ -701,6 +732,23 @@ abstract class Entity
 		$type = $property->getType();
 		if (!($entity instanceof $type)) {
 			throw new InvalidValueException("Inconsistency found: property '{$property->getName()}' is supposed to contain an instance of '$type' (due to type hint), but mapper maps it to '$mapperClass'. Please fix getEntityClass method in mapper, property annotation or entities inheritance.");
+		}
+	}
+
+	/**
+	 * @param int $expectedCount
+	 * @param array $arguments
+	 * @param string $methodName
+	 * @throws InvalidMethodCallException
+	 */
+	private function checkMethodArgumentsCount($expectedCount, array $arguments, $methodName)
+	{
+		if (count($arguments) !== $expectedCount) {
+			if ($expectedCount === 0) {
+				throw new InvalidMethodCallException("Method '$methodName' doesn't expect any arguments.");
+			} else {
+				throw new InvalidMethodCallException("Method '$methodName' expects exactly $expectedCount argument" . ($expectedCount > 1 ? 's' : '') . '.');
+			}
 		}
 	}
 

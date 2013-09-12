@@ -16,9 +16,6 @@ class Author extends Entity
 {
 }
 
-/**
- * @entity Author
- */
 class AuthorRepository extends \LeanMapper\Repository
 {
 

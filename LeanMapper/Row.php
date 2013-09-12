@@ -240,11 +240,22 @@ class Row
 	 * Cleans in-memory cache with referenced rows
 	 *
 	 * @param string|null $table
-	 * @param string|null $column
+	 * @param string|null $viaColumn
 	 */
-	public function cleanReferencedRowsCache($table = null, $column = null)
+	public function cleanReferencedRowsCache($table = null, $viaColumn = null)
 	{
-		$this->result->cleanReferencedResultsCache($table, $column);
+		$this->result->cleanReferencedResultsCache($table, $viaColumn);
+	}
+
+	/**
+	 * Cleans in-memory cache with referencing rows
+	 *
+	 * @param string|null $table
+	 * @param string|null $viaColumn
+	 */
+	public function cleanReferencingRowsCache($table = null, $viaColumn = null)
+	{
+		$this->result->cleanReferencingResultsCache($table, $viaColumn);
 	}
 
 	/**
