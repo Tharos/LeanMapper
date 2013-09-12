@@ -314,9 +314,7 @@ class Result implements \Iterator
 		if ($this->isDetached()) {
 			throw new InvalidMethodCallException('Detached Result cannot be marked as updated.');
 		}
-		if (isset($this->modified[$id])) {
-			unset($this->modified[$id]);
-		}
+		unset($this->modified[$id]);
 	}
 
 	/**
@@ -450,16 +448,37 @@ class Result implements \Iterator
 	 * Cleans in-memory cache with referenced results
 	 *
 	 * @param string|null $table
-	 * @param string|null $column
+	 * @param string|null $viaColumn
 	 */
-	public function cleanReferencedResultsCache($table = null, $column = null)
+	public function cleanReferencedResultsCache($table = null, $viaColumn = null)
 	{
-		if ($table === null or $column === null) {
+		if ($table === null or $viaColumn === null) {
 			$this->referenced = array();
 		} else {
 			foreach ($this->referenced as $key => $value) {
-				if (preg_match("~^$table\\($column\\)(#.*)?$~", $key)) {
+				if (preg_match("~^$table\\($viaColumn\\)(#.*)?$~", $key)) {
 					unset($this->referenced[$key]);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Cleans in-memory cache with referencing results
+	 *
+	 * @param string|null $table
+	 * @param string|null $viaColumn
+	 */
+	public function cleanReferencingResultsCache($table = null, $viaColumn = null)
+	{
+		if ($table === null or $viaColumn === null) {
+			$this->referencing = $this->index = array();
+		} else {
+			foreach ($this->referencing as $key => $value) {
+				$strategies = '(' . self::STRATEGY_IN . '|' . self::STRATEGY_UNION . ')';
+				if (preg_match("~^$table\\($viaColumn\\)$strategies(#.*)?$~", $key)) {
+					$originKey = $this->referencing[$key]->getOriginKey();
+					unset($this->referencing[$key], $this->index[$originKey]);
 				}
 			}
 		}
