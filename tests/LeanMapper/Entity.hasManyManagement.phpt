@@ -32,9 +32,6 @@ class Book extends Entity
 {
 }
 
-/**
- * @entity Book
- */
 class BookRepository extends \LeanMapper\Repository
 {
 
