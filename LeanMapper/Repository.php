@@ -88,19 +88,17 @@ abstract class Repository
 		$this->checkEntityType($entity);
 
 		$this->events->invokeCallbacks(Events::EVENT_BEFORE_PERSIST, $entity);
-		if ($entity->isModified()) {
-			if ($entity->isDetached()) {
-				$entity->useMapper($this->mapper);
-				$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
-				$result = $id = $this->insertIntoDatabase($entity);
-				$entity->markAsAttached($id, $this->getTable(), $this->connection);
-				$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
-			} else {
-				$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
-				$result = $this->updateInDatabase($entity);
-				$entity->markAsUpdated();
-				$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
-			}
+		if ($entity->isDetached()) {
+			$entity->useMapper($this->mapper);
+			$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
+			$result = $id = $this->insertIntoDatabase($entity);
+			$entity->markAsAttached($id, $this->getTable(), $this->connection);
+			$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
+		} elseif ($entity->isModified()) {
+			$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
+			$result = $this->updateInDatabase($entity);
+			$entity->markAsUpdated();
+			$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
 		}
 		$this->persistHasManyChanges($entity);
 		$this->events->invokeCallbacks(Events::EVENT_AFTER_PERSIST, $entity);
