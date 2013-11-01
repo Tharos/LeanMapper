@@ -59,6 +59,17 @@ class Row
 	}
 
 	/**
+	 * Tells whether Row has given column and is not null
+	 *
+	 * @param string $name
+	 * @return bool
+	 */
+	public function __isset($name)
+	{
+		return $this->hasColumn($name) and $this->$name !== null;
+	}
+
+	/**
 	 * Tells whether Row has given column
 	 *
 	 * @param string $name
