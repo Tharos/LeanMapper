@@ -11,6 +11,7 @@
 
 namespace LeanMapper;
 
+use Exception;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidStateException;
@@ -287,7 +288,7 @@ abstract class Entity
 	{
 		try {
 			return $this->$name !== null;
-		} catch (MemberAccessException $e) {
+		} catch (Exception $e) {
 			return false;
 		}
 	}
