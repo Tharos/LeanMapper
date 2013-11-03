@@ -60,7 +60,7 @@ Assert::equal(Author::STATE_INACTIVE, $extraAuthor->stateParent);
 
 Assert::exception(function () use ($extraAuthor) {
 	$extraAuthor->stateParent = ExtraAuthor::STATE_ACTIVE;
-}, 'LeanMapper\Exception\InvalidValueException', "Given value is not from possible values enumeration.");
+}, 'LeanMapper\Exception\InvalidValueException', "Given value is not from possible values enumeration in property 'stateParent' in entity ExtraAuthor.");
 
 $extraAuthor->stateStatic = ExtraAuthor::STATE_ACTIVE;
 
@@ -68,7 +68,7 @@ Assert::equal(ExtraAuthor::STATE_ACTIVE, $extraAuthor->stateStatic);
 
 Assert::exception(function () use ($extraAuthor) {
 	$extraAuthor->stateStatic = Author::STATE_ACTIVE;
-}, 'LeanMapper\Exception\InvalidValueException', "Given value is not from possible values enumeration.");
+}, 'LeanMapper\Exception\InvalidValueException', "Given value is not from possible values enumeration in property 'stateStatic' in entity ExtraAuthor.");
 
 //////////
 

@@ -66,11 +66,11 @@ Assert::equal($data, $book->getData());
 
 Assert::exception(function () {
 	new Book(false);
-}, 'LeanMapper\Exception\InvalidArgumentException', 'Argument $arg in LeanMapper\Entity::__construct must contain either null, array, instance of LeanMapper\Row or instance of Traversable, boolean given.');
+}, 'LeanMapper\Exception\InvalidArgumentException', 'Argument $arg in Book::__construct must contain either null, array, instance of LeanMapper\Row or instance of Traversable, boolean given.');
 
 Assert::exception(function () {
 	new Book('hello');
-}, 'LeanMapper\Exception\InvalidArgumentException', 'Argument $arg in LeanMapper\Entity::__construct must contain either null, array, instance of LeanMapper\Row or instance of Traversable, string given.');
+}, 'LeanMapper\Exception\InvalidArgumentException', 'Argument $arg in Book::__construct must contain either null, array, instance of LeanMapper\Row or instance of Traversable, string given.');
 
 //////////
 
@@ -80,4 +80,4 @@ $row->detach();
 
 Assert::exception(function () use ($row) {
 	new Book($row);
-}, 'LeanMapper\Exception\InvalidArgumentException', 'It is not allowed to create entity from detached instance of LeanMapper\Row.');
+}, 'LeanMapper\Exception\InvalidArgumentException', 'It is not allowed to create entity Book from detached instance of LeanMapper\Row.');

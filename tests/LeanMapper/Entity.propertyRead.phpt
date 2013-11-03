@@ -41,11 +41,11 @@ $author = new Author;
 
 Assert::exception(function () use ($author) {
 	$author->name = 'test';
-}, 'LeanMapper\Exception\MemberAccessException', "Cannot write to read only property 'name'.");
+}, 'LeanMapper\Exception\MemberAccessException', "Cannot write to read-only property 'name' in entity Author.");
 
 Assert::exception(function () use ($author) {
 	$author->setName('test');
-}, 'LeanMapper\Exception\MemberAccessException', "Cannot write to read only property 'name'.");
+}, 'LeanMapper\Exception\MemberAccessException', "Cannot write to read-only property 'name' in entity Author.");
 
 //////////
 
@@ -53,8 +53,8 @@ $author = $authorRepository->find(1);
 
 Assert::exception(function () use ($author) {
 	$author->name = 'test';
-}, 'LeanMapper\Exception\MemberAccessException', "Cannot write to read only property 'name'.");
+}, 'LeanMapper\Exception\MemberAccessException', "Cannot write to read-only property 'name' in entity Author.");
 
 Assert::exception(function () use ($author) {
 	$author->setName('test');
-}, 'LeanMapper\Exception\MemberAccessException', "Cannot write to read only property 'name'.");
+}, 'LeanMapper\Exception\MemberAccessException', "Cannot write to read-only property 'name' in entity Author.");

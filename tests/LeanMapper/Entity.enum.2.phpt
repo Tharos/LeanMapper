@@ -58,4 +58,4 @@ Assert::equal(Project::STATE_CREATED, $project->state);
 
 Assert::throws(function () use ($project) {
 	$project->state = 'reopened';
-}, 'LeanMapper\Exception\InvalidValueException', "Given value is not from possible values enumeration.");
+}, 'LeanMapper\Exception\InvalidValueException', "Given value is not from possible values enumeration in property 'state' in entity Project.");

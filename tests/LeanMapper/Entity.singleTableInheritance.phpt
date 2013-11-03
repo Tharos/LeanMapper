@@ -89,7 +89,7 @@ foreach ($authorRepository->findAll() as $author) {
 		Assert::type('Author', $author);
 		Assert::throws(function () use ($author) {
 			$author->web;
-		}, 'LeanMapper\Exception\MemberAccessException', "Cannot access undefined property 'web'.");
+		}, 'LeanMapper\Exception\MemberAccessException', "Cannot access undefined property 'web' in entity Author.");
 	}
 }
 
@@ -102,6 +102,6 @@ foreach ($bookRepository->findAll() as $book) {
 		Assert::type('Author', $author);
 		Assert::throws(function () use ($author) {
 			$author->web;
-		}, 'LeanMapper\Exception\MemberAccessException', "Cannot access undefined property 'web'.");
+		}, 'LeanMapper\Exception\MemberAccessException', "Cannot access undefined property 'web' in entity Author.");
 	}
 }
