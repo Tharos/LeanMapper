@@ -20,8 +20,6 @@ use LeanMapper\Exception\MemberAccessException;
 use LeanMapper\Exception\RuntimeException;
 use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
-use LeanMapper\Relationship;
-use LeanMapper\Row;
 use Traversable;
 
 /**
@@ -41,6 +39,9 @@ abstract class Entity
 
 	/** @var IMapper */
 	protected $mapper;
+
+	/** @var IEntityFactory */
+	protected $entityFactory;
 
 	/** @var EntityReflection[] */
 	protected static $reflections = array();
@@ -478,9 +479,11 @@ abstract class Entity
 	 * @param int $id
 	 * @param string $table
 	 * @param Connection $connection
+	 * @param IEntityFactory $entityFactory
 	 */
-	public function markAsAttached($id, $table, Connection $connection)
+	public function markAsAttached($id, $table, Connection $connection, IEntityFactory $entityFactory)
 	{
+		$this->entityFactory = $entityFactory;
 		$this->row->markAsAttached($id, $table, $connection);
 	}
 
@@ -587,9 +590,9 @@ abstract class Entity
 			}
 			return null;
 		} else {
-			$class = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = new $class($row);
-			$this->checkConsistency($property, $class, $entity);
+			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = $this->entityFactory->getEntity($entityClass, $row);
+			$this->checkConsistency($property, $entityClass, $entity);
 			return $entity;
 		}
 	}
@@ -611,9 +614,9 @@ abstract class Entity
 		foreach ($rows as $row) {
 			$valueRow = $row->referenced($targetTable, $columnReferencingTargetTable, $targetTableFiltering);
 			if ($valueRow !== null) {
-				$class = $this->mapper->getEntityClass($targetTable, $valueRow);
-				$entity = new $class($valueRow);
-				$this->checkConsistency($property, $class, $entity);
+				$entityClass = $this->mapper->getEntityClass($targetTable, $valueRow);
+				$entity = $this->entityFactory->getEntity($entityClass, $valueRow);
+				$this->checkConsistency($property, $entityClass, $entity);
 				$value[] = $entity;
 			}
 		}
@@ -642,9 +645,9 @@ abstract class Entity
 			return null;
 		} else {
 			$row = reset($rows);
-			$class = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = new $class($row);
-			$this->checkConsistency($property, $class, $entity);
+			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = $this->entityFactory->getEntity($entityClass, $row);
+			$this->checkConsistency($property, $entityClass, $entity);
 			return $entity;
 		}
 	}
@@ -661,9 +664,9 @@ abstract class Entity
 		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$value = array();
 		foreach ($rows as $row) {
-			$class = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = new $class($row);
-			$this->checkConsistency($property, $class, $entity);
+			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = $this->entityFactory->getEntity($entityClass, $row);
+			$this->checkConsistency($property, $entityClass, $entity);
 			$value[] = $entity;
 		}
 		return $this->createCollection($value);

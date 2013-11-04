@@ -10,7 +10,9 @@
  */
 
 require_once __DIR__ . '/IMapper.php';
+require_once __DIR__ . '/IEntityFactory.php';
 require_once __DIR__ . '/Connection.php';
+require_once __DIR__ . '/DefaultEntityFactory.php';
 require_once __DIR__ . '/DefaultMapper.php';
 require_once __DIR__ . '/DataDifference.php';
 require_once __DIR__ . '/Entity.php';
