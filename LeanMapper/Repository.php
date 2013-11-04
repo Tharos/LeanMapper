@@ -94,10 +94,10 @@ abstract class Repository
 
 		$this->events->invokeCallbacks(Events::EVENT_BEFORE_PERSIST, $entity);
 		if ($entity->isDetached()) {
-			$entity->useMapper($this->mapper);
+			$entity->alive($this->connection, $this->mapper, $this->entityFactory);
 			$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
 			$result = $id = $this->insertIntoDatabase($entity);
-			$entity->markAsAttached($id, $this->getTable(), $this->connection);
+			$entity->attach($id, $this->getTable());
 			$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
 		} elseif ($entity->isModified()) {
 			$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
@@ -236,7 +236,9 @@ abstract class Repository
 		if ($entityClass === null) {
 			$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
 		}
-		return $this->entityFactory->getEntity($entityClass, $row);
+		$entity = $this->entityFactory->getEntity($entityClass, $row);
+		$entity->alive($this->connection, $this->mapper, $this->entityFactory);
+		return $entity;
 	}
 
 	/**
@@ -257,15 +259,19 @@ abstract class Repository
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 		if ($entityClass !== null) {
 			foreach ($rows as $dibiRow) {
-				$entities[$dibiRow->$primaryKey] = $this->entityFactory->getEntity(
+				$entity = $this->entityFactory->getEntity(
 					$entityClass, $collection->getRow($dibiRow->$primaryKey)
 				);
+				$entity->alive($this->connection, $this->mapper, $this->entityFactory);
+				$entities[$dibiRow->$primaryKey] = $entity;
 			}
 		} else {
 			foreach ($rows as $dibiRow) {
 				$row = $collection->getRow($dibiRow->$primaryKey);
 				$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
-				$entities[$dibiRow->$primaryKey] = $this->entityFactory->getEntity($entityClass, $row);
+				$entity = $this->entityFactory->getEntity($entityClass, $row);
+				$entity->alive($this->connection, $this->mapper, $this->entityFactory);
+				$entities[$dibiRow->$primaryKey] = $entity;
 			}
 		}
 		return $this->createCollection($entities);

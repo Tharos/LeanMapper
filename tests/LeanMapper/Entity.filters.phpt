@@ -44,8 +44,8 @@ $connection->registerFilter('second', function () use ($args) {
 });
 
 $book = new Book;
-$book->useMapper(new Mapper);
-$book->markAsAttached(1, 'book', $connection);
+$book->alive($connection, $mapper, $entityFactory);
+$book->attach(1, 'book');
 
 $book->getTags(1, 'argument', true);
 

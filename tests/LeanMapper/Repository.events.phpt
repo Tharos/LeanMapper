@@ -2,6 +2,7 @@
 
 use LeanMapper\Entity;
 use LeanMapper\Events;
+use LeanMapper\IEntityFactory;
 use LeanMapper\IMapper;
 use LeanMapper\Repository;
 use Tester\Assert;
@@ -22,9 +23,9 @@ class CustomRepository extends Repository
 	private $log;
 
 
-	public function __construct(Connection $connection, IMapper $mapper, ArrayObject $log)
+	public function __construct(Connection $connection, IMapper $mapper, IEntityFactory $entityFactory, ArrayObject $log)
 	{
-		parent::__construct($connection, $mapper);
+		parent::__construct($connection, $mapper, $entityFactory);
 		$this->log = $log;
 	}
 
@@ -37,7 +38,7 @@ class CustomRepository extends Repository
 
 }
 
-$repository = new CustomRepository($connection, $mapper, $log);
+$repository = new CustomRepository($connection, $mapper, $entityFactory, $log);
 
 $repository->onBeforePersist[] = function ($author) use ($log) {
 	$log->append('before persist: ' . $author->name);

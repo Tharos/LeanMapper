@@ -56,7 +56,7 @@ function implodeTags(array $tags) {
 
 ////////////////////
 
-$bookRepository = new BookRepository($connection, new Mapper);
+$bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 
 $book = $bookRepository->find(2);
 

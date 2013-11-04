@@ -78,8 +78,8 @@ class BookRepository extends BaseRepository
 
 $mapper = new Mapper;
 
-$authorRepository = new AuthorRepository($connection, $mapper);
-$bookRepository = new BookRepository($connection, $mapper);
+$authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
+$bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 
 foreach ($authorRepository->findAll() as $author) {
 	if ($author->id === 3 or $author->id === 6) {

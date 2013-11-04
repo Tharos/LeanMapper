@@ -91,6 +91,14 @@ class Row
 	}
 
 	/**
+	 * @param Connection $connection
+	 */
+	public function setConnection(Connection $connection)
+	{
+		$this->result->setConnection($connection);
+	}
+
+	/**
 	 * @param IMapper $mapper
 	 */
 	public function setMapper(IMapper $mapper)
@@ -154,9 +162,21 @@ class Row
 		$data = $this->result->getData($this->id);
 		$this->result = Result::getDetachedInstance();
 		foreach ($data as $key => $value) {
-			$this->result->setDataEntry(0, $key, $value);
+			$this->result->setDataEntry(Result::DETACHED_ROW_ID, $key, $value);
 		}
-		$this->id = 0;
+		$this->id = Result::DETACHED_ROW_ID;
+	}
+
+	/**
+	 * Marks Row as attached
+	 *
+	 * @param int $id
+	 * @param string $table
+	 */
+	public function attach($id, $table)
+	{
+		$this->result->attach($id, $table);
+		$this->id = $id;
 	}
 
 	/**
@@ -165,19 +185,6 @@ class Row
 	public function markAsUpdated()
 	{
 		$this->result->markAsUpdated($this->id);
-	}
-
-	/**
-	 * Marks Row as attached
-	 *
-	 * @param int $id
-	 * @param string $table
-	 * @param Connection $connection
-	 */
-	public function markAsAttached($id, $table, Connection $connection)
-	{
-		$this->result->markAsAttached($id, $this->id, $table, $connection);
-		$this->id = $id;
 	}
 
 	/**

@@ -77,7 +77,6 @@ abstract class Entity
 				throw new InvalidArgumentException('It is not allowed to create entity ' . get_called_class() . ' from detached instance of LeanMapper\Row.');
 			}
 			$this->row = $arg;
-			$this->mapper = $arg->getMapper();
 		} else {
 			$this->row = Result::getDetachedInstance()->getRow();
 			foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
@@ -474,25 +473,22 @@ abstract class Entity
 	}
 
 	/**
-	 * Marks entity as attached
-	 *
-	 * @param int $id
-	 * @param string $table
-	 * @param Connection $connection
-	 * @param IEntityFactory $entityFactory
-	 */
-	public function markAsAttached($id, $table, Connection $connection, IEntityFactory $entityFactory)
-	{
-		$this->entityFactory = $entityFactory;
-		$this->row->markAsAttached($id, $table, $connection);
-	}
-
-	/**
-	 * Marks entity as detached
+	 * Detaches entity
 	 */
 	public function detach()
 	{
 		$this->row->detach();
+	}
+
+	/**
+	 * Attaches entity
+	 *
+	 * @param int $id
+	 * @param string $table
+	 */
+	public function attach($id, $table)
+	{
+		$this->row->attach($id, $table);
 	}
 
 	/**
@@ -506,36 +502,23 @@ abstract class Entity
 	}
 
 	/**
-	 * Provides an mapper for entity
+	 * Provides dependencies
 	 *
+	 * @param Connection $connection
 	 * @param IMapper $mapper
-	 * @throws InvalidMethodCallException
+	 * @param IEntityFactory $entityFactory
 	 * @throws InvalidStateException
 	 */
-	public function useMapper(IMapper $mapper)
+	public function alive(Connection $connection, IMapper $mapper, IEntityFactory $entityFactory)
 	{
-		if (!$this->isDetached()) {
-			throw new InvalidMethodCallException('Mapper can only be provided to detached entity.');
-		}
-		$newProperties = $this->getReflection($mapper)->getEntityProperties();
-		foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
-			$oldColumn = $oldProperty->getColumn();
-			if ($oldColumn !== null) {
-				$name = $oldProperty->getName();
-				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
-					throw new InvalidStateException('Inconsistent sets of properties detected in entity ' . get_called_class() . '.');
-				}
-				if ($this->row->hasColumn($oldColumn)) {
-					$newColumn = $newProperties[$name]->getColumn();
-					$value = $this->row->$oldColumn;
-					unset($this->row->$oldColumn);
-					$this->row->$newColumn = $value;
-				}
-			}
+		$this->entityFactory = $entityFactory;
+		if ($this->row->isDetached()) {
+			$this->useMapper($mapper);
+			$this->row->setConnection($connection);
+		} elseif ($mapper !== $this->row->getMapper()) {
+			throw new InvalidStateException('Entity and Result must share the same mapper.');
 		}
 		$this->mapper = $mapper;
-		$this->row->setMapper($mapper);
-		$this->currentReflection = null;
 	}
 
 	/**
@@ -571,6 +554,35 @@ abstract class Entity
 
 	////////////////////
 	////////////////////
+
+	/**
+	 * Provides an mapper for entity
+	 *
+	 * @param IMapper $mapper
+	 * @throws InvalidMethodCallException
+	 * @throws InvalidStateException
+	 */
+	private function useMapper(IMapper $mapper)
+	{
+		$newProperties = $this->getReflection($mapper)->getEntityProperties();
+		foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
+			$oldColumn = $oldProperty->getColumn();
+			if ($oldColumn !== null) {
+				$name = $oldProperty->getName();
+				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
+					throw new InvalidStateException('Inconsistent sets of properties detected in entity ' . get_called_class() . '.');
+				}
+				if ($this->row->hasColumn($oldColumn)) {
+					$newColumn = $newProperties[$name]->getColumn();
+					$value = $this->row->$oldColumn;
+					unset($this->row->$oldColumn);
+					$this->row->$newColumn = $value;
+				}
+			}
+		}
+		$this->row->setMapper($mapper);
+		$this->currentReflection = null;
+	}
 
 	/**
 	 * @param Property $property

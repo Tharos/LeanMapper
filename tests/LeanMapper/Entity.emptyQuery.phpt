@@ -28,8 +28,8 @@ $book = new Book;
 $book->name = 'Test book';
 $book->author = null;
 
-$book->useMapper(new DefaultMapper);
-$book->markAsAttached(1, 'book', $connection);
+$book->alive($connection, $mapper, $entityFactory);
+$book->attach(1, 'book');
 
 $book->getData();
 
