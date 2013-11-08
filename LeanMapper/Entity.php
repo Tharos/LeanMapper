@@ -142,6 +142,9 @@ abstract class Entity
 			}
 		} else {
 			if ($property->hasRelationship()) {
+				if ($this->entityFactory === null) {
+					throw new InvalidStateException('Missing IEntityFactory in ' . get_called_class() . '.');
+				}
 				$relationship = $property->getRelationship();
 
 				$method = explode('\\', get_class($relationship));
@@ -519,12 +522,12 @@ abstract class Entity
 		$this->entityFactory = $entityFactory;
 		if ($this->row->isDetached()) {
 			if ($connection === null or $mapper === null) {
-				throw new InvalidArgumentException('Both Connection and IMapper must be provided when making detached entity alive.');
+				throw new InvalidArgumentException('All three arguments (IEntityFactory, Connection and IMapper) must be given when making detached entity ' . get_called_class() . ' alive.');
 			}
 			$this->row->setConnection($connection);
 			$this->useMapper($mapper);
 		} elseif ($connection !== null or $mapper !== null) {
-			throw new InvalidArgumentException('Connection and IMapper must not be provided when making attached entity alive.');
+			throw new InvalidArgumentException('Only IEntityFactory argument can be given when making attached entity ' . get_called_class() . ' alive. Note that Connection and IMapper are already encapsulated in Row.');
 		}
 	}
 
