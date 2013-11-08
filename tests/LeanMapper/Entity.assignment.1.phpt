@@ -45,7 +45,7 @@ class BookRepository extends \LeanMapper\Repository
 
 //////////
 
-$bookRepository = new BookRepository($connection, $mapper);
+$bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 
 $book = $bookRepository->find(1);
 

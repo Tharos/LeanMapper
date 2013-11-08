@@ -30,6 +30,11 @@ class Result implements \Iterator
 
 	const STRATEGY_UNION = 'union';
 
+	const DETACHED_ROW_ID = -1;
+
+	/** @var bool */
+	private $isDetached;
+
 	/** @var array */
 	private $data;
 
@@ -83,7 +88,7 @@ class Result implements \Iterator
 		$dataArray = array();
 		$primaryKey = $mapper->getPrimaryKey($table);
 		if ($data instanceof DibiRow) {
-			$dataArray = array(isset($data->$primaryKey) ? $data->$primaryKey : 0 => $data->toArray());
+			$dataArray = array(isset($data->$primaryKey) ? $data->$primaryKey : self::DETACHED_ROW_ID => $data->toArray());
 		} else {
 			$e = new InvalidArgumentException('Invalid type of data given, only DibiRow or array of DibiRow is supported at this moment.');
 			if (is_array($data)) {
@@ -115,6 +120,14 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * @param Connection $connection
+	 */
+	public function setConnection(Connection $connection)
+	{
+		$this->connection = $connection;
+	}
+
+	/**
 	 * @param IMapper $mapper
 	 */
 	public function setMapper(IMapper $mapper)
@@ -142,10 +155,19 @@ class Result implements \Iterator
 	 * Creates new Row instance pointing to specific row within Result
 	 *
 	 * @param int $id
+	 * @throws InvalidArgumentException
 	 * @return Row|null
 	 */
-	public function getRow($id = 0)
+	public function getRow($id = null)
 	{
+		if ($this->isDetached) {
+			if ($id !== null) {
+				throw new InvalidArgumentException('Argument $id in Result::getRow method cannot be passed when Result is in detached state.');
+			}
+			$id = self::DETACHED_ROW_ID;
+		} elseif ($id === null) {
+			throw new InvalidArgumentException('Argument $id in Result::getRow method must be passed when Result is in attached state.');
+		}
 		if (!isset($this->data[$id])) {
 			return null;
 		}
@@ -181,7 +203,7 @@ class Result implements \Iterator
 		if (!isset($this->data[$id])) {
 			throw new InvalidArgumentException("Missing row with ID $id.");
 		}
-		if (!$this->isDetached() and $key === $this->mapper->getPrimaryKey($this->table)) { // mapper is always set when Result is not detached
+		if (!$this->isDetached and $key === $this->mapper->getPrimaryKey($this->table)) { // mapper is always set when Result is not detached
 			throw new InvalidArgumentException("ID can only be set in detached rows.");
 		}
 		$this->modified[$id][$key] = true;
@@ -206,6 +228,7 @@ class Result implements \Iterator
 	 * @param mixed $id
 	 * @param string $column
 	 * @throws InvalidArgumentException
+	 * @throws InvalidStateException
 	 */
 	public function unsetDataEntry($id, $column)
 	{
@@ -219,9 +242,13 @@ class Result implements \Iterator
 	 * Adds new data entry
 	 *
 	 * @param array $values
+	 * @throws InvalidStateException
 	 */
 	public function addDataEntry(array $values)
 	{
+		if ($this->isDetached) {
+			throw new InvalidStateException('Cannot add data entry to detached Result.');
+		}
 		$this->data[] = $values;
 		$this->added[] = $values;
 		$this->cleanReferencedResultsCache();
@@ -231,10 +258,13 @@ class Result implements \Iterator
 	 * Removes given data entry
 	 *
 	 * @param array $values
-	 * @throws InvalidArgumentException
+	 * @throws InvalidStateException
 	 */
 	public function removeDataEntry(array $values)
 	{
+		if ($this->isDetached) {
+			throw new InvalidStateException('Cannot remove data entry to detached Result.');
+		}
 		foreach ($this->data as $key => $entry) {
 			if (array_diff_assoc($values, $entry) === array()) {
 				$this->removed[] = $entry;
@@ -300,7 +330,7 @@ class Result implements \Iterator
 	 */
 	public function isDetached()
 	{
-		return $this->connection === null or $this->table === null or $this->mapper === null;
+		return $this->isDetached;
 	}
 
 	/**
@@ -311,37 +341,35 @@ class Result implements \Iterator
 	 */
 	public function markAsUpdated($id)
 	{
-		if ($this->isDetached()) {
+		if ($this->isDetached) {
 			throw new InvalidMethodCallException('Detached Result cannot be marked as updated.');
 		}
 		unset($this->modified[$id]);
 	}
 
 	/**
-	 * Marks requested row as attached
-	 *
-	 * @param mixed $newId
-	 * @param mixed $oldId
+	 * @param mixed $id
 	 * @param string $table
-	 * @param Connection $connection
 	 * @throws InvalidStateException
 	 */
-	public function markAsAttached($newId, $oldId, $table, Connection $connection)
+	public function attach($id, $table)
 	{
-		if (!$this->isDetached()) {
+		if (!$this->isDetached) {
 			throw new InvalidStateException('Result is not in detached state.');
+		}
+		if ($this->connection === null) {
+			throw new InvalidStateException('Missing connection.');
 		}
 		if ($this->mapper === null) {
 			throw new InvalidStateException('Missing mapper.');
 		}
-		$modifiedData = $this->getModifiedData($oldId);
-		unset($this->data[$oldId]);
-		$this->data[$newId] = array($this->mapper->getPrimaryKey($table) => $newId) + $modifiedData;
-		foreach (array($newId, $oldId) as $key) {
-			unset($this->modified[$key]);
-		}
+		$modifiedData = $this->getModifiedData(self::DETACHED_ROW_ID);
+		$this->data = array(
+			$id => array($this->mapper->getPrimaryKey($table) => $id) + $modifiedData
+		);
+		$this->modified = array();
 		$this->table = $table;
-		$this->connection = $connection;
+		$this->isDetached = false;
 	}
 
 	public function cleanAddedAndRemovedMeta()
@@ -366,7 +394,8 @@ class Result implements \Iterator
 			$viaColumn = $this->mapper->getRelationshipColumn($this->table, $table);
 		}
 		$result = $this->getReferencedResult($table, $viaColumn, $filtering);
-		return $result->getRow($this->getDataEntry($id, $viaColumn));
+		$rowId = $this->getDataEntry($id, $viaColumn);
+		return $rowId === null ? null : $result->getRow($rowId);
 	}
 
 	/**
@@ -546,14 +575,12 @@ class Result implements \Iterator
 	 */
 	private function __construct(array $data = null, $table = null, Connection $connection = null, IMapper $mapper = null, $originKey = null)
 	{
-		if ($data === null) {
-			$data = array(array());
-		}
-		$this->data = $data;
+		$this->data = $data !== null ? $data : array(self::DETACHED_ROW_ID => array());
 		$this->table = $table;
 		$this->connection = $connection;
 		$this->mapper = $mapper;
 		$this->originKey = $originKey;
+		$this->isDetached = ($table === null or $connection === null or $mapper === null);
 	}
 
 	/**
@@ -566,7 +593,7 @@ class Result implements \Iterator
 	 */
 	private function getReferencedResult($table, $viaColumn, Filtering $filtering = null)
 	{
-		if ($this->isDetached()) {
+		if ($this->isDetached) {
 			throw new InvalidStateException('Cannot get referenced Result for detached Result.');
 		}
 		$key = "$table($viaColumn)";
@@ -605,7 +632,7 @@ class Result implements \Iterator
 	private function getReferencingResult($table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
 	{
 		$strategy = $this->translateStrategy($strategy);
-		if ($this->isDetached()) {
+		if ($this->isDetached) {
 			throw new InvalidStateException('Cannot get referencing Result for detached Result.');
 		}
 		if ($viaColumn === null) {

@@ -20,8 +20,6 @@ use LeanMapper\Exception\MemberAccessException;
 use LeanMapper\Exception\RuntimeException;
 use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
-use LeanMapper\Relationship;
-use LeanMapper\Row;
 use Traversable;
 
 /**
@@ -41,6 +39,9 @@ abstract class Entity
 
 	/** @var IMapper */
 	protected $mapper;
+
+	/** @var IEntityFactory */
+	protected $entityFactory;
 
 	/** @var EntityReflection[] */
 	protected static $reflections = array();
@@ -141,6 +142,9 @@ abstract class Entity
 			}
 		} else {
 			if ($property->hasRelationship()) {
+				if ($this->entityFactory === null) {
+					throw new InvalidStateException('Missing IEntityFactory in ' . get_called_class() . '.');
+				}
 				$relationship = $property->getRelationship();
 
 				$method = explode('\\', get_class($relationship));
@@ -473,23 +477,25 @@ abstract class Entity
 	}
 
 	/**
-	 * Marks entity as attached
-	 *
-	 * @param int $id
-	 * @param string $table
-	 * @param Connection $connection
-	 */
-	public function markAsAttached($id, $table, Connection $connection)
-	{
-		$this->row->markAsAttached($id, $table, $connection);
-	}
-
-	/**
-	 * Marks entity as detached
+	 * Detaches entity
 	 */
 	public function detach()
 	{
 		$this->row->detach();
+	}
+
+	/**
+	 * Attaches entity
+	 *
+	 * @param int $id
+	 * @throws InvalidStateException
+	 */
+	public function attach($id)
+	{
+		if ($this->mapper === null) {
+			throw new InvalidStateException('Missing mapper in ' . get_called_class() . '.');
+		}
+		$this->row->attach($id, $this->mapper->getTable(get_called_class()));
 	}
 
 	/**
@@ -503,36 +509,26 @@ abstract class Entity
 	}
 
 	/**
-	 * Provides an mapper for entity
+	 * Provides dependencies
 	 *
-	 * @param IMapper $mapper
-	 * @throws InvalidMethodCallException
+	 * @param IEntityFactory $entityFactory
+	 * @param Connection|null $connection
+	 * @param IMapper|null $mapper
+	 * @throws InvalidArgumentException
 	 * @throws InvalidStateException
 	 */
-	public function useMapper(IMapper $mapper)
+	public function makeAlive(IEntityFactory $entityFactory, Connection $connection = null, IMapper $mapper = null)
 	{
-		if (!$this->isDetached()) {
-			throw new InvalidMethodCallException('Mapper can only be provided to detached entity.');
-		}
-		$newProperties = $this->getReflection($mapper)->getEntityProperties();
-		foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
-			$oldColumn = $oldProperty->getColumn();
-			if ($oldColumn !== null) {
-				$name = $oldProperty->getName();
-				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
-					throw new InvalidStateException('Inconsistent sets of properties detected in entity ' . get_called_class() . '.');
-				}
-				if ($this->row->hasColumn($oldColumn)) {
-					$newColumn = $newProperties[$name]->getColumn();
-					$value = $this->row->$oldColumn;
-					unset($this->row->$oldColumn);
-					$this->row->$newColumn = $value;
-				}
+		$this->entityFactory = $entityFactory;
+		if ($this->row->isDetached()) {
+			if ($connection === null or $mapper === null) {
+				throw new InvalidArgumentException('All three arguments (IEntityFactory, Connection and IMapper) must be given when making detached entity ' . get_called_class() . ' alive.');
 			}
+			$this->row->setConnection($connection);
+			$this->useMapper($mapper);
+		} elseif ($connection !== null or $mapper !== null) {
+			throw new InvalidArgumentException('Only IEntityFactory argument can be given when making attached entity ' . get_called_class() . ' alive. Note that Connection and IMapper are already encapsulated in Row.');
 		}
-		$this->mapper = $mapper;
-		$this->row->setMapper($mapper);
-		$this->currentReflection = null;
 	}
 
 	/**
@@ -570,6 +566,36 @@ abstract class Entity
 	////////////////////
 
 	/**
+	 * Provides an mapper for entity
+	 *
+	 * @param IMapper $mapper
+	 * @throws InvalidMethodCallException
+	 * @throws InvalidStateException
+	 */
+	private function useMapper(IMapper $mapper)
+	{
+		$newProperties = $this->getReflection($mapper)->getEntityProperties();
+		foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
+			$oldColumn = $oldProperty->getColumn();
+			if ($oldColumn !== null) {
+				$name = $oldProperty->getName();
+				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
+					throw new InvalidStateException('Inconsistent sets of properties detected in entity ' . get_called_class() . '.');
+				}
+				if ($this->row->hasColumn($oldColumn)) {
+					$newColumn = $newProperties[$name]->getColumn();
+					$value = $this->row->$oldColumn;
+					unset($this->row->$oldColumn);
+					$this->row->$newColumn = $value;
+				}
+			}
+		}
+		$this->mapper = $mapper;
+		$this->row->setMapper($mapper);
+		$this->currentReflection = null;
+	}
+
+	/**
 	 * @param Property $property
 	 * @param Filtering|null $filtering
 	 * @return Entity
@@ -587,9 +613,9 @@ abstract class Entity
 			}
 			return null;
 		} else {
-			$class = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = new $class($row);
-			$this->checkConsistency($property, $class, $entity);
+			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = $this->entityFactory->getEntity($entityClass, $row);
+			$this->checkConsistency($property, $entityClass, $entity);
 			return $entity;
 		}
 	}
@@ -611,9 +637,9 @@ abstract class Entity
 		foreach ($rows as $row) {
 			$valueRow = $row->referenced($targetTable, $columnReferencingTargetTable, $targetTableFiltering);
 			if ($valueRow !== null) {
-				$class = $this->mapper->getEntityClass($targetTable, $valueRow);
-				$entity = new $class($valueRow);
-				$this->checkConsistency($property, $class, $entity);
+				$entityClass = $this->mapper->getEntityClass($targetTable, $valueRow);
+				$entity = $this->entityFactory->getEntity($entityClass, $valueRow);
+				$this->checkConsistency($property, $entityClass, $entity);
 				$value[] = $entity;
 			}
 		}
@@ -642,9 +668,9 @@ abstract class Entity
 			return null;
 		} else {
 			$row = reset($rows);
-			$class = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = new $class($row);
-			$this->checkConsistency($property, $class, $entity);
+			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = $this->entityFactory->getEntity($entityClass, $row);
+			$this->checkConsistency($property, $entityClass, $entity);
 			return $entity;
 		}
 	}
@@ -661,9 +687,9 @@ abstract class Entity
 		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$value = array();
 		foreach ($rows as $row) {
-			$class = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = new $class($row);
-			$this->checkConsistency($property, $class, $entity);
+			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = $this->entityFactory->getEntity($entityClass, $row);
+			$this->checkConsistency($property, $entityClass, $entity);
 			$value[] = $entity;
 		}
 		return $this->createCollection($value);
