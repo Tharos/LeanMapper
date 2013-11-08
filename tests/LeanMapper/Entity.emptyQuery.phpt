@@ -28,8 +28,8 @@ $book = new Book;
 $book->name = 'Test book';
 $book->author = null;
 
-$book->alive($connection, $mapper, $entityFactory);
-$book->attach(1, 'book');
+$book->makeAlive($entityFactory, $connection, $mapper);
+$book->attach(1);
 
 $book->getData();
 

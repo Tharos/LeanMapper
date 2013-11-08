@@ -94,7 +94,7 @@ abstract class Repository
 
 		$this->events->invokeCallbacks(Events::EVENT_BEFORE_PERSIST, $entity);
 		if ($entity->isDetached()) {
-			$entity->alive($this->connection, $this->mapper, $this->entityFactory);
+			$entity->makeAlive($this->entityFactory, $this->connection, $this->mapper);
 			$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
 			$result = $id = $this->insertIntoDatabase($entity);
 			$entity->attach($id, $this->getTable());
@@ -237,7 +237,7 @@ abstract class Repository
 			$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
 		}
 		$entity = $this->entityFactory->getEntity($entityClass, $row);
-		$entity->alive($this->connection, $this->mapper, $this->entityFactory);
+		$entity->makeAlive($this->entityFactory);
 		return $entity;
 	}
 
@@ -262,7 +262,7 @@ abstract class Repository
 				$entity = $this->entityFactory->getEntity(
 					$entityClass, $collection->getRow($dibiRow->$primaryKey)
 				);
-				$entity->alive($this->connection, $this->mapper, $this->entityFactory);
+				$entity->makeAlive($this->entityFactory);
 				$entities[$dibiRow->$primaryKey] = $entity;
 			}
 		} else {
@@ -270,7 +270,7 @@ abstract class Repository
 				$row = $collection->getRow($dibiRow->$primaryKey);
 				$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
 				$entity = $this->entityFactory->getEntity($entityClass, $row);
-				$entity->alive($this->connection, $this->mapper, $this->entityFactory);
+				$entity->makeAlive($this->entityFactory);
 				$entities[$dibiRow->$primaryKey] = $entity;
 			}
 		}

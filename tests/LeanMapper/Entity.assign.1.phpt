@@ -60,8 +60,8 @@ $mapper = new Mapper;
 
 $author = new Author;
 $author->name = 'John Doe';
-$author->alive($connection, $mapper, $entityFactory);
-$author->attach(1, 'author');
+$author->makeAlive($entityFactory, $connection, $mapper);
+$author->attach(1);
 
 Assert::equal(array (
 	'customid' => 1,
@@ -77,6 +77,6 @@ list($key, $value) = each($result);
 Assert::equal(1, $value);
 Assert::equal('author{hasOne:', substr($key, 0, 14));
 
-$book->alive($connection, $mapper, $entityFactory);
+$book->makeAlive($entityFactory, $connection, $mapper);
 
 Assert::equal(array('author_customid' => 1), $book->getRowData());

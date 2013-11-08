@@ -77,6 +77,7 @@ abstract class Entity
 				throw new InvalidArgumentException('It is not allowed to create entity ' . get_called_class() . ' from detached instance of LeanMapper\Row.');
 			}
 			$this->row = $arg;
+			$this->mapper = $arg->getMapper();
 		} else {
 			$this->row = Result::getDetachedInstance()->getRow();
 			foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
@@ -484,11 +485,14 @@ abstract class Entity
 	 * Attaches entity
 	 *
 	 * @param int $id
-	 * @param string $table
+	 * @throws InvalidStateException
 	 */
-	public function attach($id, $table)
+	public function attach($id)
 	{
-		$this->row->attach($id, $table);
+		if ($this->mapper === null) {
+			throw new InvalidStateException('Missing mapper in ' . get_called_class() . '.');
+		}
+		$this->row->attach($id, $this->mapper->getTable(get_called_class()));
 	}
 
 	/**
@@ -504,21 +508,24 @@ abstract class Entity
 	/**
 	 * Provides dependencies
 	 *
-	 * @param Connection $connection
-	 * @param IMapper $mapper
 	 * @param IEntityFactory $entityFactory
+	 * @param Connection|null $connection
+	 * @param IMapper|null $mapper
+	 * @throws InvalidArgumentException
 	 * @throws InvalidStateException
 	 */
-	public function alive(Connection $connection, IMapper $mapper, IEntityFactory $entityFactory)
+	public function makeAlive(IEntityFactory $entityFactory, Connection $connection = null, IMapper $mapper = null)
 	{
 		$this->entityFactory = $entityFactory;
 		if ($this->row->isDetached()) {
-			$this->useMapper($mapper);
+			if ($connection === null or $mapper === null) {
+				throw new InvalidArgumentException('Both Connection and IMapper must be provided when making detached entity alive.');
+			}
 			$this->row->setConnection($connection);
-		} elseif ($mapper !== $this->row->getMapper()) {
-			throw new InvalidStateException('Entity and Result must share the same mapper.');
+			$this->useMapper($mapper);
+		} elseif ($connection !== null or $mapper !== null) {
+			throw new InvalidArgumentException('Connection and IMapper must not be provided when making attached entity alive.');
 		}
-		$this->mapper = $mapper;
 	}
 
 	/**
@@ -580,6 +587,7 @@ abstract class Entity
 				}
 			}
 		}
+		$this->mapper = $mapper;
 		$this->row->setMapper($mapper);
 		$this->currentReflection = null;
 	}
