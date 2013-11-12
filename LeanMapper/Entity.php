@@ -616,6 +616,7 @@ abstract class Entity
 			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
 			$entity = $this->entityFactory->getEntity($entityClass, $row);
 			$this->checkConsistency($property, $entityClass, $entity);
+			$entity->makeAlive($this->entityFactory);
 			return $entity;
 		}
 	}
@@ -640,6 +641,7 @@ abstract class Entity
 				$entityClass = $this->mapper->getEntityClass($targetTable, $valueRow);
 				$entity = $this->entityFactory->getEntity($entityClass, $valueRow);
 				$this->checkConsistency($property, $entityClass, $entity);
+				$entity->makeAlive($this->entityFactory);
 				$value[] = $entity;
 			}
 		}
@@ -671,6 +673,7 @@ abstract class Entity
 			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
 			$entity = $this->entityFactory->getEntity($entityClass, $row);
 			$this->checkConsistency($property, $entityClass, $entity);
+			$entity->makeAlive($this->entityFactory);
 			return $entity;
 		}
 	}
@@ -690,6 +693,7 @@ abstract class Entity
 			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
 			$entity = $this->entityFactory->getEntity($entityClass, $row);
 			$this->checkConsistency($property, $entityClass, $entity);
+			$entity->makeAlive($this->entityFactory);
 			$value[] = $entity;
 		}
 		return $this->createCollection($value);
