@@ -97,7 +97,7 @@ abstract class Repository
 			$entity->makeAlive($this->entityFactory, $this->connection, $this->mapper);
 			$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
 			$result = $id = $this->insertIntoDatabase($entity);
-			$entity->attach($id, $this->getTable());
+			$entity->attach($id);
 			$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
 		} elseif ($entity->isModified()) {
 			$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
