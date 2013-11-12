@@ -76,6 +76,22 @@ abstract class Repository
 	}
 
 	/**
+	 * @return Fluent
+	 */
+	protected function createFluent()
+	{
+		$table = $this->getTable();
+		$statement = $this->connection->select('*')->from($table);
+		$entityFilters = $this->mapper->getEntityFilters($this->mapper->getEntityClass($table));
+		if (!empty($entityFilters)) {
+			foreach ($entityFilters as $entityFilter) {
+				$statement->applyFilter($entityFilter);
+			}
+		}
+		return $statement;
+	}
+
+	/**
 	 * Allows initialize repository's events
 	 */
 	protected function initEvents()

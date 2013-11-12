@@ -87,5 +87,13 @@ interface IMapper
 	 * @return string
 	 */
 	public function getTableByRepositoryClass($repositoryClass);
+
+	/**
+	 * TODO: description
+	 *
+	 * @param string $entityClass
+	 * @return array
+	 */
+	public function getEntityFilters($entityClass);
 	
 }

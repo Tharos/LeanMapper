@@ -779,7 +779,7 @@ class Result implements \Iterator
 				}
 			}
 			if (isset($namedArgs[$filter])) {
-				$args[] = $namedArgs[$filter];
+				$args = array_merge($args, $namedArgs[$filter]);
 			}
 			$args = array_merge($args, $filtering->getArgs());
 			call_user_func_array(array($statement, 'applyFilter'), $args);

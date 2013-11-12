@@ -48,7 +48,7 @@ class PropertyFilters
 				}
 				$filters[] = $filterName = $matches[1];
 				if (isset($matches[2])) {
-					$annotationArgs[$filterName] = $matches[2];
+					$annotationArgs[$filterName] = array($matches[2]);
 				}
 			}
 			$this->filters[] = $filters;

@@ -106,6 +106,7 @@ abstract class Entity
 	 * @throws MemberAccessException
 	 * @throws RuntimeException
 	 * @throws InvalidMethodCallException
+	 * @throws InvalidStateException
 	 */
 	public function __get($name /*, array $filterArgs*/)
 	{
@@ -605,6 +606,7 @@ abstract class Entity
 	{
 		$relationship = $property->getRelationship();
 		$targetTable = $relationship->getTargetTable();
+		$filtering = $this->mergeEntityFilters($targetTable, $property, $filtering);
 		$row = $this->row->referenced($targetTable, $relationship->getColumnReferencingTargetTable(), $filtering);
 		if ($row === null) {
 			if (!$property->isNullable()) {
@@ -632,6 +634,7 @@ abstract class Entity
 		$relationship = $property->getRelationship();
 		$targetTable = $relationship->getTargetTable();
 		$columnReferencingTargetTable = $relationship->getColumnReferencingTargetTable();
+		$targetTableFiltering = $this->mergeEntityFilters($targetTable, $property, $targetTableFiltering);
 		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), $relTableFiltering, $relationship->getStrategy());
 		$value = array();
 		foreach ($rows as $row) {
@@ -656,6 +659,7 @@ abstract class Entity
 	{
 		$relationship = $property->getRelationship();
 		$targetTable = $relationship->getTargetTable();
+		$filtering = $this->mergeEntityFilters($targetTable, $property, $filtering);
 		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$count = count($rows);
 		if ($count > 1) {
@@ -684,6 +688,7 @@ abstract class Entity
 	{
 		$relationship = $property->getRelationship();
 		$targetTable = $relationship->getTargetTable();
+		$filtering = $this->mergeEntityFilters($targetTable, $property, $filtering);
 		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$value = array();
 		foreach ($rows as $row) {
@@ -776,6 +781,33 @@ abstract class Entity
 				throw new InvalidMethodCallException("Method '$methodName' in entity " . get_called_class() . " expects exactly $expectedCount argument" . ($expectedCount > 1 ? 's' : '') . '.');
 			}
 		}
+	}
+
+	/**
+	 * @param string $table
+	 * @param Property $property
+	 * @param Filtering $filtering
+	 * @return Filtering
+	 */
+	private function mergeEntityFilters($table, Property $property, Filtering $filtering = null)
+	{
+		$entityFilters = $this->mapper->getEntityFilters(
+			$this->mapper->getEntityClass($table)
+		);
+		if (!empty($entityFilters)) {
+			if ($filtering === null) {
+				return new Filtering($entityFilters, null, $this, $property); // TODO: named args
+			} else {
+				$filters = $filtering->getFilters();
+				foreach (array_reverse($entityFilters) as $entityFilter) {
+					if (!in_array($entityFilter, $filters)) {
+						array_unshift($filters, $entityFilter);
+					}
+				}
+				return new Filtering($filters, $filtering->getArgs(), $filtering->getEntity(), $filtering->getProperty(), $filtering->getNamedArgs()); // TODO: merge named args
+			}
+		}
+		return $filtering;
 	}
 
 }
