@@ -92,8 +92,9 @@ interface IMapper
 	 * TODO: description
 	 *
 	 * @param string $entityClass
+	 * @param Entity|Repository|mixed|null $caller
 	 * @return array|EntityFilters
 	 */
-	public function getEntityFilters($entityClass);
+	public function getEntityFilters($entityClass, $caller = null);
 	
 }

@@ -99,7 +99,7 @@ class DefaultMapper implements IMapper
 	/*
 	 * @inheritdoc
 	 */
-	public function getEntityFilters($entityClass)
+	public function getEntityFilters($entityClass, $caller = null)
 	{
 		return array();
 	}

@@ -82,7 +82,7 @@ abstract class Repository
 	{
 		$table = $this->getTable();
 		$statement = $this->connection->select('*')->from($table);
-		$filters = $this->mapper->getEntityFilters($this->mapper->getEntityClass($table));
+		$filters = $this->mapper->getEntityFilters($this->mapper->getEntityClass($table), $this);
 		if (!empty($filters)) {
 			$namedArgs = array();
 			if ($filters instanceof EntityFilters) {

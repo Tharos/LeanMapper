@@ -158,7 +158,7 @@ abstract class Entity
 
 				$args = array($property, $relationship, $targetTable);
 
-				$entityFilters = $this->mapper->getEntityFilters($this->mapper->getEntityClass($targetTable));
+				$entityFilters = $this->mapper->getEntityFilters($this->mapper->getEntityClass($targetTable), $this);
 				$namedArgs = array();
 				if ($entityFilters instanceof EntityFilters) {
 					$namedArgs = $entityFilters->getNamedArgs();
