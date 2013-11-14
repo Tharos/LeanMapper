@@ -248,11 +248,11 @@ class Property
 	 * Gets filters arguments hard-coded in annotation
 	 *
 	 * @param int $index
-	 * @return array|string|null
+	 * @return array|null
 	 */
-	public function getFiltersAnnotationArgs($index = 0)
+	public function getFiltersNamedArgs($index = 0)
 	{
-		return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersAnnotationArgs($index) : null;
+		return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersNamedArgs($index) : null;
 	}
 
 	/**

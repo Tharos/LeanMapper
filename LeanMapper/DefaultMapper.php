@@ -49,7 +49,7 @@ class DefaultMapper implements IMapper
 	 */
 	public function getEntityClass($table, Row $row = null)
 	{
-		return $this->defaultEntityNamespace . '\\' . ucfirst($table);
+		return ($this->defaultEntityNamespace !== null ? $this->defaultEntityNamespace . '\\' : '') . ucfirst($table);
 	}
 
 	/*
@@ -94,6 +94,14 @@ class DefaultMapper implements IMapper
 			return strtolower($matches[1]);
 		}
 		throw new InvalidStateException('Cannot determine table name.');
+	}
+
+	/*
+	 * @inheritdoc
+	 */
+	public function getEntityFilters($entityClass)
+	{
+		return array();
 	}
 
 	/**

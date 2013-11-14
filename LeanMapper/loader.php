@@ -16,6 +16,7 @@ require_once __DIR__ . '/DefaultEntityFactory.php';
 require_once __DIR__ . '/DefaultMapper.php';
 require_once __DIR__ . '/DataDifference.php';
 require_once __DIR__ . '/Entity.php';
+require_once __DIR__ . '/EntityFilters.php';
 require_once __DIR__ . '/Events.php';
 require_once __DIR__ . '/Filtering.php';
 require_once __DIR__ . '/Exception/InvalidAnnotationException.php';

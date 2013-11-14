@@ -25,7 +25,7 @@ class PropertyFilters
 	private $filters = array();
 
 	/** @var array */
-	private $annotationArgs = array();
+	private $namedArgs = array();
 
 
 	/**
@@ -36,10 +36,10 @@ class PropertyFilters
 	{
 		foreach (preg_split('#\s*\|\s*#', trim($definition)) as $set) {
 			if ($set === '') {
-				$this->filters[] = $this->annotationArgs[] = array();
+				$this->filters[] = $this->namedArgs[] = array();
 				continue;
 			}
-			$filters = $annotationArgs = array();
+			$filters = $namedArgs = array();
 			foreach (preg_split('#\s*,\s*#', $set) as $filter) {
 				$matches = array();
 				preg_match('~^([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(?:#(.*))?$~', $filter, $matches);
@@ -48,11 +48,11 @@ class PropertyFilters
 				}
 				$filters[] = $filterName = $matches[1];
 				if (isset($matches[2])) {
-					$annotationArgs[$filterName] = $matches[2];
+					$namedArgs[$filterName] = array($matches[2]);
 				}
 			}
 			$this->filters[] = $filters;
-			$this->annotationArgs[] = $annotationArgs;
+			$this->namedArgs[] = $namedArgs;
 		}
 	}
 
@@ -76,12 +76,12 @@ class PropertyFilters
 	 * @param int $index
 	 * @return array
 	 */
-	public function getFiltersAnnotationArgs($index = 0)
+	public function getFiltersNamedArgs($index = 0)
 	{
-		if (!isset($this->annotationArgs[$index])) {
+		if (!isset($this->namedArgs[$index])) {
 			return array();
 		}
-		return $this->annotationArgs[$index];
+		return $this->namedArgs[$index];
 	}
 
 }

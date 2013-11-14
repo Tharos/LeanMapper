@@ -76,6 +76,31 @@ abstract class Repository
 	}
 
 	/**
+	 * @return Fluent
+	 */
+	protected function createFluent()
+	{
+		$table = $this->getTable();
+		$statement = $this->connection->select('*')->from($table);
+		$filters = $this->mapper->getEntityFilters($this->mapper->getEntityClass($table));
+		if (!empty($filters)) {
+			$namedArgs = array();
+			if ($filters instanceof EntityFilters) {
+				$namedArgs = $filters->getNamedArgs();
+				$filters = $filters->getFilters();
+			}
+			foreach ($filters as $filter) {
+				$args = array($filter);
+				if (array_key_exists($filter, $namedArgs)) {
+					$args = array_merge($args, $namedArgs[$filter]);
+				}
+				call_user_func_array(array($statement, 'applyFilter'), $args);
+			}
+		}
+		return $statement;
+	}
+
+	/**
 	 * Allows initialize repository's events
 	 */
 	protected function initEvents()
