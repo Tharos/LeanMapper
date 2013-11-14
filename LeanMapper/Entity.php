@@ -20,6 +20,10 @@ use LeanMapper\Exception\MemberAccessException;
 use LeanMapper\Exception\RuntimeException;
 use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
+use LeanMapper\Relationship\BelongsToMany;
+use LeanMapper\Relationship\BelongsToOne;
+use LeanMapper\Relationship\HasMany;
+use LeanMapper\Relationship\HasOne;
 use Traversable;
 
 /**
@@ -147,21 +151,33 @@ abstract class Entity
 					throw new InvalidStateException('Missing IEntityFactory in ' . get_called_class() . '.');
 				}
 				$relationship = $property->getRelationship();
+				$targetTable = $relationship->getTargetTable();
 
 				$method = explode('\\', get_class($relationship));
 				$method = 'get' . end($method) . 'Value';
 
-				$args = array($property);
-				$firstFilters = $property->getFilters(0);
+				$args = array($property, $relationship, $targetTable);
+
+				$entityFilters = $this->mapper->getEntityFilters($this->mapper->getEntityClass($targetTable));
+				$namedArgs = array();
+				if ($entityFilters instanceof EntityFilters) {
+					$namedArgs = $entityFilters->getNamedArgs();
+					$entityFilters = $entityFilters->getFilters();
+				}
+				$firstFilters = $property->getFilters(0) ?: array();
 				if ($method === 'getHasManyValue') {
-					$secondFilters = $property->getFilters(1);
+					$secondFilters = $this->mergeFilters($property->getFilters(1) ?: array(), $entityFilters);
+				} else {
+					$firstFilters = $this->mergeFilters($firstFilters, $entityFilters);
 				}
 				if (!empty($firstFilters) or !empty($secondFilters)) {
 					$funcArgs = func_get_args();
 					$filterArgs = isset($funcArgs[1]) ? $funcArgs[1] : array();
-					$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, $property->getFiltersAnnotationArgs(0)) : null;
-					if (!empty($secondFilters)) {
-						$args[] = new Filtering($secondFilters, $filterArgs, $this, $property, $property->getFiltersAnnotationArgs(1));
+					if (empty($secondFilters)) {
+						$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, array_merge($namedArgs, (array) $property->getFiltersNamedArgs(0))) : null;
+					} else {
+						$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, (array) $property->getFiltersNamedArgs(0)) : null;
+						$args[] = new Filtering($secondFilters, $filterArgs, $this, $property, array_merge($namedArgs, (array) $property->getFiltersNamedArgs(1)));
 					}
 				}
 				$value = call_user_func_array(array($this, $method), $args);
@@ -598,15 +614,14 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
+	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
+	 * @param string $targetTable
 	 * @param Filtering|null $filtering
-	 * @return Entity
 	 * @throws InvalidValueException
+	 * @return Entity
 	 */
-	private function getHasOneValue(Property $property, Filtering $filtering = null)
+	private function getHasOneValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
 	{
-		$relationship = $property->getRelationship();
-		$targetTable = $relationship->getTargetTable();
-		$filtering = $this->mergeEntityFilters($targetTable, $property, $filtering);
 		$row = $this->row->referenced($targetTable, $relationship->getColumnReferencingTargetTable(), $filtering);
 		if ($row === null) {
 			if (!$property->isNullable()) {
@@ -618,23 +633,23 @@ abstract class Entity
 			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
 			$entity = $this->entityFactory->getEntity($entityClass, $row);
 			$this->checkConsistency($property, $entityClass, $entity);
+			$entity->makeAlive($this->entityFactory);
 			return $entity;
 		}
 	}
 
 	/**
 	 * @param Property $property
+	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
+	 * @param string $targetTable
 	 * @param Filtering|null $relTableFiltering
 	 * @param Filtering|null $targetTableFiltering
 	 * @return Entity[]
 	 * @throws InvalidValueException
 	 */
-	private function getHasManyValue(Property $property, Filtering $relTableFiltering = null, Filtering $targetTableFiltering = null)
+	private function getHasManyValue(Property $property, $relationship, $targetTable, Filtering $relTableFiltering = null, Filtering $targetTableFiltering = null)
 	{
-		$relationship = $property->getRelationship();
-		$targetTable = $relationship->getTargetTable();
 		$columnReferencingTargetTable = $relationship->getColumnReferencingTargetTable();
-		$targetTableFiltering = $this->mergeEntityFilters($targetTable, $property, $targetTableFiltering);
 		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), $relTableFiltering, $relationship->getStrategy());
 		$value = array();
 		foreach ($rows as $row) {
@@ -643,6 +658,7 @@ abstract class Entity
 				$entityClass = $this->mapper->getEntityClass($targetTable, $valueRow);
 				$entity = $this->entityFactory->getEntity($entityClass, $valueRow);
 				$this->checkConsistency($property, $entityClass, $entity);
+				$entity->makeAlive($this->entityFactory);
 				$value[] = $entity;
 			}
 		}
@@ -651,15 +667,14 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
+	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
+	 * @param string $targetTable
 	 * @param Filtering|null $filtering
 	 * @return Entity
 	 * @throws InvalidValueException
 	 */
-	private function getBelongsToOneValue(Property $property, Filtering $filtering = null)
+	private function getBelongsToOneValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
 	{
-		$relationship = $property->getRelationship();
-		$targetTable = $relationship->getTargetTable();
-		$filtering = $this->mergeEntityFilters($targetTable, $property, $filtering);
 		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$count = count($rows);
 		if ($count > 1) {
@@ -675,26 +690,27 @@ abstract class Entity
 			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
 			$entity = $this->entityFactory->getEntity($entityClass, $row);
 			$this->checkConsistency($property, $entityClass, $entity);
+			$entity->makeAlive($this->entityFactory);
 			return $entity;
 		}
 	}
 
 	/**
 	 * @param Property $property
+	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
+	 * @param string $targetTable
 	 * @param Filtering|null $filtering
 	 * @return Entity[]
 	 */
-	private function getBelongsToManyValue(Property $property, Filtering $filtering = null)
+	private function getBelongsToManyValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
 	{
-		$relationship = $property->getRelationship();
-		$targetTable = $relationship->getTargetTable();
-		$filtering = $this->mergeEntityFilters($targetTable, $property, $filtering);
 		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$value = array();
 		foreach ($rows as $row) {
 			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
 			$entity = $this->entityFactory->getEntity($entityClass, $row);
 			$this->checkConsistency($property, $entityClass, $entity);
+			$entity->makeAlive($this->entityFactory);
 			$value[] = $entity;
 		}
 		return $this->createCollection($value);
@@ -784,30 +800,20 @@ abstract class Entity
 	}
 
 	/**
-	 * @param string $table
-	 * @param Property $property
-	 * @param Filtering $filtering
-	 * @return Filtering
+	 * @param array $filters1
+	 * @param array $filters2
+	 * @return array
 	 */
-	private function mergeEntityFilters($table, Property $property, Filtering $filtering = null)
+	private function mergeFilters(array $filters1, array $filters2)
 	{
-		$entityFilters = $this->mapper->getEntityFilters(
-			$this->mapper->getEntityClass($table)
-		);
-		if (!empty($entityFilters)) {
-			if ($filtering === null) {
-				return new Filtering($entityFilters, null, $this, $property); // TODO: named args
-			} else {
-				$filters = $filtering->getFilters();
-				foreach (array_reverse($entityFilters) as $entityFilter) {
-					if (!in_array($entityFilter, $filters)) {
-						array_unshift($filters, $entityFilter);
-					}
+		if (!empty($filters2)) {
+			foreach (array_reverse($filters2) as $filter) {
+				if (!in_array($filter, $filters1)) {
+					array_unshift($filters1, $filter);
 				}
-				return new Filtering($filters, $filtering->getArgs(), $filtering->getEntity(), $filtering->getProperty(), $filtering->getNamedArgs()); // TODO: merge named args
 			}
 		}
-		return $filtering;
+		return $filters1;
 	}
 
 }

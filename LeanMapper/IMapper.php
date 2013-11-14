@@ -92,7 +92,7 @@ interface IMapper
 	 * TODO: description
 	 *
 	 * @param string $entityClass
-	 * @return array
+	 * @return array|EntityFilters
 	 */
 	public function getEntityFilters($entityClass);
 	

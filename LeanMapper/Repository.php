@@ -82,10 +82,19 @@ abstract class Repository
 	{
 		$table = $this->getTable();
 		$statement = $this->connection->select('*')->from($table);
-		$entityFilters = $this->mapper->getEntityFilters($this->mapper->getEntityClass($table));
-		if (!empty($entityFilters)) {
-			foreach ($entityFilters as $entityFilter) {
-				$statement->applyFilter($entityFilter);
+		$filters = $this->mapper->getEntityFilters($this->mapper->getEntityClass($table));
+		if (!empty($filters)) {
+			$namedArgs = array();
+			if ($filters instanceof EntityFilters) {
+				$namedArgs = $filters->getNamedArgs();
+				$filters = $filters->getFilters();
+			}
+			foreach ($filters as $filter) {
+				$args = array($filter);
+				if (array_key_exists($filter, $namedArgs)) {
+					$args = array_merge($args, $namedArgs[$filter]);
+				}
+				call_user_func_array(array($statement, 'applyFilter'), $args);
 			}
 		}
 		return $statement;
@@ -113,7 +122,7 @@ abstract class Repository
 			$entity->makeAlive($this->entityFactory, $this->connection, $this->mapper);
 			$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
 			$result = $id = $this->insertIntoDatabase($entity);
-			$entity->attach($id, $this->getTable());
+			$entity->attach($id);
 			$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
 		} elseif ($entity->isModified()) {
 			$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
