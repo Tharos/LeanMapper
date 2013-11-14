@@ -22,12 +22,12 @@ interface IEntityFactory
 {
 
 	/**
-	 * Gets entity instance from given entity class name and argument
+	 * Creates entity instance from given entity class name and argument
 	 *
 	 * @param string $entityClass
 	 * @param Row|Traversable|array|null $arg
 	 * @return Entity
 	 */
-	public function getEntity($entityClass, $arg = null);
+	public function createEntity($entityClass, $arg = null);
 	
 }

@@ -83,7 +83,7 @@ abstract class Entity
 			$this->row = $arg;
 			$this->mapper = $arg->getMapper();
 		} else {
-			$this->row = Result::getDetachedInstance()->getRow();
+			$this->row = Result::createDetachedInstance()->getRow();
 			foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
 				if ($property->hasDefaultValue()) {
 					$propertyName = $property->getName();
@@ -631,7 +631,7 @@ abstract class Entity
 			return null;
 		} else {
 			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = $this->entityFactory->getEntity($entityClass, $row);
+			$entity = $this->entityFactory->createEntity($entityClass, $row);
 			$this->checkConsistency($property, $entityClass, $entity);
 			$entity->makeAlive($this->entityFactory);
 			return $entity;
@@ -656,7 +656,7 @@ abstract class Entity
 			$valueRow = $row->referenced($targetTable, $columnReferencingTargetTable, $targetTableFiltering);
 			if ($valueRow !== null) {
 				$entityClass = $this->mapper->getEntityClass($targetTable, $valueRow);
-				$entity = $this->entityFactory->getEntity($entityClass, $valueRow);
+				$entity = $this->entityFactory->createEntity($entityClass, $valueRow);
 				$this->checkConsistency($property, $entityClass, $entity);
 				$entity->makeAlive($this->entityFactory);
 				$value[] = $entity;
@@ -688,7 +688,7 @@ abstract class Entity
 		} else {
 			$row = reset($rows);
 			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = $this->entityFactory->getEntity($entityClass, $row);
+			$entity = $this->entityFactory->createEntity($entityClass, $row);
 			$this->checkConsistency($property, $entityClass, $entity);
 			$entity->makeAlive($this->entityFactory);
 			return $entity;
@@ -708,7 +708,7 @@ abstract class Entity
 		$value = array();
 		foreach ($rows as $row) {
 			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = $this->entityFactory->getEntity($entityClass, $row);
+			$entity = $this->entityFactory->createEntity($entityClass, $row);
 			$this->checkConsistency($property, $entityClass, $entity);
 			$entity->makeAlive($this->entityFactory);
 			$value[] = $entity;

@@ -83,7 +83,7 @@ class Result implements \Iterator
 	 * @return self
 	 * @throws InvalidArgumentException
 	 */
-	public static function getInstance($data, $table, Connection $connection, IMapper $mapper, $originKey = null)
+	public static function createInstance($data, $table, Connection $connection, IMapper $mapper, $originKey = null)
 	{
 		$dataArray = array();
 		$primaryKey = $mapper->getPrimaryKey($table);
@@ -114,7 +114,7 @@ class Result implements \Iterator
 	 *
 	 * @return self
 	 */
-	public static function getDetachedInstance()
+	public static function createDetachedInstance()
 	{
 		return new self;
 	}
@@ -605,7 +605,7 @@ class Result implements \Iterator
 					$data = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $ids)
 							->fetchAll();
 				}
-				$this->referenced[$key] = self::getInstance($data, $table, $this->connection, $this->mapper, $key);
+				$this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper, $key);
 			}
 		} else {
 			$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn));
@@ -614,7 +614,7 @@ class Result implements \Iterator
 			$key .= '#' . $this->calculateArgumentsHash($args);
 
 			if (!isset($this->referenced[$key])) {
-				$this->referenced[$key] = self::getInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
+				$this->referenced[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 			}
 		}
 		return $this->referenced[$key];
@@ -644,7 +644,7 @@ class Result implements \Iterator
 			if ($filtering === null) {
 				if (!isset($this->referencing[$key])) {
 					$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
-					$this->referencing[$key] = self::getInstance($statement->fetchAll(), $table, $this->connection, $this->mapper, $key);
+					$this->referencing[$key] = self::createInstance($statement->fetchAll(), $table, $this->connection, $this->mapper, $key);
 				}
 			} else {
 				$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
@@ -653,7 +653,7 @@ class Result implements \Iterator
 				$key .= '#' . $this->calculateArgumentsHash($args);
 
 				if (!isset($this->referencing[$key])) {
-					$this->referencing[$key] = self::getInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
+					$this->referencing[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 				}
 			}
 		} else { // self::STRATEGY_UNION
@@ -667,12 +667,12 @@ class Result implements \Iterator
 							$this->buildUnionStrategySql($ids, $table, $viaColumn)
 						)->fetchAll();
 					}
-					$this->referencing[$key] = self::getInstance($data, $table, $this->connection, $this->mapper, $key);
+					$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper, $key);
 				}
 			} else {
 				$ids = $this->extractIds($primaryKey);
 				if (count($ids) === 0) {
-					$this->referencing[$key] = self::getInstance(array(), $table, $this->connection, $this->mapper, $key);
+					$this->referencing[$key] = self::createInstance(array(), $table, $this->connection, $this->mapper, $key);
 				} else {
 					$firstStatement = $this->createTableSelection($table)->where('%n.%n = %i', $table, $viaColumn, reset($ids));
 					$this->applyFiltering($firstStatement, $filtering);
@@ -681,7 +681,7 @@ class Result implements \Iterator
 
 					if (!isset($this->referencing[$key])) {
 						$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
-						$this->referencing[$key] = self::getInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
+						$this->referencing[$key] = self::createInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 					}
 				}
 			}

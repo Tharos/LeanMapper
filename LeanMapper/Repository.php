@@ -254,14 +254,14 @@ abstract class Repository
 		if ($table === null) {
 			$table = $this->getTable();
 		}
-		$result = Result::getInstance($dibiRow, $table, $this->connection, $this->mapper);
+		$result = Result::createInstance($dibiRow, $table, $this->connection, $this->mapper);
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 
 		$row = $result->getRow($dibiRow->$primaryKey);
 		if ($entityClass === null) {
 			$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
 		}
-		$entity = $this->entityFactory->getEntity($entityClass, $row);
+		$entity = $this->entityFactory->createEntity($entityClass, $row);
 		$entity->makeAlive($this->entityFactory);
 		return $entity;
 	}
@@ -280,11 +280,11 @@ abstract class Repository
 			$table = $this->getTable();
 		}
 		$entities = array();
-		$collection = Result::getInstance($rows, $table, $this->connection, $this->mapper);
+		$collection = Result::createInstance($rows, $table, $this->connection, $this->mapper);
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 		if ($entityClass !== null) {
 			foreach ($rows as $dibiRow) {
-				$entity = $this->entityFactory->getEntity(
+				$entity = $this->entityFactory->createEntity(
 					$entityClass, $collection->getRow($dibiRow->$primaryKey)
 				);
 				$entity->makeAlive($this->entityFactory);
@@ -294,7 +294,7 @@ abstract class Repository
 			foreach ($rows as $dibiRow) {
 				$row = $collection->getRow($dibiRow->$primaryKey);
 				$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
-				$entity = $this->entityFactory->getEntity($entityClass, $row);
+				$entity = $this->entityFactory->createEntity($entityClass, $row);
 				$entity->makeAlive($this->entityFactory);
 				$entities[$dibiRow->$primaryKey] = $entity;
 			}

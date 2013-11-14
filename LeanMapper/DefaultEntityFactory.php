@@ -24,7 +24,7 @@ class DefaultEntityFactory implements IEntityFactory
 	/*
 	 * @inheritdoc
 	 */
-	public function getEntity($entityClass, $arg = null)
+	public function createEntity($entityClass, $arg = null)
 	{
 		return new $entityClass($arg);
 	}

@@ -160,7 +160,7 @@ class Row
 	public function detach()
 	{
 		$data = $this->result->getData($this->id);
-		$this->result = Result::getDetachedInstance();
+		$this->result = Result::createDetachedInstance();
 		foreach ($data as $key => $value) {
 			$this->result->setDataEntry(Result::DETACHED_ROW_ID, $key, $value);
 		}
