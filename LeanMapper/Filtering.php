@@ -39,7 +39,7 @@ class Filtering
 
 
 	/**
-	 * @param string|array $filters
+	 * @param array $filters
 	 * @param array|null $args
 	 * @param Entity|null $entity
 	 * @param Property|null $property
@@ -48,12 +48,6 @@ class Filtering
 	 */
 	public function __construct(array $filters, array $args = null, Entity $entity = null, Property $property = null, array $targetedArgs = array())
 	{
-		if (!is_array($filters)) {
-			if (!is_string($filters)) {
-				throw new InvalidArgumentException("Argument \$filters must contain either string (name of filter) or array (names of filters).");
-			}
-			$filters = array($filters);
-		}
 		$this->filters = $filters;
 		$this->args = $args !== null ? $args : array();
 		$this->entity = $entity;
