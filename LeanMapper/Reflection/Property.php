@@ -250,9 +250,9 @@ class Property
 	 * @param int $index
 	 * @return array|null
 	 */
-	public function getFiltersNamedArgs($index = 0)
+	public function getFiltersTargetedArgs($index = 0)
 	{
-		return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersNamedArgs($index) : null;
+		return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersTargetedArgs($index) : null;
 	}
 
 	/**

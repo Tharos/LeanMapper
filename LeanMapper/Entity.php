@@ -158,26 +158,26 @@ abstract class Entity
 
 				$args = array($property, $relationship, $targetTable);
 
-				$entityFilters = $this->mapper->getEntityFilters($this->mapper->getEntityClass($targetTable), $this);
-				$namedArgs = array();
-				if ($entityFilters instanceof EntityFilters) {
-					$namedArgs = $entityFilters->getNamedArgs();
-					$entityFilters = $entityFilters->getFilters();
+				$implicitFilters = $this->mapper->getImplicitFilters($this->mapper->getEntityClass($targetTable), $this);
+				$targetedArgs = array();
+				if ($implicitFilters instanceof ImplicitFilters) {
+					$targetedArgs = $implicitFilters->getTargetedArgs();
+					$implicitFilters = $implicitFilters->getFilters();
 				}
 				$firstFilters = $property->getFilters(0) ?: array();
 				if ($method === 'getHasManyValue') {
-					$secondFilters = $this->mergeFilters($property->getFilters(1) ?: array(), $entityFilters);
+					$secondFilters = $this->mergeFilters($property->getFilters(1) ?: array(), $implicitFilters);
 				} else {
-					$firstFilters = $this->mergeFilters($firstFilters, $entityFilters);
+					$firstFilters = $this->mergeFilters($firstFilters, $implicitFilters);
 				}
 				if (!empty($firstFilters) or !empty($secondFilters)) {
 					$funcArgs = func_get_args();
 					$filterArgs = isset($funcArgs[1]) ? $funcArgs[1] : array();
 					if (empty($secondFilters)) {
-						$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, array_merge($namedArgs, (array) $property->getFiltersNamedArgs(0))) : null;
+						$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, array_merge($targetedArgs, (array) $property->getFiltersTargetedArgs(0))) : null;
 					} else {
-						$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, (array) $property->getFiltersNamedArgs(0)) : null;
-						$args[] = new Filtering($secondFilters, $filterArgs, $this, $property, array_merge($namedArgs, (array) $property->getFiltersNamedArgs(1)));
+						$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, (array) $property->getFiltersTargetedArgs(0)) : null;
+						$args[] = new Filtering($secondFilters, $filterArgs, $this, $property, array_merge($targetedArgs, (array) $property->getFiltersTargetedArgs(1)));
 					}
 				}
 				$value = call_user_func_array(array($this, $method), $args);

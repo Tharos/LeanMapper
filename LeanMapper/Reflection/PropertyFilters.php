@@ -25,7 +25,7 @@ class PropertyFilters
 	private $filters = array();
 
 	/** @var array */
-	private $namedArgs = array();
+	private $targetedArgs = array();
 
 
 	/**
@@ -36,10 +36,10 @@ class PropertyFilters
 	{
 		foreach (preg_split('#\s*\|\s*#', trim($definition)) as $set) {
 			if ($set === '') {
-				$this->filters[] = $this->namedArgs[] = array();
+				$this->filters[] = $this->targetedArgs[] = array();
 				continue;
 			}
-			$filters = $namedArgs = array();
+			$filters = $targetedArgs = array();
 			foreach (preg_split('#\s*,\s*#', $set) as $filter) {
 				$matches = array();
 				preg_match('~^([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(?:#(.*))?$~', $filter, $matches);
@@ -48,11 +48,11 @@ class PropertyFilters
 				}
 				$filters[] = $filterName = $matches[1];
 				if (isset($matches[2])) {
-					$namedArgs[$filterName] = array($matches[2]);
+					$targetedArgs[$filterName] = array($matches[2]);
 				}
 			}
 			$this->filters[] = $filters;
-			$this->namedArgs[] = $namedArgs;
+			$this->targetedArgs[] = $targetedArgs;
 		}
 	}
 
@@ -76,12 +76,12 @@ class PropertyFilters
 	 * @param int $index
 	 * @return array
 	 */
-	public function getFiltersNamedArgs($index = 0)
+	public function getFiltersTargetedArgs($index = 0)
 	{
-		if (!isset($this->namedArgs[$index])) {
+		if (!isset($this->targetedArgs[$index])) {
 			return array();
 		}
-		return $this->namedArgs[$index];
+		return $this->targetedArgs[$index];
 	}
 
 }

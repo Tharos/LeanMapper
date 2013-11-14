@@ -82,17 +82,17 @@ abstract class Repository
 	{
 		$table = $this->getTable();
 		$statement = $this->connection->select('*')->from($table);
-		$filters = $this->mapper->getEntityFilters($this->mapper->getEntityClass($table), $this);
+		$filters = $this->mapper->getImplicitFilters($this->mapper->getEntityClass($table), $this);
 		if (!empty($filters)) {
-			$namedArgs = array();
-			if ($filters instanceof EntityFilters) {
-				$namedArgs = $filters->getNamedArgs();
+			$targetedArgs = array();
+			if ($filters instanceof ImplicitFilters) {
+				$targetedArgs = $filters->getTargetedArgs();
 				$filters = $filters->getFilters();
 			}
 			foreach ($filters as $filter) {
 				$args = array($filter);
-				if (array_key_exists($filter, $namedArgs)) {
-					$args = array_merge($args, $namedArgs[$filter]);
+				if (array_key_exists($filter, $targetedArgs)) {
+					$args = array_merge($args, $targetedArgs[$filter]);
 				}
 				call_user_func_array(array($statement, 'applyFilter'), $args);
 			}

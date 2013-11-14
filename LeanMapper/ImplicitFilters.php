@@ -12,28 +12,28 @@
 namespace LeanMapper;
 
 /**
- * Encapsulation of entity filters
+ * Encapsulation of implicit filters
  *
  * @author Vojtěch Kohout
  */
-class EntityFilters
+class ImplicitFilters
 {
 
 	/** @var array */
 	private $filters;
 
 	/** @var array */
-	private $namedArgs;
+	private $targetedArgs;
 
 
 	/**
 	 * @param array $filters
-	 * @param array|null $namedArgs
+	 * @param array|null $targetedArgs
 	 */
-	public function __construct(array $filters, array $namedArgs = array())
+	public function __construct(array $filters, array $targetedArgs = array())
 	{
 		$this->filters = $filters;
-		$this->namedArgs = $namedArgs;
+		$this->targetedArgs = $targetedArgs;
 	}
 
 	/**
@@ -47,9 +47,9 @@ class EntityFilters
 	/**
 	 * @return array
 	 */
-	public function getNamedArgs()
+	public function getTargetedArgs()
 	{
-		return $this->namedArgs;
+		return $this->targetedArgs;
 	}
 
 }

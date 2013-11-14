@@ -768,7 +768,7 @@ class Result implements \Iterator
 	 */
 	private function applyFiltering(Fluent $statement, Filtering $filtering)
 	{
-		$namedArgs = $filtering->getNamedArgs();
+		$targetedArgs = $filtering->getTargetedArgs();
 		foreach ($filtering->getFilters() as $filter) {
 			$args = array($filter);
 			foreach (str_split($this->connection->getWiringSchema($filter)) as $autowiredArg) {
@@ -778,8 +778,8 @@ class Result implements \Iterator
 					$args[] = $filtering->getProperty();
 				}
 			}
-			if (isset($namedArgs[$filter])) {
-				$args = array_merge($args, $namedArgs[$filter]);
+			if (isset($targetedArgs[$filter])) {
+				$args = array_merge($args, $targetedArgs[$filter]);
 			}
 			$args = array_merge($args, $filtering->getArgs());
 			call_user_func_array(array($statement, 'applyFilter'), $args);

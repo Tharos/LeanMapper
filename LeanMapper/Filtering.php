@@ -35,7 +35,7 @@ class Filtering
 	private $property;
 
 	/** @var array */
-	private $namedArgs;
+	private $targetedArgs;
 
 
 	/**
@@ -43,10 +43,10 @@ class Filtering
 	 * @param array|null $args
 	 * @param Entity|null $entity
 	 * @param Property|null $property
-	 * @param array|null $namedArgs
+	 * @param array|null $targetedArgs
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct($filters, array $args = null, Entity $entity = null, Property $property = null, array $namedArgs = array())
+	public function __construct(array $filters, array $args = null, Entity $entity = null, Property $property = null, array $targetedArgs = array())
 	{
 		if (!is_array($filters)) {
 			if (!is_string($filters)) {
@@ -58,7 +58,7 @@ class Filtering
 		$this->args = $args !== null ? $args : array();
 		$this->entity = $entity;
 		$this->property = $property;
-		$this->namedArgs = $namedArgs;
+		$this->targetedArgs = $targetedArgs;
 	}
 
 	/**
@@ -96,9 +96,9 @@ class Filtering
 	/**
 	 * @return array
 	 */
-	public function getNamedArgs()
+	public function getTargetedArgs()
 	{
-		return $this->namedArgs;
+		return $this->targetedArgs;
 	}
 
 }
