@@ -81,7 +81,7 @@ abstract class Repository
 	protected function createFluent()
 	{
 		$table = $this->getTable();
-		$statement = $this->connection->select('*')->from($table);
+		$statement = $this->connection->select('%n.*', $table)->from($table);
 		$filters = $this->mapper->getImplicitFilters($this->mapper->getEntityClass($table), $this);
 		if (!empty($filters)) {
 			$targetedArgs = array();
