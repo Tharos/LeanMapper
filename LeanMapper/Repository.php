@@ -78,13 +78,14 @@ abstract class Repository
 	/**
 	 * @return Fluent
 	 */
-	protected function createFluent()
+	protected function createFluent(/*$filterArg1, $filterArg2, ...*/)
 	{
 		$table = $this->getTable();
 		$statement = $this->connection->select('%n.*', $table)->from($table);
 		$filters = $this->mapper->getImplicitFilters($this->mapper->getEntityClass($table), $this);
 		if (!empty($filters)) {
 			$targetedArgs = array();
+			$funcArgs = func_get_args();
 			if ($filters instanceof ImplicitFilters) {
 				$targetedArgs = $filters->getTargetedArgs();
 				$filters = $filters->getFilters();
@@ -93,6 +94,9 @@ abstract class Repository
 				$args = array($filter);
 				if (array_key_exists($filter, $targetedArgs)) {
 					$args = array_merge($args, $targetedArgs[$filter]);
+				}
+				if (!empty($funcArgs)) {
+					$args = array_merge($args, $funcArgs);
 				}
 				call_user_func_array(array($statement, 'applyFilter'), $args);
 			}
