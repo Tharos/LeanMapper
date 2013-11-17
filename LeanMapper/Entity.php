@@ -135,6 +135,9 @@ abstract class Entity
 		if ($property->isBasicType()) {
 			$column = $property->getColumn();
 			$value = $this->row->$column;
+			if ($pass !== null) {
+				$value = $this->$pass($value);
+			}
 			if ($value === null) {
 				if (!$property->isNullable()) {
 					throw new InvalidValueException("Property $name in entity " . get_called_class() . 'cannot be null.');
@@ -181,9 +184,15 @@ abstract class Entity
 					}
 				}
 				$value = call_user_func_array(array($this, $method), $args);
+				if ($pass !== null) {
+					$value = $this->$pass($value);
+				}
 			} else {
 				$column = $property->getColumn();
 				$value = $this->row->$column;
+				if ($pass !== null) {
+					$value = $this->$pass($value);
+				}
 				if ($value === null) {
 					if (!$property->isNullable()) {
 						throw new InvalidValueException("Property '$name' in entity " . get_called_class() . " cannot be null.");
@@ -201,9 +210,6 @@ abstract class Entity
 					}
 				}
 			}
-		}
-		if ($pass !== null) {
-			$value = $this->$pass($value);
 		}
 		return $value;
 	}
@@ -239,7 +245,9 @@ abstract class Entity
 				}
 				$customSetterReflection->invoke($this, $value);
 			} else {
-				$pass = $property->getSetterPass();
+				if (($pass = $property->getSetterPass()) !== null) {
+					$value = $this->$pass($value);
+				}
 				$column = $property->getColumn();
 				if ($value === null) {
 					if (!$property->isNullable()) {
@@ -288,9 +296,6 @@ abstract class Entity
 							}
 						}
 					}
-				}
-				if ($pass !== null) {
-					$value = $this->$pass($value);
 				}
 				$this->row->$column = $value;
 			}
