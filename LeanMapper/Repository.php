@@ -82,7 +82,7 @@ abstract class Repository
 	{
 		$table = $this->getTable();
 		$statement = $this->connection->select('%n.*', $table)->from($table);
-		$filters = $this->mapper->getImplicitFilters($this->mapper->getEntityClass($table), $this);
+		$filters = $this->mapper->getImplicitFilters($this->mapper->getEntityClass($table), new Caller($this));
 		if (!empty($filters)) {
 			$targetedArgs = array();
 			$funcArgs = func_get_args();

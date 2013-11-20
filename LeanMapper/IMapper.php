@@ -92,9 +92,9 @@ interface IMapper
 	 * Gets filters that should be used used every time when given entity is loaded from database
 	 *
 	 * @param string $entityClass
-	 * @param Entity|Repository|mixed|null $caller
+	 * @param Caller|null $caller
 	 * @return array|ImplicitFilters
 	 */
-	public function getImplicitFilters($entityClass, $caller = null);
+	public function getImplicitFilters($entityClass, Caller $caller = null);
 	
 }
