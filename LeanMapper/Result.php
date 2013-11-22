@@ -11,6 +11,7 @@
 
 namespace LeanMapper;
 
+use Closure;
 use DibiSqliteDriver;
 use DibiSqlite3Driver;
 use DibiRow;
@@ -771,15 +772,17 @@ class Result implements \Iterator
 		$targetedArgs = $filtering->getTargetedArgs();
 		foreach ($filtering->getFilters() as $filter) {
 			$args = array($filter);
-			foreach (str_split($this->connection->getWiringSchema($filter)) as $autowiredArg) {
-				if ($autowiredArg === 'e') {
-					$args[] = $filtering->getEntity();
-				} elseif ($autowiredArg === 'p') {
-					$args[] = $filtering->getProperty();
+			if (!($filter instanceof Closure)) {
+				foreach (str_split($this->connection->getWiringSchema($filter)) as $autowiredArg) {
+					if ($autowiredArg === 'e') {
+						$args[] = $filtering->getEntity();
+					} elseif ($autowiredArg === 'p') {
+						$args[] = $filtering->getProperty();
+					}
 				}
-			}
-			if (isset($targetedArgs[$filter])) {
-				$args = array_merge($args, $targetedArgs[$filter]);
+				if (isset($targetedArgs[$filter])) {
+					$args = array_merge($args, $targetedArgs[$filter]);
+				}
 			}
 			$args = array_merge($args, $filtering->getArgs());
 			call_user_func_array(array($statement, 'applyFilter'), $args);

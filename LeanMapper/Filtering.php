@@ -11,6 +11,7 @@
 
 namespace LeanMapper;
 
+use Closure;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Reflection\Property;
 
@@ -39,15 +40,21 @@ class Filtering
 
 
 	/**
-	 * @param array $filters
+	 * @param array|string|Closure $filters
 	 * @param array|null $args
 	 * @param Entity|null $entity
 	 * @param Property|null $property
 	 * @param array|null $targetedArgs
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct(array $filters, array $args = null, Entity $entity = null, Property $property = null, array $targetedArgs = array())
+	public function __construct($filters, array $args = null, Entity $entity = null, Property $property = null, array $targetedArgs = array())
 	{
+		if (!is_array($filters)) {
+			if (!is_string($filters) and !($filters instanceof Closure)) {
+				throw new InvalidArgumentException("Argument \$filters must contain either string (name of filter), instance of Closure or array (with names of filters or instances of Closure).");
+			}
+			$filters = array($filters);
+		}
 		$this->filters = $filters;
 		$this->args = $args !== null ? $args : array();
 		$this->entity = $entity;
