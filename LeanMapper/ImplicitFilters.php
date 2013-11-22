@@ -11,6 +11,9 @@
 
 namespace LeanMapper;
 
+use Closure;
+use LeanMapper\Exception\InvalidArgumentException;
+
 /**
  * Encapsulation of implicit filters
  *
@@ -27,11 +30,18 @@ class ImplicitFilters
 
 
 	/**
-	 * @param array $filters
+	 * @param array|string|Closure $filters
 	 * @param array|null $targetedArgs
+	 * @throws InvalidArgumentException
 	 */
-	public function __construct(array $filters, array $targetedArgs = array())
+	public function __construct($filters, array $targetedArgs = array())
 	{
+		if (!is_array($filters)) {
+			if (!is_string($filters) and !($filters instanceof Closure)) {
+				throw new InvalidArgumentException("Argument \$filters must contain either string (name of filter), instance of Closure or array (with names of filters or instances of Closure).");
+			}
+			$filters = array($filters);
+		}
 		$this->filters = $filters;
 		$this->targetedArgs = $targetedArgs;
 	}
