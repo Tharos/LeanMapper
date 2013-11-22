@@ -161,7 +161,7 @@ abstract class Entity
 
 				$args = array($property, $relationship, $targetTable);
 
-				$implicitFilters = $this->mapper->getImplicitFilters($this->mapper->getEntityClass($targetTable), $this);
+				$implicitFilters = $this->mapper->getImplicitFilters($this->mapper->getEntityClass($targetTable), new Caller($this, $property));
 				$targetedArgs = array();
 				if ($implicitFilters instanceof ImplicitFilters) {
 					$targetedArgs = $implicitFilters->getTargetedArgs();
