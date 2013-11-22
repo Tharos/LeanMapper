@@ -125,11 +125,7 @@ abstract class Entity
 		}
 		$customGetter = $property->getGetter();
 		if ($customGetter !== null) {
-			$customGetterReflection = $reflection->getGetter($customGetter);
-			if ($customGetterReflection === null) {
-				throw new InvalidMethodCallException("Missing getter method '$customGetter' in entity " . get_called_class() . '.');
-			}
-			return $customGetterReflection->invoke($this); // filters are not relevant here
+			return $this->$customGetter(); // filters are not relevant here
 		}
 		$pass = $property->getGetterPass();
 		if ($property->isBasicType()) {
@@ -239,11 +235,7 @@ abstract class Entity
 			}
 			$customSetter = $property->getSetter();
 			if ($customSetter !== null) {
-				$customSetterReflection = $reflection->getSetter($customSetter);
-				if ($customSetterReflection === null) {
-					throw new InvalidMethodCallException("Missing setter method '$customSetter' in entity " . get_called_class() . '.');
-				}
-				$customSetterReflection->invoke($this, $value);
+				$this->$customSetter($value);
 			} else {
 				if (($pass = $property->getSetterPass()) !== null) {
 					$value = $this->$pass($value);
