@@ -160,7 +160,7 @@ class EntityReflection extends \ReflectionClass
 		foreach ($this->getFamilyLine() as $member) {
 			foreach ($annotationTypes as $annotationType) {
 				foreach (AnnotationsParser::parseAnnotationValues($annotationType, $member->getDocComment()) as $definition) {
-					$property = PropertyFactory::createFromAnnotation($annotationType, $definition, $this, $this->mapper);
+					$property = PropertyFactory::createFromAnnotation($annotationType, $definition, $member, $this->mapper);
 					// collision check
 					$column = $property->getColumn();
 					if ($column !== null and $property->isWritable()) {
