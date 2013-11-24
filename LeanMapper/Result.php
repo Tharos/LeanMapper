@@ -122,10 +122,23 @@ class Result implements \Iterator
 
 	/**
 	 * @param Connection $connection
+	 * @throws InvalidStateException
 	 */
 	public function setConnection(Connection $connection)
 	{
-		$this->connection = $connection;
+		if ($this->connection === null) {
+			$this->connection = $connection;
+		} elseif ($this->connection !== $connection) {
+			throw new InvalidStateException("Given connection doesn't equal to connection already present in Result.");
+		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function hasConnection()
+	{
+		return $this->connection !== null;
 	}
 
 	/**
