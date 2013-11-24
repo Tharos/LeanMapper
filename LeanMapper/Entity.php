@@ -507,6 +507,7 @@ abstract class Entity
 	public function detach()
 	{
 		$this->row->detach();
+		$this->mapper = null;
 	}
 
 	/**
@@ -599,7 +600,7 @@ abstract class Entity
 	 */
 	private function useMapper(IMapper $mapper)
 	{
-		if ($this->mapper === null or $this->isDetached()) {
+		if ($this->mapper === null) {
 			$newProperties = $this->getReflection($mapper)->getEntityProperties();
 			foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
 				$oldColumn = $oldProperty->getColumn();
