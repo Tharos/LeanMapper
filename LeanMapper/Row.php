@@ -102,6 +102,14 @@ class Row
 	}
 
 	/**
+	 * @return bool
+	 */
+	public function hasConnection()
+	{
+		return $this->result->hasConnection();
+	}
+
+	/**
 	 * @param IMapper $mapper
 	 */
 	public function setMapper(IMapper $mapper)
