@@ -74,9 +74,4 @@ $book->author = $author;
 $result = $book->getModifiedRowData();
 list($key, $value) = each($result);
 
-Assert::equal(1, $value);
-Assert::equal('author{hasOne:', substr($key, 0, 14));
-
-$book->makeAlive($entityFactory, $connection, $mapper);
-
 Assert::equal(array('author_customid' => 1), $book->getRowData());

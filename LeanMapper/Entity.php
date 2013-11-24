@@ -150,7 +150,7 @@ abstract class Entity
 		} else {
 			if ($property->hasRelationship()) {
 				if ($this->entityFactory === null) {
-					throw new InvalidStateException('Missing IEntityFactory in ' . get_called_class() . '.');
+					throw new InvalidStateException('Missing entity factory in ' . get_called_class() . '.');
 				}
 				$relationship = $property->getRelationship();
 				$targetTable = $relationship->getTargetTable();
@@ -273,20 +273,22 @@ abstract class Entity
 							if (!($value instanceof Entity)) {
 								throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given.");
 							}
+							if ($value->isDetached()) {
+								throw new InvalidValueException("Detached entity cannot be assigned to property '{$property->getName()}' with relationship in entity " . get_called_class() . '.');
+							}
+							$this->useMapper($value->mapper);
+
+							$property = $this->getCurrentReflection()->getEntityProperty($name);
 							$relationship = $property->getRelationship();
 							if (!($relationship instanceof Relationship\HasOne)) {
 								throw new InvalidMethodCallException("Cannot assign value to property '{$property->getName()}' in entity " . get_called_class() . '. Only properties with m:hasOne relationship can be set via magic __set.');
 							}
+							$this->setEntityFactory($value->entityFactory);
 							$column = $relationship->getColumnReferencingTargetTable();
-							if ($value->isDetached()) {
-								throw new InvalidValueException("Detached entity cannot be assigned to property '{$property->getName()}' with relationship in entity " . get_called_class() . '.');
-							}
-							$mapper = $value->mapper; // mapper stealing :)
-							$table = $mapper->getTable(get_class($value));
-							$idProperty = $mapper->getEntityField($table, $mapper->getPrimaryKey($table));
-
+							$table = $this->mapper->getTable(get_class($value));
+							$idProperty = $this->mapper->getEntityField($table, $this->mapper->getPrimaryKey($table));
+							$this->row->setReferencedRow($value->row, $column);
 							$value = $value->$idProperty;
-							$this->row->cleanReferencedRowsCache($table, $column);
 						} else {
 							if (!is_object($value)) {
 								$givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
@@ -502,6 +504,7 @@ abstract class Entity
 	public function detach()
 	{
 		$this->row->detach();
+		$this->mapper = null;
 	}
 
 	/**
@@ -531,23 +534,26 @@ abstract class Entity
 	/**
 	 * Provides dependencies
 	 *
-	 * @param IEntityFactory $entityFactory
+	 * @param IEntityFactory|null $entityFactory
 	 * @param Connection|null $connection
 	 * @param IMapper|null $mapper
 	 * @throws InvalidArgumentException
 	 * @throws InvalidStateException
 	 */
-	public function makeAlive(IEntityFactory $entityFactory, Connection $connection = null, IMapper $mapper = null)
+	public function makeAlive(IEntityFactory $entityFactory = null, Connection $connection = null, IMapper $mapper = null)
 	{
-		$this->entityFactory = $entityFactory;
-		if ($this->row->isDetached()) {
-			if ($connection === null or $mapper === null) {
-				throw new InvalidArgumentException('All three arguments (IEntityFactory, Connection and IMapper) must be given when making detached entity ' . get_called_class() . ' alive.');
-			}
-			$this->row->setConnection($connection);
-			$this->useMapper($mapper);
-		} elseif ($connection !== null or $mapper !== null) {
-			throw new InvalidArgumentException('Only IEntityFactory argument can be given when making attached entity ' . get_called_class() . ' alive. Note that Connection and IMapper are already encapsulated in Row.');
+		$entityFactory === null or $this->setEntityFactory($entityFactory);
+		$mapper === null or $this->useMapper($mapper);
+		$connection === null or $this->row->setConnection($connection);
+
+		if ($this->entityFactory === null) {
+			throw new InvalidStateException('Missing entity factory in entity ' . get_called_class() . '.');
+		}
+		if ($this->mapper === null) {
+			throw new InvalidStateException('Missing entity factory in entity ' . get_called_class() . '.');
+		}
+		if (!$this->row->hasConnection()) {
+			throw new InvalidStateException('Missing connection in Result in entity ' . get_called_class() . '.');
 		}
 	}
 
@@ -594,25 +600,42 @@ abstract class Entity
 	 */
 	private function useMapper(IMapper $mapper)
 	{
-		$newProperties = $this->getReflection($mapper)->getEntityProperties();
-		foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
-			$oldColumn = $oldProperty->getColumn();
-			if ($oldColumn !== null) {
-				$name = $oldProperty->getName();
-				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
-					throw new InvalidStateException('Inconsistent sets of properties detected in entity ' . get_called_class() . '.');
-				}
-				if ($this->row->hasColumn($oldColumn)) {
-					$newColumn = $newProperties[$name]->getColumn();
-					$value = $this->row->$oldColumn;
-					unset($this->row->$oldColumn);
-					$this->row->$newColumn = $value;
+		if ($this->mapper === null) {
+			$newProperties = $this->getReflection($mapper)->getEntityProperties();
+			foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
+				$oldColumn = $oldProperty->getColumn();
+				if ($oldColumn !== null) {
+					$name = $oldProperty->getName();
+					if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
+						throw new InvalidStateException('Inconsistent sets of properties detected in entity ' . get_called_class() . '.');
+					}
+					if ($this->row->hasColumn($oldColumn)) {
+						$newColumn = $newProperties[$name]->getColumn();
+						$value = $this->row->$oldColumn;
+						unset($this->row->$oldColumn);
+						$this->row->$newColumn = $value;
+					}
 				}
 			}
+			$this->mapper = $mapper;
+			$this->row->setMapper($mapper);
+			$this->currentReflection = null;
+		} elseif ($this->mapper !== $mapper) {
+			throw new InvalidStateException("Given mapper doesn't equal to mapper already present in entity " . get_called_class() . '.');
 		}
-		$this->mapper = $mapper;
-		$this->row->setMapper($mapper);
-		$this->currentReflection = null;
+	}
+
+	/**
+	 * @param IEntityFactory $entityFactory
+	 * @throws InvalidStateException
+	 */
+	private function setEntityFactory(IEntityFactory $entityFactory)
+	{
+		if ($this->entityFactory === null) {
+			$this->entityFactory = $entityFactory;
+		} elseif ($this->entityFactory !== $entityFactory) {
+			throw new InvalidStateException("Given entity factory doesn't equal to entity factory already present in entity " . get_called_class() . '.');
+		}
 	}
 
 	/**
