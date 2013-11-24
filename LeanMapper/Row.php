@@ -25,6 +25,9 @@ class Row
 	/** @var int */
 	private $id;
 
+	/** @var array */
+	private $referencedRows;
+
 
 	/**
 	 * @param Result $result
@@ -197,6 +200,9 @@ class Row
 	 */
 	public function referenced($table, $viaColumn = null, Filtering $filtering = null)
 	{
+		if (isset($this->referencedRows[$viaColumn])) {
+			return $this->referencedRows[$viaColumn];
+		}
 		return $this->result->getReferencedRow($this->id, $table, $viaColumn, $filtering);
 	}
 
@@ -212,6 +218,15 @@ class Row
 	public function referencing($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
 		return $this->result->getReferencingRows($this->id, $table, $viaColumn, $filtering, $strategy);
+	}
+
+	/**
+	 * @param Row $row
+	 * @param string $viaColumn
+	 */
+	public function setReferencedRow(self $row, $viaColumn)
+	{
+		$this->referencedRows[$viaColumn] = $row;
 	}
 
 	/**

@@ -273,20 +273,25 @@ abstract class Entity
 							if (!($value instanceof Entity)) {
 								throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given.");
 							}
+							if ($value->isDetached()) {
+								throw new InvalidValueException("Detached entity cannot be assigned to property '{$property->getName()}' with relationship in entity " . get_called_class() . '.');
+							}
+							if ($this->mapper === null) {
+								$this->useMapper($value->mapper);
+								$property = $this->getCurrentReflection()->getEntityProperty($name);
+							}
 							$relationship = $property->getRelationship();
 							if (!($relationship instanceof Relationship\HasOne)) {
 								throw new InvalidMethodCallException("Cannot assign value to property '{$property->getName()}' in entity " . get_called_class() . '. Only properties with m:hasOne relationship can be set via magic __set.');
 							}
-							$column = $relationship->getColumnReferencingTargetTable();
-							if ($value->isDetached()) {
-								throw new InvalidValueException("Detached entity cannot be assigned to property '{$property->getName()}' with relationship in entity " . get_called_class() . '.');
+							if ($this->entityFactory === null) {
+								$this->entityFactory = $value->entityFactory;
 							}
-							$mapper = $value->mapper; // mapper stealing :)
-							$table = $mapper->getTable(get_class($value));
-							$idProperty = $mapper->getEntityField($table, $mapper->getPrimaryKey($table));
-
+							$column = $relationship->getColumnReferencingTargetTable();
+							$table = $this->mapper->getTable(get_class($value));
+							$idProperty = $this->mapper->getEntityField($table, $this->mapper->getPrimaryKey($table));
+							$this->row->setReferencedRow($value->row, $column);
 							$value = $value->$idProperty;
-							$this->row->cleanReferencedRowsCache($table, $column);
 						} else {
 							if (!is_object($value)) {
 								$givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
@@ -594,25 +599,27 @@ abstract class Entity
 	 */
 	private function useMapper(IMapper $mapper)
 	{
-		$newProperties = $this->getReflection($mapper)->getEntityProperties();
-		foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
-			$oldColumn = $oldProperty->getColumn();
-			if ($oldColumn !== null) {
-				$name = $oldProperty->getName();
-				if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
-					throw new InvalidStateException('Inconsistent sets of properties detected in entity ' . get_called_class() . '.');
-				}
-				if ($this->row->hasColumn($oldColumn)) {
-					$newColumn = $newProperties[$name]->getColumn();
-					$value = $this->row->$oldColumn;
-					unset($this->row->$oldColumn);
-					$this->row->$newColumn = $value;
+		if ($this->mapper === null or $this->isDetached()) {
+			$newProperties = $this->getReflection($mapper)->getEntityProperties();
+			foreach ($this->getCurrentReflection()->getEntityProperties() as $oldProperty) {
+				$oldColumn = $oldProperty->getColumn();
+				if ($oldColumn !== null) {
+					$name = $oldProperty->getName();
+					if (!isset($newProperties[$name]) or $newProperties[$name]->getColumn() === null) {
+						throw new InvalidStateException('Inconsistent sets of properties detected in entity ' . get_called_class() . '.');
+					}
+					if ($this->row->hasColumn($oldColumn)) {
+						$newColumn = $newProperties[$name]->getColumn();
+						$value = $this->row->$oldColumn;
+						unset($this->row->$oldColumn);
+						$this->row->$newColumn = $value;
+					}
 				}
 			}
+			$this->mapper = $mapper;
+			$this->row->setMapper($mapper);
+			$this->currentReflection = null;
 		}
-		$this->mapper = $mapper;
-		$this->row->setMapper($mapper);
-		$this->currentReflection = null;
 	}
 
 	/**
