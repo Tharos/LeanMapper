@@ -222,7 +222,7 @@ abstract class Entity
 	 * @throws InvalidValueException
 	 * @throws MemberAccessException
 	 */
-	function __set($name, $value)
+	public function __set($name, $value)
 	{
 		$reflection = $this->getCurrentReflection();
 		$nativeSetter = $reflection->getSetter('set' . ucfirst($name));
