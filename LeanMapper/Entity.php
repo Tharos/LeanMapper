@@ -257,12 +257,14 @@ abstract class Entity
 							throw new InvalidMethodCallException("Property '$name' in entity " . get_called_class() . " cannot be null since it contains relationship that doesn't support it.");
 						}
 					}
+					$this->row->$column = $value;
 				} else {
 					if ($property->isBasicType()) {
 						settype($value, $property->getType());
 						if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
 							throw new InvalidValueException("Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.');
 						}
+						$this->row->$column = $value;
 					} else {
 						$type = $property->getType();
 						$givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
@@ -276,28 +278,16 @@ abstract class Entity
 							if ($value->isDetached()) {
 								throw new InvalidValueException("Detached entity cannot be assigned to property '{$property->getName()}' with relationship in entity " . get_called_class() . '.');
 							}
-							$this->useMapper($value->mapper);
-
-							$property = $this->getCurrentReflection()->getEntityProperty($name);
-							$relationship = $property->getRelationship();
-							if (!($relationship instanceof Relationship\HasOne)) {
-								throw new InvalidMethodCallException("Cannot assign value to property '{$property->getName()}' in entity " . get_called_class() . '. Only properties with m:hasOne relationship can be set via magic __set.');
-							}
-							$this->setEntityFactory($value->entityFactory);
-							$column = $relationship->getColumnReferencingTargetTable();
-							$table = $this->mapper->getTable(get_class($value));
-							$idProperty = $this->mapper->getEntityField($table, $this->mapper->getPrimaryKey($table));
-							$this->row->setReferencedRow($value->row, $column);
-							$value = $value->$idProperty;
+							$this->setRelatedEntity($name, $value);
 						} else {
 							if (!is_object($value)) {
 								$givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
 								throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given.");
 							}
+							$this->row->$column = $value;
 						}
 					}
 				}
-				$this->row->$column = $value;
 			}
 		}
 	}
@@ -554,6 +544,32 @@ abstract class Entity
 		}
 		if (!$this->row->hasConnection()) {
 			throw new InvalidStateException('Missing connection in Result in entity ' . get_called_class() . '.');
+		}
+	}
+
+	/**
+	 * @param string $propertyName
+	 * @param Entity $entity
+	 * @throws InvalidMethodCallException
+	 */
+	protected function setRelatedEntity($propertyName, Entity $entity = null)
+	{
+		if ($entity !== null) {
+			$this->useMapper($entity->mapper);
+			$this->setEntityFactory($entity->entityFactory);
+			$table = $this->mapper->getTable(get_class($entity));
+			$idProperty = $this->mapper->getEntityField($table, $this->mapper->getPrimaryKey($table));
+		}
+		$relationship = $this->getCurrentReflection()->getEntityProperty($propertyName)->getRelationship();
+		if (!($relationship instanceof Relationship\HasOne)) {
+			throw new InvalidMethodCallException("Cannot assign value to property '$propertyName' in entity " . get_called_class() . '. Only properties with m:hasOne relationship can be set via magic __set.');
+		}
+		$column = $relationship->getColumnReferencingTargetTable();
+		if ($entity !== null) {
+			$this->row->setReferencedRow($entity->row, $column);
+			$this->row->$column = $entity->$idProperty;
+		} else {
+			$this->row->$column = null;
 		}
 	}
 
