@@ -282,7 +282,7 @@ abstract class Entity
 			if ($value->isDetached()) {
 				throw new InvalidValueException("Detached entity cannot be assigned to property '{$property->getName()}' with relationship in entity " . get_called_class() . '.');
 			}
-			$this->setRelatedEntity($name, $value);
+			$this->assignEntityToProperty($value, $name);
 			return;
 		}
 		if (!is_object($value)) {
@@ -548,11 +548,11 @@ abstract class Entity
 	}
 
 	/**
+	 * @param Entity|null $entity
 	 * @param string $propertyName
-	 * @param Entity $entity
 	 * @throws InvalidMethodCallException
 	 */
-	protected function setRelatedEntity($propertyName, Entity $entity = null)
+	protected function assignEntityToProperty(Entity $entity = null, $propertyName)
 	{
 		if ($entity !== null) {
 			$this->useMapper($entity->mapper);
