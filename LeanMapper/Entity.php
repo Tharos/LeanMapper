@@ -135,7 +135,7 @@ abstract class Entity
 			$column = $property->getColumn();
 			$value = $this->row->$column;
 			if ($pass !== null) {
-				$value = $this->$pass($value);
+				$this->$pass($value);
 			}
 			if ($value === null) {
 				if (!$property->isNullable()) {
@@ -185,14 +185,14 @@ abstract class Entity
 			}
 			$value = call_user_func_array(array($this, $method), $args);
 			if ($pass !== null) {
-				$value = $this->$pass($value);
+				$this->$pass($value);
 			}
 			return $value;
 		}
 		$column = $property->getColumn();
 		$value = $this->row->$column;
 		if ($pass !== null) {
-			$value = $this->$pass($value);
+			$this->$pass($value);
 		}
 		if ($value === null) {
 			if (!$property->isNullable()) {
@@ -246,7 +246,7 @@ abstract class Entity
 			return;
 		}
 		if (($pass = $property->getSetterPass()) !== null) {
-			$value = $this->$pass($value);
+			$this->$pass($value);
 		}
 		$column = $property->getColumn();
 		if ($value === null) {
