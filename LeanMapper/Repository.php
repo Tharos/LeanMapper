@@ -92,7 +92,7 @@ abstract class Repository
 			}
 			foreach ($filters as $filter) {
 				$args = array($filter);
-				if (array_key_exists($filter, $targetedArgs)) {
+				if (is_string($filter) and array_key_exists($filter, $targetedArgs)) {
 					$args = array_merge($args, $targetedArgs[$filter]);
 				}
 				if (!empty($funcArgs)) {
