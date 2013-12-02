@@ -154,14 +154,12 @@ abstract class Entity
 				throw new InvalidStateException('Missing entity factory in ' . get_called_class() . '.');
 			}
 			$relationship = $property->getRelationship();
-			$targetTable = $relationship->getTargetTable();
-
 			$method = explode('\\', get_class($relationship));
 			$method = 'get' . end($method) . 'Value';
 
-			$args = array($property, $relationship, $targetTable);
+			$args = array($property);
 
-			$implicitFilters = $this->createImplicitFilters($this->mapper->getEntityClass($targetTable), new Caller($this, $property));
+			$implicitFilters = $this->createImplicitFilters($property->getType(), new Caller($this, $property));
 			$firstFilters = $property->getFilters(0) ?: array();
 			if ($method === 'getHasManyValue') {
 				$secondFilters = $this->mergeFilters($property->getFilters(1) ?: array(), $implicitFilters->getFilters());
@@ -544,14 +542,14 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
-	 * @param string $targetTable
 	 * @param Filtering|null $filtering
 	 * @throws InvalidValueException
 	 * @return Entity
 	 */
-	protected function getHasOneValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
+	protected function getHasOneValue(Property $property, Filtering $filtering = null)
 	{
+		$relationship = $property->getRelationship();
+		$targetTable = $relationship->getTargetTable();
 		$row = $this->row->referenced($targetTable, $relationship->getColumnReferencingTargetTable(), $filtering);
 		if ($row === null) {
 			if (!$property->isNullable()) {
@@ -570,15 +568,15 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
-	 * @param string $targetTable
 	 * @param Filtering|null $relTableFiltering
 	 * @param Filtering|null $targetTableFiltering
 	 * @return Entity[]
 	 * @throws InvalidValueException
 	 */
-	protected function getHasManyValue(Property $property, $relationship, $targetTable, Filtering $relTableFiltering = null, Filtering $targetTableFiltering = null)
+	protected function getHasManyValue(Property $property, Filtering $relTableFiltering = null, Filtering $targetTableFiltering = null)
 	{
+		$relationship = $property->getRelationship();
+		$targetTable = $relationship->getTargetTable();
 		$columnReferencingTargetTable = $relationship->getColumnReferencingTargetTable();
 		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), $relTableFiltering, $relationship->getStrategy());
 		$value = array();
@@ -597,14 +595,14 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
-	 * @param string $targetTable
 	 * @param Filtering|null $filtering
 	 * @return Entity
 	 * @throws InvalidValueException
 	 */
-	protected function getBelongsToOneValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
+	protected function getBelongsToOneValue(Property $property, Filtering $filtering = null)
 	{
+		$relationship = $property->getRelationship();
+		$targetTable = $relationship->getTargetTable();
 		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$count = count($rows);
 		if ($count > 1) {
@@ -627,13 +625,13 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
-	 * @param string $targetTable
 	 * @param Filtering|null $filtering
 	 * @return Entity[]
 	 */
-	protected function getBelongsToManyValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
+	protected function getBelongsToManyValue(Property $property, Filtering $filtering = null)
 	{
+		$relationship = $property->getRelationship();
+		$targetTable = $relationship->getTargetTable();
 		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$value = array();
 		foreach ($rows as $row) {
