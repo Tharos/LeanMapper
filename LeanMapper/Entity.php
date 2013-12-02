@@ -161,26 +161,21 @@ abstract class Entity
 
 			$args = array($property, $relationship, $targetTable);
 
-			$implicitFilters = $this->mapper->getImplicitFilters($this->mapper->getEntityClass($targetTable), new Caller($this, $property));
-			$targetedArgs = array();
-			if ($implicitFilters instanceof ImplicitFilters) {
-				$targetedArgs = $implicitFilters->getTargetedArgs();
-				$implicitFilters = $implicitFilters->getFilters();
-			}
+			$implicitFilters = $this->createImplicitFilters($this->mapper->getEntityClass($targetTable), new Caller($this, $property));
 			$firstFilters = $property->getFilters(0) ?: array();
 			if ($method === 'getHasManyValue') {
-				$secondFilters = $this->mergeFilters($property->getFilters(1) ?: array(), $implicitFilters);
+				$secondFilters = $this->mergeFilters($property->getFilters(1) ?: array(), $implicitFilters->getFilters());
 			} else {
-				$firstFilters = $this->mergeFilters($firstFilters, $implicitFilters);
+				$firstFilters = $this->mergeFilters($firstFilters, $implicitFilters->getFilters());
 			}
 			if (!empty($firstFilters) or !empty($secondFilters)) {
 				$funcArgs = func_get_args();
 				$filterArgs = isset($funcArgs[1]) ? $funcArgs[1] : array();
 				if (empty($secondFilters)) {
-					$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, array_merge($targetedArgs, (array) $property->getFiltersTargetedArgs(0))) : null;
+					$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, array_merge($implicitFilters->getTargetedArgs(), (array) $property->getFiltersTargetedArgs(0))) : null;
 				} else {
 					$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, (array) $property->getFiltersTargetedArgs(0)) : null;
-					$args[] = new Filtering($secondFilters, $filterArgs, $this, $property, array_merge($targetedArgs, (array) $property->getFiltersTargetedArgs(1)));
+					$args[] = new Filtering($secondFilters, $filterArgs, $this, $property, array_merge($implicitFilters->getTargetedArgs(), (array) $property->getFiltersTargetedArgs(1)));
 				}
 			}
 			$value = call_user_func_array(array($this, $method), $args);
@@ -602,6 +597,17 @@ abstract class Entity
 	 */
 	protected function initDefaults()
 	{
+	}
+
+	/**
+	 * @param string $entityClass
+	 * @param Caller $caller
+	 * @return ImplicitFilters
+	 */
+	protected function createImplicitFilters($entityClass, Caller $caller = null)
+	{
+		$implicitFilters = $this->mapper->getImplicitFilters($entityClass, $caller);
+		return ($implicitFilters instanceof ImplicitFilters) ? $implicitFilters : new ImplicitFilters($implicitFilters);
 	}
 
 	////////////////////
