@@ -543,6 +543,110 @@ abstract class Entity
 	}
 
 	/**
+	 * @param Property $property
+	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
+	 * @param string $targetTable
+	 * @param Filtering|null $filtering
+	 * @throws InvalidValueException
+	 * @return Entity
+	 */
+	protected function getHasOneValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
+	{
+		$row = $this->row->referenced($targetTable, $relationship->getColumnReferencingTargetTable(), $filtering);
+		if ($row === null) {
+			if (!$property->isNullable()) {
+				$name = $property->getName();
+				throw new InvalidValueException("Property '$name' cannot be null in entity " . get_called_class() . '.');
+			}
+			return null;
+		} else {
+			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = $this->entityFactory->createEntity($entityClass, $row);
+			$this->checkConsistency($property, $entityClass, $entity);
+			$entity->makeAlive($this->entityFactory);
+			return $entity;
+		}
+	}
+
+	/**
+	 * @param Property $property
+	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
+	 * @param string $targetTable
+	 * @param Filtering|null $relTableFiltering
+	 * @param Filtering|null $targetTableFiltering
+	 * @return Entity[]
+	 * @throws InvalidValueException
+	 */
+	protected function getHasManyValue(Property $property, $relationship, $targetTable, Filtering $relTableFiltering = null, Filtering $targetTableFiltering = null)
+	{
+		$columnReferencingTargetTable = $relationship->getColumnReferencingTargetTable();
+		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), $relTableFiltering, $relationship->getStrategy());
+		$value = array();
+		foreach ($rows as $row) {
+			$valueRow = $row->referenced($targetTable, $columnReferencingTargetTable, $targetTableFiltering);
+			if ($valueRow !== null) {
+				$entityClass = $this->mapper->getEntityClass($targetTable, $valueRow);
+				$entity = $this->entityFactory->createEntity($entityClass, $valueRow);
+				$this->checkConsistency($property, $entityClass, $entity);
+				$entity->makeAlive($this->entityFactory);
+				$value[] = $entity;
+			}
+		}
+		return $this->createCollection($value);
+	}
+
+	/**
+	 * @param Property $property
+	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
+	 * @param string $targetTable
+	 * @param Filtering|null $filtering
+	 * @return Entity
+	 * @throws InvalidValueException
+	 */
+	protected function getBelongsToOneValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
+	{
+		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
+		$count = count($rows);
+		if ($count > 1) {
+			throw new InvalidValueException('There cannot be more than one entity referencing to entity ' . get_called_class() . " in property '{$property->getName()}' with m:belongToOne relationship.");
+		} elseif ($count === 0) {
+			if (!$property->isNullable()) {
+				$name = $property->getName();
+				throw new InvalidValueException("Property '$name' cannot be null in entity " . get_called_class() . '.');
+			}
+			return null;
+		} else {
+			$row = reset($rows);
+			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = $this->entityFactory->createEntity($entityClass, $row);
+			$this->checkConsistency($property, $entityClass, $entity);
+			$entity->makeAlive($this->entityFactory);
+			return $entity;
+		}
+	}
+
+	/**
+	 * @param Property $property
+	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
+	 * @param string $targetTable
+	 * @param Filtering|null $filtering
+	 * @return Entity[]
+	 */
+	protected function getBelongsToManyValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
+	{
+		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
+		$value = array();
+		foreach ($rows as $row) {
+			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
+			$entity = $this->entityFactory->createEntity($entityClass, $row);
+			$this->checkConsistency($property, $entityClass, $entity);
+			$entity->makeAlive($this->entityFactory);
+			$value[] = $entity;
+		}
+		return $this->createCollection($value);
+	}
+
+	/**
 	 * @param Entity|null $entity
 	 * @param string $propertyName
 	 * @throws InvalidMethodCallException
@@ -658,110 +762,6 @@ abstract class Entity
 		} elseif ($this->entityFactory !== $entityFactory) {
 			throw new InvalidStateException("Given entity factory doesn't equal to entity factory already present in entity " . get_called_class() . '.');
 		}
-	}
-
-	/**
-	 * @param Property $property
-	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
-	 * @param string $targetTable
-	 * @param Filtering|null $filtering
-	 * @throws InvalidValueException
-	 * @return Entity
-	 */
-	private function getHasOneValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
-	{
-		$row = $this->row->referenced($targetTable, $relationship->getColumnReferencingTargetTable(), $filtering);
-		if ($row === null) {
-			if (!$property->isNullable()) {
-				$name = $property->getName();
-				throw new InvalidValueException("Property '$name' cannot be null in entity " . get_called_class() . '.');
-			}
-			return null;
-		} else {
-			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = $this->entityFactory->createEntity($entityClass, $row);
-			$this->checkConsistency($property, $entityClass, $entity);
-			$entity->makeAlive($this->entityFactory);
-			return $entity;
-		}
-	}
-
-	/**
-	 * @param Property $property
-	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
-	 * @param string $targetTable
-	 * @param Filtering|null $relTableFiltering
-	 * @param Filtering|null $targetTableFiltering
-	 * @return Entity[]
-	 * @throws InvalidValueException
-	 */
-	private function getHasManyValue(Property $property, $relationship, $targetTable, Filtering $relTableFiltering = null, Filtering $targetTableFiltering = null)
-	{
-		$columnReferencingTargetTable = $relationship->getColumnReferencingTargetTable();
-		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), $relTableFiltering, $relationship->getStrategy());
-		$value = array();
-		foreach ($rows as $row) {
-			$valueRow = $row->referenced($targetTable, $columnReferencingTargetTable, $targetTableFiltering);
-			if ($valueRow !== null) {
-				$entityClass = $this->mapper->getEntityClass($targetTable, $valueRow);
-				$entity = $this->entityFactory->createEntity($entityClass, $valueRow);
-				$this->checkConsistency($property, $entityClass, $entity);
-				$entity->makeAlive($this->entityFactory);
-				$value[] = $entity;
-			}
-		}
-		return $this->createCollection($value);
-	}
-
-	/**
-	 * @param Property $property
-	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
-	 * @param string $targetTable
-	 * @param Filtering|null $filtering
-	 * @return Entity
-	 * @throws InvalidValueException
-	 */
-	private function getBelongsToOneValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
-	{
-		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
-		$count = count($rows);
-		if ($count > 1) {
-			throw new InvalidValueException('There cannot be more than one entity referencing to entity ' . get_called_class() . " in property '{$property->getName()}' with m:belongToOne relationship.");
-		} elseif ($count === 0) {
-			if (!$property->isNullable()) {
-				$name = $property->getName();
-				throw new InvalidValueException("Property '$name' cannot be null in entity " . get_called_class() . '.');
-			}
-			return null;
-		} else {
-			$row = reset($rows);
-			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = $this->entityFactory->createEntity($entityClass, $row);
-			$this->checkConsistency($property, $entityClass, $entity);
-			$entity->makeAlive($this->entityFactory);
-			return $entity;
-		}
-	}
-
-	/**
-	 * @param Property $property
-	 * @param BelongsToMany|BelongsToOne|HasMany|HasOne $relationship
-	 * @param string $targetTable
-	 * @param Filtering|null $filtering
-	 * @return Entity[]
-	 */
-	private function getBelongsToManyValue(Property $property, $relationship, $targetTable, Filtering $filtering = null)
-	{
-		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
-		$value = array();
-		foreach ($rows as $row) {
-			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
-			$entity = $this->entityFactory->createEntity($entityClass, $row);
-			$this->checkConsistency($property, $entityClass, $entity);
-			$entity->makeAlive($this->entityFactory);
-			$value[] = $entity;
-		}
-		return $this->createCollection($value);
 	}
 
 	/**
