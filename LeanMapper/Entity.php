@@ -20,10 +20,7 @@ use LeanMapper\Exception\MemberAccessException;
 use LeanMapper\Exception\RuntimeException;
 use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
-use LeanMapper\Relationship\BelongsToMany;
-use LeanMapper\Relationship\BelongsToOne;
-use LeanMapper\Relationship\HasMany;
-use LeanMapper\Relationship\HasOne;
+use LeanMapper\Relationship;
 use Traversable;
 
 /**
