@@ -11,8 +11,6 @@
 
 namespace LeanMapper;
 
-use Traversable;
-
 /**
  * Default IEntityFactory implementation
  *
@@ -27,6 +25,14 @@ class DefaultEntityFactory implements IEntityFactory
 	public function createEntity($entityClass, $arg = null)
 	{
 		return new $entityClass($arg);
+	}
+
+	/*
+	 * @inheritdoc
+	 */
+	public function createCollection(array $entities)
+	{
+		return $entities;
 	}
 
 }

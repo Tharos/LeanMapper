@@ -29,5 +29,13 @@ interface IEntityFactory
 	 * @return Entity
 	 */
 	public function createEntity($entityClass, $arg = null);
+
+	/**
+	 * Allows wrap set of entities in custom collection
+	 *
+	 * @param Entity[] $entities
+	 * @return mixed
+	 */
+	public function createCollection(array $entities);
 	
 }

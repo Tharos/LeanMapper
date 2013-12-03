@@ -600,17 +600,6 @@ abstract class Entity
 	}
 
 	/**
-	 * Allows encapsulate set of entities in custom collection
-	 *
-	 * @param array $entities
-	 * @return array
-	 */
-	protected function createCollection(array $entities)
-	{
-		return $entities;
-	}
-
-	/**
 	 * @param string $entityClass
 	 * @param Caller $caller
 	 * @return ImplicitFilters
@@ -681,7 +670,7 @@ abstract class Entity
 				$value[] = $entity;
 			}
 		}
-		return $this->createCollection($value);
+		return $this->entityFactory->createCollection($value);
 	}
 
 	/**
@@ -732,7 +721,7 @@ abstract class Entity
 			$entity->makeAlive($this->entityFactory);
 			$value[] = $entity;
 		}
-		return $this->createCollection($value);
+		return $this->entityFactory->createCollection($value);
 	}
 
 	/**

@@ -303,7 +303,7 @@ abstract class Repository
 				$entities[$dibiRow->$primaryKey] = $entity;
 			}
 		}
-		return $this->createCollection($entities);
+		return $this->entityFactory->createCollection($entities);
 	}
 
 	/**
@@ -325,17 +325,6 @@ abstract class Repository
 			return $this->mapper->getTableByRepositoryClass(get_called_class());
 		}
 		return $this->table;
-	}
-
-	/**
-	 * Allows encapsulate set of entities in custom collection
-	 *
-	 * @param array $entities
-	 * @return array
-	 */
-	protected function createCollection(array $entities)
-	{
-		return $entities;
 	}
 
 	/**

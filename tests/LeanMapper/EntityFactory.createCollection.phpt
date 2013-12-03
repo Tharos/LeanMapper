@@ -1,15 +1,16 @@
 <?php
 
+use LeanMapper\DefaultEntityFactory;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
 //////////
 
-class BaseEntity extends LeanMapper\Entity
+class CustomEntityFactory extends DefaultEntityFactory
 {
 
-	protected function createCollection(array $entites)
+	public function createCollection(array $entites)
 	{
 		return new ArrayObject($entites);
 	}
@@ -22,7 +23,7 @@ class BaseEntity extends LeanMapper\Entity
  * @property string $pubdate
  * @property Author $author m:hasOne
  */
-class Book extends BaseEntity
+class Book extends LeanMapper\Entity
 {
 }
 
@@ -32,7 +33,7 @@ class Book extends BaseEntity
  * @property string|null $web
  * @property Book[] $books m:belongsToMany
  */
-class Author extends BaseEntity
+class Author extends LeanMapper\Entity
 {
 }
 
@@ -41,8 +42,16 @@ class AuthorRepository extends LeanMapper\Repository
 
 	public function find($id)
 	{
+		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 		return $this->createEntity(
-			$this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch()
+			$this->createFluent()->where('%n = %i', $primaryKey, $id)->fetch()
+		);
+	}
+
+	public function findAll()
+	{
+		return $this->createEntities(
+			$this->createFluent()->fetchAll()
 		);
 	}
 
@@ -50,7 +59,7 @@ class AuthorRepository extends LeanMapper\Repository
 
 //////////
 
-$authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
+$authorRepository = new AuthorRepository($connection, $mapper, new CustomEntityFactory);
 
 $author = $authorRepository->find(1);
 
@@ -62,8 +71,8 @@ Assert::equal(1, count($books));
 
 //////////
 
-$books = $authorRepository->find(3)->books;
+$authors = $authorRepository->findAll();
 
-Assert::type('ArrayObject', $books);
+Assert::type('ArrayObject', $authors);
 
-Assert::equal(2, count($books));
+Assert::equal(5, count($authors));
