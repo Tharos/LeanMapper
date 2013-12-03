@@ -145,7 +145,7 @@ abstract class Entity
 				throw new InvalidValueException("Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.');
 			}
 			return $value;
-		}
+		} // property doesn't contain basic type
 		if ($property->hasRelationship()) {
 			if ($this->entityFactory === null) {
 				throw new InvalidStateException('Missing entity factory in ' . get_called_class() . '.');
@@ -175,7 +175,7 @@ abstract class Entity
 				$this->$pass($value);
 			}
 			return $value;
-		}
+		} // property doesn't contain basic type and doesn't contain relationship
 		$column = $property->getColumn();
 		$value = $this->row->$column;
 		if ($pass !== null) {
@@ -186,7 +186,7 @@ abstract class Entity
 				throw new InvalidValueException("Property '$name' in entity " . get_called_class() . " cannot be null.");
 			}
 			return $value;
-		}
+		} // property doesn't contain basic type, doesn't contain relationship and doesn't contain null
 		if (!$property->containsCollection()) {
 			$type = $property->getType();
 			if (!($value instanceof $type)) {
@@ -248,7 +248,7 @@ abstract class Entity
 			}
 			$this->row->$column = $value;
 			return;
-		}
+		} // value is not null
 		if ($property->isBasicType()) {
 			settype($value, $property->getType());
 			if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
@@ -256,7 +256,7 @@ abstract class Entity
 			}
 			$this->row->$column = $value;
 			return;
-		}
+		} // value is not null and property doesn't contain basic type
 		$type = $property->getType();
 		$givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
 		if (!($value instanceof $type)) {
@@ -271,7 +271,7 @@ abstract class Entity
 			}
 			$this->assignEntityToProperty($value, $name);
 			return;
-		}
+		} // value is not null, property doesn't contain basic type and property doesn't contain relationship
 		if (!is_object($value)) {
 			$givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
 			throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given.");
