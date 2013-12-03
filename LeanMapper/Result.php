@@ -199,7 +199,7 @@ class Result implements \Iterator
 	public function getDataEntry($id, $key)
 	{
 		if (!isset($this->data[$id]) or !array_key_exists($key, $this->data[$id])) {
-			throw new InvalidArgumentException("Missing '$key' value for requested row.");
+			throw new InvalidArgumentException("Missing row with id $id or '$key' column in that row.");
 		}
 		return $this->data[$id][$key];
 	}
@@ -711,7 +711,7 @@ class Result implements \Iterator
 	{
 		$ids = array();
 		foreach ($this->data as $data) {
-			if ($data[$column] === null) continue;
+			if (!isset($data[$column]) or $data[$column] === null) continue;
 			$ids[$data[$column]] = true;
 		}
 		return array_keys($ids);

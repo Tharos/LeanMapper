@@ -47,8 +47,8 @@ Assert::equal('Default name', $book->name);
 
 Assert::exception(function () use ($book) {
 	$book->id;
-}, 'LeanMapper\Exception\InvalidArgumentException', "Missing 'id' value for requested row.");
+}, 'LeanMapper\Exception\InvalidArgumentException', "Missing row with id -1 or 'id' column in that row.");
 
 Assert::exception(function () use ($book) {
 	$book->getData();
-}, 'LeanMapper\Exception\InvalidArgumentException', "Missing 'id' value for requested row.");
+}, 'LeanMapper\Exception\InvalidArgumentException', "Missing row with id -1 or 'id' column in that row.");

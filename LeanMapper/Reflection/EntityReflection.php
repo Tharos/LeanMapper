@@ -165,7 +165,7 @@ class EntityReflection extends \ReflectionClass
 					$column = $property->getColumn();
 					if ($column !== null and $property->isWritable()) {
 						if (isset($columns[$column])) {
-							throw new InvalidStateException("Mapping collision on property '{$property->getName()}' (column '$column'). Please fix mapping or make chosen properties read only (using property-read).");
+							throw new InvalidStateException("Mapping collision in property '{$property->getName()}' (column '$column') in entity {$this->getName()}. Please fix mapping or make chosen properties read only (using property-read).");
 						}
 						$columns[$column] = true;
 					}

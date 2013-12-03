@@ -14,6 +14,6 @@ namespace LeanMapper\Exception;
 /**
  * @author Vojtěch Kohout
  */
-class InvalidArgumentException extends \Exception
+class InvalidArgumentException extends Exception
 {
 }

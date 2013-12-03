@@ -12,6 +12,7 @@
 namespace LeanMapper;
 
 use Exception;
+use LeanMapper\Exception\Exception as LeanMapperException;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Exception\InvalidStateException;
@@ -551,6 +552,7 @@ abstract class Entity
 	 * @param Property|string $property micro-optimalization
 	 * @param Filtering|null $targetTableFiltering
 	 * @param Filtering|null $relationshipTableFiltering
+	 * @throws LeanMapperException
 	 * @return Entity|Entity[]
 	 */
 	protected function getValueByPropertyWithRelationship($property, Filtering $targetTableFiltering = null, Filtering $relationshipTableFiltering = null)
@@ -561,7 +563,11 @@ abstract class Entity
 		$relationship = $property->getRelationship();
 		$method = explode('\\', get_class($relationship));
 		$method = 'get' . end($method) . 'Value';
-		return $this->$method($property, $relationship, $targetTableFiltering, $relationshipTableFiltering);
+		try {
+			return $this->$method($property, $relationship, $targetTableFiltering, $relationshipTableFiltering);
+		} catch (Exception $e) {
+			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . lcfirst($e->getMessage()));
+		}
 	}
 
 	/**

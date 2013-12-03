@@ -32,6 +32,9 @@ class Property
 	/** @var string|null */
 	private $column;
 
+	/** @var EntityReflection */
+	private $entityReflection;
+
 	/** @var PropertyType */
 	private $type;
 
@@ -68,6 +71,7 @@ class Property
 
 	/**
 	 * @param string $name
+	 * @param EntityReflection $entityReflection
 	 * @param string|null $column
 	 * @param PropertyType $type
 	 * @param bool $isWritable
@@ -82,12 +86,13 @@ class Property
 	 * @param array|null $customFlags
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $defaultValue = null, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
+	public function __construct($name, EntityReflection $entityReflection, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $defaultValue = null, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
 	{
 		if ($propertyFilters !== null and $relationship === null) {
-			throw new InvalidArgumentException('Cannot bind filter to property without relationship.');
+			throw new InvalidArgumentException("Cannot bind filter to property '$name' in entity {$entityReflection->getName()} since it doesn't contain relationship.");
 		}
 		$this->name = $name;
+		$this->entityReflection = $entityReflection;
 		$this->column = $column;
 		$this->type = $type;
 		$this->isWritable = $isWritable;
@@ -330,7 +335,7 @@ class Property
 	public function getCustomFlagValue($name)
 	{
 		if (!$this->hasCustomFlag($name)) {
-			throw new InvalidArgumentException("Property doesn't have custom flag '$name'.");
+			throw new InvalidArgumentException("Property '{$this->name}' in entity {$this->entityReflection->getName()} doesn't have custom flag '$name'.");
 		}
 		return $this->customFlags[$name];
 	}
@@ -343,7 +348,7 @@ class Property
 	private function checkContainsEnumeration()
 	{
 		if (!$this->containsEnumeration()) {
-			throw new InvalidMethodCallException("It doesn't make sense to call this method on property that doesn't contain enumeration.");
+			throw new InvalidMethodCallException("It doesn't make sense to call enumeration related method on property '{$this->name}' in entity {$this->entityReflection->getName()} since it doesn't contain enumeration.");
 		}
 	}
 

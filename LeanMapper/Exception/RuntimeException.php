@@ -14,6 +14,6 @@ namespace LeanMapper\Exception;
 /**
  * @author Vojtěch Kohout
  */
-class RuntimeException extends \Exception
+class RuntimeException extends Exception
 {
 }

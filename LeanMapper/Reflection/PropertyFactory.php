@@ -36,14 +36,14 @@ class PropertyFactory
 	 *
 	 * @param string $annotationType
 	 * @param string $annotation
-	 * @param EntityReflection $reflection
+	 * @param EntityReflection $entityReflection
 	 * @param IMapper|null $mapper
 	 * @return Property
 	 * @throws InvalidAnnotationException
 	 */
-	public static function createFromAnnotation($annotationType, $annotation, EntityReflection $reflection, IMapper $mapper = null)
+	public static function createFromAnnotation($annotationType, $annotation, EntityReflection $entityReflection, IMapper $mapper = null)
 	{
-		$aliases = $reflection->getAliases();
+		$aliases = $entityReflection->getAliases();
 
 		$matches = array();
 		$matched = preg_match('~
@@ -83,7 +83,7 @@ class PropertyFactory
 			$defaultValue = self::fixDefaultValue($defaultValue, $propertyType);
 		}
 
-		$column = $mapper !== null ? $mapper->getColumn($reflection->getName(), $name) : $name;
+		$column = $mapper !== null ? $mapper->getColumn($entityReflection->getName(), $name) : $name;
 		if (isset($matches[9]) and $matches[9] !== '') {
 			$column = $matches[9];
 		}
@@ -111,7 +111,7 @@ class PropertyFactory
 							throw new InvalidAnnotationException("It doesn't make sense to have multiple relationship definitions in property definition: @$annotationType $annotation.");
 						}
 						$relationship = self::createRelationship(
-							$reflection->getName(),
+							$entityReflection->getName(),
 							$propertyType,
 							$containsCollection,
 							$flag,
@@ -147,7 +147,7 @@ class PropertyFactory
 						if (!$propertyType->isBasicType() or $propertyType->getType() === 'array') {
 							throw new InvalidAnnotationException("Values of {$propertyType->getType()} property cannot be enumerated.");
 						}
-						$propertyValuesEnum = new PropertyValuesEnum($flagArgument, $reflection);
+						$propertyValuesEnum = new PropertyValuesEnum($flagArgument, $entityReflection);
 						break;
 					default:
 						if (array_key_exists($flag, $customFlags)) {
@@ -165,6 +165,7 @@ class PropertyFactory
 		}
 		return new Property(
 			$name,
+			$entityReflection,
 			$column,
 			$propertyType,
 			$isWritable,
