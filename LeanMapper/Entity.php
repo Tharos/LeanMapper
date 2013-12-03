@@ -150,15 +150,11 @@ abstract class Entity
 			if ($this->entityFactory === null) {
 				throw new InvalidStateException('Missing entity factory in ' . get_called_class() . '.');
 			}
-			$relationship = $property->getRelationship();
-			$method = explode('\\', get_class($relationship));
-			$method = 'get' . end($method) . 'Value';
-
-			$args = array($property);
-
 			$implicitFilters = $this->createImplicitFilters($property->getType(), new Caller($this, $property));
 			$firstFilters = $property->getFilters(0) ?: array();
-			if ($method === 'getHasManyValue') {
+
+			$relationship = $property->getRelationship();
+			if ($relationship instanceof Relationship\HasMany) {
 				$secondFilters = $this->mergeFilters($property->getFilters(1) ?: array(), $implicitFilters->getFilters());
 			} else {
 				$firstFilters = $this->mergeFilters($firstFilters, $implicitFilters->getFilters());
@@ -166,14 +162,15 @@ abstract class Entity
 			if (!empty($firstFilters) or !empty($secondFilters)) {
 				$funcArgs = func_get_args();
 				$filterArgs = isset($funcArgs[1]) ? $funcArgs[1] : array();
-				if (empty($secondFilters)) {
-					$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, array_merge($implicitFilters->getTargetedArgs(), (array) $property->getFiltersTargetedArgs(0))) : null;
+
+				if ($relationship instanceof Relationship\HasMany) {
+					$relationshipTableFiltering = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, (array) $property->getFiltersTargetedArgs(0)) : null;
+					$targetTableFiltering = new Filtering($secondFilters, $filterArgs, $this, $property, array_merge($implicitFilters->getTargetedArgs(), (array) $property->getFiltersTargetedArgs(1)));
 				} else {
-					$args[] = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, (array) $property->getFiltersTargetedArgs(0)) : null;
-					$args[] = new Filtering($secondFilters, $filterArgs, $this, $property, array_merge($implicitFilters->getTargetedArgs(), (array) $property->getFiltersTargetedArgs(1)));
+					$targetTableFiltering = !empty($firstFilters) ? new Filtering($firstFilters, $filterArgs, $this, $property, array_merge($implicitFilters->getTargetedArgs(), (array) $property->getFiltersTargetedArgs(0))) : null;
 				}
 			}
-			$value = call_user_func_array(array($this, $method), $args);
+			$value = $this->getValueByPropertyWithRelationship($property, isset($targetTableFiltering) ? $targetTableFiltering : null, isset($relationshipTableFiltering) ? $relationshipTableFiltering : null);
 			if ($pass !== null) {
 				$this->$pass($value);
 			}
@@ -538,14 +535,105 @@ abstract class Entity
 	}
 
 	/**
+	 * Gets current entity's reflection (cached in memory)
+	 *
+	 * @return EntityReflection
+	 */
+	protected function getCurrentReflection()
+	{
+		if ($this->currentReflection === null) {
+			$this->currentReflection = $this->getReflection($this->mapper);
+		}
+		return $this->currentReflection;
+	}
+
+	/**
+	 * @param Property|string $property micro-optimalization
+	 * @param Filtering|null $targetTableFiltering
+	 * @param Filtering|null $relationshipTableFiltering
+	 * @return Entity|Entity[]
+	 */
+	protected function getValueByPropertyWithRelationship($property, Filtering $targetTableFiltering = null, Filtering $relationshipTableFiltering = null)
+	{
+		if (is_string($property)) {
+			$property = $this->getCurrentReflection()->getEntityProperty($property);
+		}
+		$relationship = $property->getRelationship();
+		$method = explode('\\', get_class($relationship));
+		$method = 'get' . end($method) . 'Value';
+		return $this->$method($property, $relationship, $targetTableFiltering, $relationshipTableFiltering);
+	}
+
+	/**
+	 * @param Entity|null $entity
+	 * @param Property|string $property micro-optimalization
+	 * @throws InvalidMethodCallException
+	 */
+	protected function assignEntityToProperty(Entity $entity = null, $property)
+	{
+		if ($entity !== null) {
+			$this->useMapper($entity->mapper);
+			$this->setEntityFactory($entity->entityFactory);
+			$table = $this->mapper->getTable(get_class($entity));
+			$idProperty = $this->mapper->getEntityField($table, $this->mapper->getPrimaryKey($table));
+		}
+		if (is_string($property)) {
+			$property = $this->getCurrentReflection()->getEntityProperty($property);
+		}
+		$relationship = $property->getRelationship();
+		if (!($relationship instanceof Relationship\HasOne)) {
+			throw new InvalidMethodCallException("Cannot assign value to property '{$property->getName()}' in entity " . get_called_class() . '. Only properties with m:hasOne relationship can be set via magic __set.');
+		}
+		$column = $relationship->getColumnReferencingTargetTable();
+		if ($entity !== null) {
+			$this->row->setReferencedRow($entity->row, $column);
+			$this->row->$column = $entity->$idProperty;
+		} else {
+			$this->row->$column = null;
+		}
+	}
+
+	/**
+	 * Allows encapsulate set of entities in custom collection
+	 *
+	 * @param array $entities
+	 * @return array
+	 */
+	protected function createCollection(array $entities)
+	{
+		return $entities;
+	}
+
+	/**
+	 * @param string $entityClass
+	 * @param Caller $caller
+	 * @return ImplicitFilters
+	 */
+	protected function createImplicitFilters($entityClass, Caller $caller = null)
+	{
+		$implicitFilters = $this->mapper->getImplicitFilters($entityClass, $caller);
+		return ($implicitFilters instanceof ImplicitFilters) ? $implicitFilters : new ImplicitFilters($implicitFilters);
+	}
+
+	/**
+	 * Allows initialize properties' default values
+	 */
+	protected function initDefaults()
+	{
+	}
+
+	////////////////////
+	////////////////////
+
+	/**
 	 * @param Property $property
+	 * @param Relationship\HasOne $relationship micro-optimalization
 	 * @param Filtering|null $filtering
 	 * @throws InvalidValueException
 	 * @return Entity
 	 */
-	protected function getHasOneValue(Property $property, Filtering $filtering = null)
+	private function getHasOneValue(Property $property, Relationship\HasOne $relationship, Filtering $filtering = null)
 	{
-		$relationship = $property->getRelationship();
 		$targetTable = $relationship->getTargetTable();
 		$row = $this->row->referenced($targetTable, $relationship->getColumnReferencingTargetTable(), $filtering);
 		if ($row === null) {
@@ -565,14 +653,14 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
-	 * @param Filtering|null $relTableFiltering
+	 * * @param Relationship\HasMany $relationship micro-optimalization
 	 * @param Filtering|null $targetTableFiltering
+	 * @param Filtering|null $relTableFiltering
 	 * @return Entity[]
 	 * @throws InvalidValueException
 	 */
-	protected function getHasManyValue(Property $property, Filtering $relTableFiltering = null, Filtering $targetTableFiltering = null)
+	private function getHasManyValue(Property $property, Relationship\HasMany $relationship, Filtering $targetTableFiltering = null, Filtering $relTableFiltering = null)
 	{
-		$relationship = $property->getRelationship();
 		$targetTable = $relationship->getTargetTable();
 		$columnReferencingTargetTable = $relationship->getColumnReferencingTargetTable();
 		$rows = $this->row->referencing($relationship->getRelationshipTable(), $relationship->getColumnReferencingSourceTable(), $relTableFiltering, $relationship->getStrategy());
@@ -592,13 +680,13 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
+	 * @param Relationship\BelongsToOne $relationship micro-optimalization
 	 * @param Filtering|null $filtering
 	 * @return Entity
 	 * @throws InvalidValueException
 	 */
-	protected function getBelongsToOneValue(Property $property, Filtering $filtering = null)
+	private function getBelongsToOneValue(Property $property, Relationship\BelongsToOne $relationship, Filtering $filtering = null)
 	{
-		$relationship = $property->getRelationship();
 		$targetTable = $relationship->getTargetTable();
 		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$count = count($rows);
@@ -622,12 +710,12 @@ abstract class Entity
 
 	/**
 	 * @param Property $property
+	 * @param Relationship\BelongsToMany $relationship micro-optimalization
 	 * @param Filtering|null $filtering
 	 * @return Entity[]
 	 */
-	protected function getBelongsToManyValue(Property $property, Filtering $filtering = null)
+	private function getBelongsToManyValue(Property $property, Relationship\BelongsToMany $relationship, Filtering $filtering = null)
 	{
-		$relationship = $property->getRelationship();
 		$targetTable = $relationship->getTargetTable();
 		$rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
 		$value = array();
@@ -640,77 +728,6 @@ abstract class Entity
 		}
 		return $this->createCollection($value);
 	}
-
-	/**
-	 * @param Entity|null $entity
-	 * @param string $propertyName
-	 * @throws InvalidMethodCallException
-	 */
-	protected function assignEntityToProperty(Entity $entity = null, $propertyName)
-	{
-		if ($entity !== null) {
-			$this->useMapper($entity->mapper);
-			$this->setEntityFactory($entity->entityFactory);
-			$table = $this->mapper->getTable(get_class($entity));
-			$idProperty = $this->mapper->getEntityField($table, $this->mapper->getPrimaryKey($table));
-		}
-		$relationship = $this->getCurrentReflection()->getEntityProperty($propertyName)->getRelationship();
-		if (!($relationship instanceof Relationship\HasOne)) {
-			throw new InvalidMethodCallException("Cannot assign value to property '$propertyName' in entity " . get_called_class() . '. Only properties with m:hasOne relationship can be set via magic __set.');
-		}
-		$column = $relationship->getColumnReferencingTargetTable();
-		if ($entity !== null) {
-			$this->row->setReferencedRow($entity->row, $column);
-			$this->row->$column = $entity->$idProperty;
-		} else {
-			$this->row->$column = null;
-		}
-	}
-
-	/**
-	 * Gets current entity's reflection (cached in memory)
-	 *
-	 * @return EntityReflection
-	 */
-	protected function getCurrentReflection()
-	{
-		if ($this->currentReflection === null) {
-			$this->currentReflection = $this->getReflection($this->mapper);
-		}
-		return $this->currentReflection;
-	}
-
-	/**
-	 * Allows encapsulate set of entities in custom collection
-	 *
-	 * @param array $entities
-	 * @return array
-	 */
-	protected function createCollection(array $entities)
-	{
-		return $entities;
-	}
-
-	/**
-	 * Allows initialize properties' default values
-	 */
-	protected function initDefaults()
-	{
-	}
-
-	/**
-	 * @param string $entityClass
-	 * @param Caller $caller
-	 * @return ImplicitFilters
-	 */
-	protected function createImplicitFilters($entityClass, Caller $caller = null)
-	{
-		$implicitFilters = $this->mapper->getImplicitFilters($entityClass, $caller);
-		return ($implicitFilters instanceof ImplicitFilters) ? $implicitFilters : new ImplicitFilters($implicitFilters);
-	}
-
-	////////////////////
-	////////////////////
 
 	/**
 	 * Provides an mapper for entity
