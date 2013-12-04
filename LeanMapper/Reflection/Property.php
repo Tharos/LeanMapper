@@ -13,10 +13,7 @@ namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
-use LeanMapper\Relationship\BelongsToMany;
-use LeanMapper\Relationship\BelongsToOne;
-use LeanMapper\Relationship\HasMany;
-use LeanMapper\Relationship\HasOne;
+use LeanMapper\Relationship;
 
 /**
  * Reflection of entity's property
@@ -50,7 +47,7 @@ class Property
 	/** @var bool */
 	private $containsCollection;
 
-	/** @var HasOne|HasMany|BelongsToOne|BelongsToMany|null */
+	/** @var Relationship\HasOne|Relationship\HasMany|Relationship\BelongsToOne|Relationship\BelongsToMany|null */
 	private $relationship;
 
 	/** @var PropertyMethods|null */
@@ -78,7 +75,7 @@ class Property
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
 	 * @param mixed|null $defaultValue
-	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
+	 * @param Relationship\HasOne|Relationship\HasMany|Relationship\BelongsToOne|Relationship\BelongsToMany|null $relationship
 	 * @param PropertyMethods|null $propertyMethods
 	 * @param PropertyFilters|null $propertyFilters
 	 * @param PropertyPasses|null $propertyPasses
@@ -88,8 +85,24 @@ class Property
 	 */
 	public function __construct($name, EntityReflection $entityReflection, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $defaultValue = null, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
 	{
-		if ($propertyFilters !== null and $relationship === null) {
+		if ($relationship !== null) {
+			if (!is_subclass_of($type->getType(), 'LeanMapper\Entity')) {
+				throw new InvalidArgumentException("Property '$name' in entity {$entityReflection->getName()} cannot contain relationship since it doesn't contain entity (or collection of entities).");
+			}
+			if (($relationship instanceof Relationship\HasMany) or ($relationship instanceof Relationship\BelongsToMany)) {
+				if (!$containsCollection) {
+					throw new InvalidArgumentException("Property '$name' with HasMany or BelongsToMany in entity {$entityReflection->getName()} relationship must contain collection.");
+				}
+			} else {
+				if ($containsCollection) {
+					throw new InvalidArgumentException("Property '$name' with HasOney or BelongsToOne in entity {$entityReflection->getName()} relationship cannot contain collection.");
+				}
+			}
+		} elseif ($propertyFilters !== null) {
 			throw new InvalidArgumentException("Cannot bind filter to property '$name' in entity {$entityReflection->getName()} since it doesn't contain relationship.");
+		}
+		if ($propertyValuesEnum !== null and (!$type->isBasicType() or $type->getType() === 'array' or $containsCollection)) {
+			throw new InvalidArgumentException("Values of property '$name' in entity {$entityReflection->getName()} cannot be enumerated.");
 		}
 		$this->name = $name;
 		$this->entityReflection = $entityReflection;
@@ -211,7 +224,7 @@ class Property
 	/**
 	 * Returns relationship that property represents
 	 *
-	 * @return BelongsToMany|BelongsToOne|HasMany|HasOne|null
+	 * @return Relationship\BelongsToMany|Relationship\BelongsToOne|Relationship\HasMany|Relationship\HasOne|null
 	 */
 	public function getRelationship()
 	{

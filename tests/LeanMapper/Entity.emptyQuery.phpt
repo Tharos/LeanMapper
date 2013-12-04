@@ -13,6 +13,10 @@ $connection->onEvent[] = function ($event) use (&$queries) {
 
 //////////
 
+class Author extends Entity
+{
+}
+
 /**
  * @property int $id
  * @property Author|null $author m:hasOne

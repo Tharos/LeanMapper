@@ -141,6 +141,12 @@ abstract class Entity
 				}
 				return $value;
 			}
+			if ($property->containsCollection()) {
+				if (!is_array($value)) {
+					throw new InvalidValueException("Property '$name' in entity " . get_called_class() . " is expected to contain an array of {$property->getType()} values.");
+				}
+				return $value;
+			}
 			settype($value, $property->getType());
 			if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
 				throw new InvalidValueException("Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.');
@@ -250,7 +256,15 @@ abstract class Entity
 			$this->row->$column = $value;
 			return;
 		} // value is not null
+		$givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
 		if ($property->isBasicType()) {
+			if ($property->containsCollection()) {
+				if (!is_array($value)) {
+					throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", array of {$property->getType()} expected, $givenType given.");
+				}
+				$this->row->$column = $value;
+				return;
+			}
 			settype($value, $property->getType());
 			if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
 				throw new InvalidValueException("Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.');
@@ -259,22 +273,24 @@ abstract class Entity
 			return;
 		} // value is not null and property doesn't contain basic type
 		$type = $property->getType();
-		$givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
-		if (!($value instanceof $type)) {
-			throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given.");
-		}
 		if ($property->hasRelationship()) {
-			if (!($value instanceof Entity)) {
+			if (!($value instanceof $type)) {
 				throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given.");
 			}
-			if ($value->isDetached()) {
+			if ($value->isDetached()) { // we are sure that the value is entity
 				throw new InvalidValueException("Detached entity cannot be assigned to property '{$property->getName()}' with relationship in entity " . get_called_class() . '.');
 			}
 			$this->assignEntityToProperty($value, $name);
 			return;
 		} // value is not null, property doesn't contain basic type and property doesn't contain relationship
-		if (!is_object($value)) {
-			$givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
+		if ($property->containsCollection()) {
+			if (!is_array($value)) {
+				throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", array of {$property->getType()} expected, $givenType given.");
+			}
+			$this->row->$column = $value;
+			return;
+		}
+		if (!($value instanceof $type)) {
 			throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given.");
 		}
 		$this->row->$column = $value;
