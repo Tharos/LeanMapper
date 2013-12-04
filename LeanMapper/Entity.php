@@ -133,7 +133,7 @@ abstract class Entity
 			$column = $property->getColumn();
 			$value = $this->row->$column;
 			if ($pass !== null) {
-				$this->$pass($value);
+				$value = $this->$pass($value);
 			}
 			if ($value === null) {
 				if (!$property->isNullable()) {
@@ -173,14 +173,14 @@ abstract class Entity
 			}
 			$value = $this->getValueByPropertyWithRelationship($property, isset($targetTableFiltering) ? $targetTableFiltering : null, isset($relationshipTableFiltering) ? $relationshipTableFiltering : null);
 			if ($pass !== null) {
-				$this->$pass($value);
+				$value = $this->$pass($value);
 			}
 			return $value;
 		} // property doesn't contain basic type and doesn't contain relationship
 		$column = $property->getColumn();
 		$value = $this->row->$column;
 		if ($pass !== null) {
-			$this->$pass($value);
+			$value = $this->$pass($value);
 		}
 		if ($value === null) {
 			if (!$property->isNullable()) {
@@ -234,7 +234,7 @@ abstract class Entity
 			return;
 		}
 		if (($pass = $property->getSetterPass()) !== null) {
-			$this->$pass($value);
+			$value = $this->$pass($value);
 		}
 		$column = $property->getColumn();
 		if ($value === null) {
