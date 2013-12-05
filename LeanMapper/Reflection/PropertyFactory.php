@@ -273,7 +273,7 @@ class PropertyFactory
 		if (!$propertyType->isBasicType()) {
 			throw new InvalidAnnotationException('Only properties of basic types may have default values specified.');
 		}
-		if (strtolower($value) === 'null' and $isNullable) {
+		if ($isNullable and strtolower($value) === 'null') {
 			return null;
 		}
 		switch ($propertyType->getType()) {
