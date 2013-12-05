@@ -41,6 +41,9 @@ class Property
 	/** @var bool */
 	private $isNullable;
 
+	/** @var bool */
+	private $hasDefaultValue;
+
 	/** @var mixed|null */
 	private $defaultValue;
 
@@ -74,6 +77,7 @@ class Property
 	 * @param bool $isWritable
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
+	 * @param bool $hasDefaultValue
 	 * @param mixed|null $defaultValue
 	 * @param Relationship\HasOne|Relationship\HasMany|Relationship\BelongsToOne|Relationship\BelongsToMany|null $relationship
 	 * @param PropertyMethods|null $propertyMethods
@@ -83,7 +87,7 @@ class Property
 	 * @param array|null $customFlags
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct($name, EntityReflection $entityReflection, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $defaultValue = null, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
+	public function __construct($name, EntityReflection $entityReflection, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $hasDefaultValue, $defaultValue = null, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
 	{
 		if ($relationship !== null) {
 			if (!is_subclass_of($type->getType(), 'LeanMapper\Entity')) {
@@ -111,6 +115,7 @@ class Property
 		$this->isWritable = $isWritable;
 		$this->isNullable = $isNullable;
 		$this->containsCollection = $containsCollection;
+		$this->hasDefaultValue = $hasDefaultValue;
 		$this->defaultValue = $defaultValue;
 		$this->relationship = $relationship;
 		$this->propertyMethods = $propertyMethods;
@@ -158,7 +163,7 @@ class Property
 	 */
 	public function hasDefaultValue()
 	{
-		return $this->defaultValue !== null;
+		return $this->hasDefaultValue;
 	}
 
 	/**

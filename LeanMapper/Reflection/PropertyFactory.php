@@ -71,6 +71,7 @@ class PropertyFactory
 		$isNullable = ($matches[1] !== '' or $matches[4] !== '');
 		$name = substr($matches[5], 1);
 
+		$hasDefaultValue = false;
 		$defaultValue = null;
 		if (isset($matches[6]) and $matches[6] !== '') {
 			$defaultValue = str_replace('\"', '"', $matches[6]);
@@ -80,8 +81,9 @@ class PropertyFactory
 			$defaultValue = $matches[8];
 		}
 		if ($defaultValue !== null) {
+			$hasDefaultValue = true;
 			try {
-				$defaultValue = self::fixDefaultValue($defaultValue, $propertyType);
+				$defaultValue = self::fixDefaultValue($defaultValue, $propertyType, $isNullable);
 			} catch (InvalidAnnotationException $e) {
 				throw new InvalidAnnotationException("Invalid property definition given: @$annotationType $annotation  in entity {$entityReflection->getName()}, " . lcfirst($e->getMessage()));
 			}
@@ -171,6 +173,7 @@ class PropertyFactory
 			$isWritable,
 			$isNullable,
 			$containsCollection,
+			$hasDefaultValue,
 			$defaultValue,
 			$relationship,
 			$propertyMethods,
@@ -261,13 +264,17 @@ class PropertyFactory
 	/**
 	 * @param mixed $value
 	 * @param PropertyType $propertyType
+	 * @param bool $isNullable
 	 * @return mixed
 	 * @throws InvalidAnnotationException
 	 */
-	private static function fixDefaultValue($value, PropertyType $propertyType)
+	private static function fixDefaultValue($value, PropertyType $propertyType, $isNullable)
 	{
 		if (!$propertyType->isBasicType()) {
 			throw new InvalidAnnotationException('Only properties of basic types may have default values specified.');
+		}
+		if (strtolower($value) === 'null' and $isNullable) {
+			return null;
 		}
 		switch ($propertyType->getType()) {
 			case 'boolean':
@@ -291,7 +298,12 @@ class PropertyFactory
 					throw new InvalidAnnotationException("Property of type array cannot have default value '$value'.");
 				}
 				return array();
-			default: // string
+			case 'string':
+				if ($value === '\'\'' or $value === '""') {
+					return '';
+				}
+				return $value;
+			default:
 				return $value;
 		}
 	}
