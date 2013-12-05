@@ -109,6 +109,7 @@ abstract class Entity
 	 * @throws RuntimeException
 	 * @throws InvalidMethodCallException
 	 * @throws InvalidStateException
+	 * @throws LeanMapperException
 	 */
 	public function __get($name /*, array $filterArgs*/)
 	{
@@ -131,7 +132,11 @@ abstract class Entity
 		$pass = $property->getGetterPass();
 		if ($property->isBasicType()) {
 			$column = $property->getColumn();
-			$value = $this->row->$column;
+			try {
+				$value = $this->row->$column;
+			} catch (LeanMapperException $e) {
+				throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . lcfirst($e->getMessage()));
+			}
 			if ($pass !== null) {
 				$value = $this->$pass($value);
 			}
@@ -184,7 +189,11 @@ abstract class Entity
 			return $value;
 		} // property doesn't contain basic type and doesn't contain relationship
 		$column = $property->getColumn();
-		$value = $this->row->$column;
+		try {
+			$value = $this->row->$column;
+		} catch (LeanMapperException $e) {
+			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . lcfirst($e->getMessage()));
+		}
 		if ($pass !== null) {
 			$value = $this->$pass($value);
 		}

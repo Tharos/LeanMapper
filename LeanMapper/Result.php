@@ -198,8 +198,11 @@ class Result implements \Iterator
 	 */
 	public function getDataEntry($id, $key)
 	{
-		if (!isset($this->data[$id]) or !array_key_exists($key, $this->data[$id])) {
-			throw new InvalidArgumentException("Missing row with id $id or '$key' column in that row.");
+		if (!isset($this->data[$id])) {
+			throw new InvalidArgumentException("Missing row with id $id.");
+		}
+		if (!array_key_exists($key, $this->data[$id])) {
+			throw new InvalidArgumentException("Missing '$key' column in row with id $id.");
 		}
 		return $this->data[$id][$key];
 	}
