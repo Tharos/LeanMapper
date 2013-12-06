@@ -85,7 +85,7 @@ class PropertyFactory
 			try {
 				$defaultValue = self::fixDefaultValue($defaultValue, $propertyType, $isNullable);
 			} catch (InvalidAnnotationException $e) {
-				throw new InvalidAnnotationException("Invalid property definition given: @$annotationType $annotation  in entity {$entityReflection->getName()}, " . lcfirst($e->getMessage()));
+				throw new InvalidAnnotationException("Invalid property definition given: @$annotationType $annotation in entity {$entityReflection->getName()}, " . lcfirst($e->getMessage()));
 			}
 		}
 		$column = $mapper !== null ? $mapper->getColumn($entityReflection->getName(), $name) : $name;
@@ -270,11 +270,10 @@ class PropertyFactory
 	 */
 	private static function fixDefaultValue($value, PropertyType $propertyType, $isNullable)
 	{
-		if (!$propertyType->isBasicType()) {
-			throw new InvalidAnnotationException('Only properties of basic types may have default values specified.');
-		}
 		if ($isNullable and strtolower($value) === 'null') {
 			return null;
+		} elseif (!$propertyType->isBasicType()) {
+			throw new InvalidAnnotationException('Only properties of basic types may have default values specified.');
 		}
 		switch ($propertyType->getType()) {
 			case 'boolean':
