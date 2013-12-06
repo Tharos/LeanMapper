@@ -142,7 +142,7 @@ abstract class Entity
 			}
 			if ($value === null) {
 				if (!$property->isNullable()) {
-					throw new InvalidValueException("Property $name in entity " . get_called_class() . 'cannot be null.');
+					throw new InvalidValueException("Property $name in entity " . get_called_class() . ' cannot be null.');
 				}
 				return $value;
 			}
