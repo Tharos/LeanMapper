@@ -14,6 +14,6 @@ namespace LeanMapper\Exception;
 /**
  * @author Vojtěch Kohout
  */
-class MemberAccessException extends \Exception
+class MemberAccessException extends Exception
 {
 }

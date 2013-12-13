@@ -11,6 +11,7 @@
 
 namespace LeanMapper;
 
+use Closure;
 use DibiFluent;
 
 /**
@@ -24,15 +25,18 @@ class Fluent extends DibiFluent
 	/**
 	 * Applies given filter to current statement
 	 *
-	 * @param string $name
+	 * @param Closure|string $filter
 	 * @param mixed|null $args
 	 * @return $this
 	 */
-	public function applyFilter($name, $args = null)
+	public function applyFilter($filter, $args = null)
 	{
 		$args = func_get_args();
 		$args[0] = $this;
-		call_user_func_array($this->getConnection()->getFilterCallback($name), $args);
+		call_user_func_array(
+			$filter instanceof Closure ? $filter : $this->getConnection()->getFilterCallback($filter),
+			$args
+		);
 		return $this;
 	}
 

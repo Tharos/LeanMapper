@@ -1,6 +1,7 @@
 <?php
 
 use LeanMapper\Connection;
+use LeanMapper\DefaultEntityFactory;
 use LeanMapper\DefaultMapper;
 
 if (@!include __DIR__ . '/../vendor/autoload.php') {
@@ -40,3 +41,5 @@ $connection = new Connection(array(
 ));
 
 $mapper = new TestMapper;
+
+$entityFactory = new DefaultEntityFactory;

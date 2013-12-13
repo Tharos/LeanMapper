@@ -31,6 +31,9 @@ abstract class Repository
 	/** @var IMapper */
 	protected $mapper;
 
+	/** @var IEntityFactory */
+	protected $entityFactory;
+
 	/** @var string */
 	protected $table;
 
@@ -50,11 +53,13 @@ abstract class Repository
 	/**
 	 * @param Connection $connection
 	 * @param IMapper $mapper
+	 * @param IEntityFactory $entityFactory
 	 */
-	public function __construct(Connection $connection, IMapper $mapper)
+	public function __construct(Connection $connection, IMapper $mapper, IEntityFactory $entityFactory)
 	{
 		$this->connection = $connection;
 		$this->mapper = $mapper;
+		$this->entityFactory = $entityFactory;
 		$this->events = new Events;
 		$this->initEvents();
 	}
@@ -68,6 +73,35 @@ abstract class Repository
 		if (preg_match('#^on[A-Z]#', $name)) {
 			return $this->events->getCallbacksReference(lcfirst(substr($name, 2)));
 		}
+	}
+
+	/**
+	 * @return Fluent
+	 */
+	protected function createFluent(/*$filterArg1, $filterArg2, ...*/)
+	{
+		$table = $this->getTable();
+		$statement = $this->connection->select('%n.*', $table)->from($table);
+		$filters = $this->mapper->getImplicitFilters($this->mapper->getEntityClass($table), new Caller($this));
+		if (!empty($filters)) {
+			$targetedArgs = array();
+			$funcArgs = func_get_args();
+			if ($filters instanceof ImplicitFilters) {
+				$targetedArgs = $filters->getTargetedArgs();
+				$filters = $filters->getFilters();
+			}
+			foreach ($filters as $filter) {
+				$args = array($filter);
+				if (is_string($filter) and array_key_exists($filter, $targetedArgs)) {
+					$args = array_merge($args, $targetedArgs[$filter]);
+				}
+				if (!empty($funcArgs)) {
+					$args = array_merge($args, $funcArgs);
+				}
+				call_user_func_array(array($statement, 'applyFilter'), $args);
+			}
+		}
+		return $statement;
 	}
 
 	/**
@@ -88,19 +122,17 @@ abstract class Repository
 		$this->checkEntityType($entity);
 
 		$this->events->invokeCallbacks(Events::EVENT_BEFORE_PERSIST, $entity);
-		if ($entity->isModified()) {
-			if ($entity->isDetached()) {
-				$entity->useMapper($this->mapper);
-				$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
-				$result = $id = $this->insertIntoDatabase($entity);
-				$entity->markAsAttached($id, $this->getTable(), $this->connection);
-				$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
-			} else {
-				$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
-				$result = $this->updateInDatabase($entity);
-				$entity->markAsUpdated();
-				$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
-			}
+		if ($entity->isDetached()) {
+			$entity->makeAlive($this->entityFactory, $this->connection, $this->mapper);
+			$this->events->invokeCallbacks(Events::EVENT_BEFORE_CREATE, $entity);
+			$result = $id = $this->insertIntoDatabase($entity);
+			$entity->attach($id);
+			$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
+		} elseif ($entity->isModified()) {
+			$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
+			$result = $this->updateInDatabase($entity);
+			$entity->markAsUpdated();
+			$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
 		}
 		$this->persistHasManyChanges($entity);
 		$this->events->invokeCallbacks(Events::EVENT_AFTER_PERSIST, $entity);
@@ -226,14 +258,16 @@ abstract class Repository
 		if ($table === null) {
 			$table = $this->getTable();
 		}
-		$result = Result::getInstance($dibiRow, $table, $this->connection, $this->mapper);
+		$result = Result::createInstance($dibiRow, $table, $this->connection, $this->mapper);
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 
 		$row = $result->getRow($dibiRow->$primaryKey);
 		if ($entityClass === null) {
 			$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
 		}
-		return new $entityClass($row);
+		$entity = $this->entityFactory->createEntity($entityClass, $row);
+		$entity->makeAlive($this->entityFactory);
+		return $entity;
 	}
 
 	/**
@@ -250,20 +284,26 @@ abstract class Repository
 			$table = $this->getTable();
 		}
 		$entities = array();
-		$collection = Result::getInstance($rows, $table, $this->connection, $this->mapper);
+		$collection = Result::createInstance($rows, $table, $this->connection, $this->mapper);
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
 		if ($entityClass !== null) {
 			foreach ($rows as $dibiRow) {
-				$entities[$dibiRow->$primaryKey] = new $entityClass($collection->getRow($dibiRow->$primaryKey));
+				$entity = $this->entityFactory->createEntity(
+					$entityClass, $collection->getRow($dibiRow->$primaryKey)
+				);
+				$entity->makeAlive($this->entityFactory);
+				$entities[$dibiRow->$primaryKey] = $entity;
 			}
 		} else {
 			foreach ($rows as $dibiRow) {
 				$row = $collection->getRow($dibiRow->$primaryKey);
 				$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
-				$entities[$dibiRow->$primaryKey] = new $entityClass($row);
+				$entity = $this->entityFactory->createEntity($entityClass, $row);
+				$entity->makeAlive($this->entityFactory);
+				$entities[$dibiRow->$primaryKey] = $entity;
 			}
 		}
-		return $this->createCollection($entities);
+		return $this->entityFactory->createCollection($entities);
 	}
 
 	/**
@@ -285,17 +325,6 @@ abstract class Repository
 			return $this->mapper->getTableByRepositoryClass(get_called_class());
 		}
 		return $this->table;
-	}
-
-	/**
-	 * Allows encapsulate set of entities in custom collection
-	 *
-	 * @param array $entities
-	 * @return array
-	 */
-	protected function createCollection(array $entities)
-	{
-		return $entities;
 	}
 
 	/**

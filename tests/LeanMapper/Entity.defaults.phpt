@@ -35,7 +35,7 @@ Assert::equal(false, $property->getDefaultValue());
 
 Assert::exception(function () use ($entityReflection) {
 	PropertyFactory::createFromAnnotation('property', 'bool $active = foobar', $entityReflection);
-}, 'LeanMapper\Exception\InvalidAnnotationException', "Property of type boolean cannot have default value 'foobar'.");
+}, 'LeanMapper\Exception\InvalidAnnotationException', "Invalid property definition given: @property bool \$active = foobar in entity EmptyEntity, property of type boolean cannot have default value 'foobar'.");
 
 ///// integers
 
@@ -57,7 +57,7 @@ Assert::equal(12, $property->getDefaultValue());
 
 Assert::exception(function () use ($entityReflection) {
 	PropertyFactory::createFromAnnotation('property', 'int $count = true', $entityReflection);
-}, 'LeanMapper\Exception\InvalidAnnotationException', "Property of type integer cannot have default value 'true'.");
+}, 'LeanMapper\Exception\InvalidAnnotationException', "Invalid property definition given: @property int \$count = true in entity EmptyEntity, property of type integer cannot have default value 'true'.");
 
 $property = PropertyFactory::createFromAnnotation('property', 'int $count =-12', $entityReflection);
 
@@ -107,6 +107,14 @@ $property = PropertyFactory::createFromAnnotation('property', 'string $title = "
 
 Assert::equal('foo"b\'ar', $property->getDefaultValue());
 
+$property = PropertyFactory::createFromAnnotation('property', 'string $title = ""', $entityReflection);
+
+Assert::equal('', $property->getDefaultValue());
+
+$property = PropertyFactory::createFromAnnotation('property', "string \$title = ''", $entityReflection);
+
+Assert::equal('', $property->getDefaultValue());
+
 ///// arrays
 
 $property = PropertyFactory::createFromAnnotation('property', 'array $list = array()', $entityReflection);
@@ -119,4 +127,24 @@ Assert::equal(array(), $property->getDefaultValue());
 
 Assert::exception(function () use ($entityReflection) {
 	PropertyFactory::createFromAnnotation('property', 'array $list = ARRAY', $entityReflection);
-}, 'LeanMapper\Exception\InvalidAnnotationException', "Property of type array cannot have default value 'ARRAY'.");
+}, 'LeanMapper\Exception\InvalidAnnotationException', "Invalid property definition given: @property array \$list = ARRAY in entity EmptyEntity, property of type array cannot have default value 'ARRAY'.");
+
+///// null
+
+$property = PropertyFactory::createFromAnnotation('property', 'string|null $title = null', $entityReflection);
+
+Assert::equal(null, $property->getDefaultValue());
+
+$property = PropertyFactory::createFromAnnotation('property', 'string|null $title = NULL', $entityReflection);
+
+Assert::equal(null, $property->getDefaultValue());
+
+///// objects
+
+$property = PropertyFactory::createFromAnnotation('property', 'NULL|DateTime $created = null', $entityReflection);
+
+Assert::equal(null, $property->getDefaultValue());
+
+Assert::exception(function () use ($entityReflection) {
+	PropertyFactory::createFromAnnotation('property', 'DateTime $created = 10', $entityReflection);
+}, 'LeanMapper\Exception\InvalidAnnotationException', "Invalid property definition given: @property DateTime \$created = 10 in entity EmptyEntity, only properties of basic types may have default values specified.");

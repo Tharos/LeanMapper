@@ -30,8 +30,8 @@ class Author extends Entity
 {
 }
 
-$authorRepository = new AuthorRepository($connection, $mapper);
-$bookRepository = new BookRepository($connection, $mapper);
+$authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
+$bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 
 //////////
 

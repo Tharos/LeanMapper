@@ -12,7 +12,6 @@ require_once __DIR__ . '/../bootstrap.php';
  * @property int $id
  * @property string $stateSelf m:enum(self::STATE_*)
  * @property string $stateStatic m:enum(static::STATE_*)
- * @property string $stateParent m:enum(parent::STATE_*)
  * @property int $stateUse m:enum(DbLayer::ATTR_*)
  * @property int $type m:enum(self::TYPE_*)
  */
@@ -31,6 +30,9 @@ class Author extends LeanMapper\Entity
 
 }
 
+/**
+ * @property string $stateParent m:enum(parent::STATE_*)
+ */
 class ExtraAuthor extends Author
 {
 
@@ -60,15 +62,12 @@ Assert::equal(Author::STATE_INACTIVE, $extraAuthor->stateParent);
 
 Assert::exception(function () use ($extraAuthor) {
 	$extraAuthor->stateParent = ExtraAuthor::STATE_ACTIVE;
-}, 'LeanMapper\Exception\InvalidValueException', "Given value is not from possible values enumeration.");
+}, 'LeanMapper\Exception\InvalidValueException', "Given value is not from possible values enumeration in property 'stateParent' in entity ExtraAuthor.");
 
-$extraAuthor->stateStatic = ExtraAuthor::STATE_ACTIVE;
-
-Assert::equal(ExtraAuthor::STATE_ACTIVE, $extraAuthor->stateStatic);
 
 Assert::exception(function () use ($extraAuthor) {
-	$extraAuthor->stateStatic = Author::STATE_ACTIVE;
-}, 'LeanMapper\Exception\InvalidValueException', "Given value is not from possible values enumeration.");
+	$extraAuthor->stateStatic = ExtraAuthor::STATE_ACTIVE;
+}, 'LeanMapper\Exception\InvalidValueException', "Given value is not from possible values enumeration in property 'stateStatic' in entity ExtraAuthor.");
 
 //////////
 

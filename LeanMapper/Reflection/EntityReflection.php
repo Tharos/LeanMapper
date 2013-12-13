@@ -160,12 +160,12 @@ class EntityReflection extends \ReflectionClass
 		foreach ($this->getFamilyLine() as $member) {
 			foreach ($annotationTypes as $annotationType) {
 				foreach (AnnotationsParser::parseAnnotationValues($annotationType, $member->getDocComment()) as $definition) {
-					$property = PropertyFactory::createFromAnnotation($annotationType, $definition, $this, $this->mapper);
+					$property = PropertyFactory::createFromAnnotation($annotationType, $definition, $member, $this->mapper);
 					// collision check
 					$column = $property->getColumn();
 					if ($column !== null and $property->isWritable()) {
 						if (isset($columns[$column])) {
-							throw new InvalidStateException("Mapping collision on property '{$property->getName()}' (column '$column'). Please fix mapping or make chosen properties read only (using property-read).");
+							throw new InvalidStateException("Mapping collision in property '{$property->getName()}' (column '$column') in entity {$this->getName()}. Please fix mapping or make chosen properties read only (using property-read).");
 						}
 						$columns[$column] = true;
 					}

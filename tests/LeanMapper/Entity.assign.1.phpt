@@ -1,5 +1,6 @@
 <?php
 
+use LeanMapper\DefaultEntityFactory;
 use LeanMapper\DefaultMapper;
 use LeanMapper\Entity;
 use LeanMapper\Result;
@@ -59,8 +60,8 @@ $mapper = new Mapper;
 
 $author = new Author;
 $author->name = 'John Doe';
-$author->useMapper($mapper);
-$author->markAsAttached(1, 'author', $connection);
+$author->makeAlive($entityFactory, $connection, $mapper);
+$author->attach(1);
 
 Assert::equal(array (
 	'customid' => 1,
@@ -72,10 +73,5 @@ $book->author = $author;
 
 $result = $book->getModifiedRowData();
 list($key, $value) = each($result);
-
-Assert::equal(1, $value);
-Assert::equal('author{hasOne:', substr($key, 0, 14));
-
-$book->useMapper($mapper);
 
 Assert::equal(array('author_customid' => 1), $book->getRowData());

@@ -14,6 +14,6 @@ namespace LeanMapper\Exception;
 /**
  * @author Vojtěch Kohout
  */
-class UtilityClassException extends \Exception
+class UtilityClassException extends Exception
 {
 }

@@ -78,8 +78,8 @@ class BookRepository extends BaseRepository
 
 $mapper = new Mapper;
 
-$authorRepository = new AuthorRepository($connection, $mapper);
-$bookRepository = new BookRepository($connection, $mapper);
+$authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
+$bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 
 foreach ($authorRepository->findAll() as $author) {
 	if ($author->id === 3 or $author->id === 6) {
@@ -89,7 +89,7 @@ foreach ($authorRepository->findAll() as $author) {
 		Assert::type('Author', $author);
 		Assert::throws(function () use ($author) {
 			$author->web;
-		}, 'LeanMapper\Exception\MemberAccessException', "Cannot access undefined property 'web'.");
+		}, 'LeanMapper\Exception\MemberAccessException', "Cannot access undefined property 'web' in entity Author.");
 	}
 }
 
@@ -102,6 +102,6 @@ foreach ($bookRepository->findAll() as $book) {
 		Assert::type('Author', $author);
 		Assert::throws(function () use ($author) {
 			$author->web;
-		}, 'LeanMapper\Exception\MemberAccessException', "Cannot access undefined property 'web'.");
+		}, 'LeanMapper\Exception\MemberAccessException', "Cannot access undefined property 'web' in entity Author.");
 	}
 }

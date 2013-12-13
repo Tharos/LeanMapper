@@ -25,6 +25,9 @@ class Row
 	/** @var int */
 	private $id;
 
+	/** @var array */
+	private $referencedRows;
+
 
 	/**
 	 * @param Result $result
@@ -59,6 +62,17 @@ class Row
 	}
 
 	/**
+	 * Tells whether Row has given column and is not null
+	 *
+	 * @param string $name
+	 * @return bool
+	 */
+	public function __isset($name)
+	{
+		return $this->hasColumn($name) and $this->$name !== null;
+	}
+
+	/**
 	 * Tells whether Row has given column
 	 *
 	 * @param string $name
@@ -77,6 +91,22 @@ class Row
 	public function __unset($name)
 	{
 		$this->result->unsetDataEntry($this->id, $name);
+	}
+
+	/**
+	 * @param Connection $connection
+	 */
+	public function setConnection(Connection $connection)
+	{
+		$this->result->setConnection($connection);
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function hasConnection()
+	{
+		return $this->result->hasConnection();
 	}
 
 	/**
@@ -141,11 +171,23 @@ class Row
 	public function detach()
 	{
 		$data = $this->result->getData($this->id);
-		$this->result = Result::getDetachedInstance();
+		$this->result = Result::createDetachedInstance();
 		foreach ($data as $key => $value) {
-			$this->result->setDataEntry(0, $key, $value);
+			$this->result->setDataEntry(Result::DETACHED_ROW_ID, $key, $value);
 		}
-		$this->id = 0;
+		$this->id = Result::DETACHED_ROW_ID;
+	}
+
+	/**
+	 * Marks Row as attached
+	 *
+	 * @param int $id
+	 * @param string $table
+	 */
+	public function attach($id, $table)
+	{
+		$this->result->attach($id, $table);
+		$this->id = $id;
 	}
 
 	/**
@@ -154,19 +196,6 @@ class Row
 	public function markAsUpdated()
 	{
 		$this->result->markAsUpdated($this->id);
-	}
-
-	/**
-	 * Marks Row as attached
-	 *
-	 * @param int $id
-	 * @param string $table
-	 * @param Connection $connection
-	 */
-	public function markAsAttached($id, $table, Connection $connection)
-	{
-		$this->result->markAsAttached($id, $this->id, $table, $connection);
-		$this->id = $id;
 	}
 
 	/**
@@ -179,6 +208,9 @@ class Row
 	 */
 	public function referenced($table, $viaColumn = null, Filtering $filtering = null)
 	{
+		if (isset($this->referencedRows[$viaColumn])) {
+			return $this->referencedRows[$viaColumn];
+		}
 		return $this->result->getReferencedRow($this->id, $table, $viaColumn, $filtering);
 	}
 
@@ -194,6 +226,15 @@ class Row
 	public function referencing($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
 		return $this->result->getReferencingRows($this->id, $table, $viaColumn, $filtering, $strategy);
+	}
+
+	/**
+	 * @param Row $row
+	 * @param string $viaColumn
+	 */
+	public function setReferencedRow(self $row, $viaColumn)
+	{
+		$this->referencedRows[$viaColumn] = $row;
 	}
 
 	/**

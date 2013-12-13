@@ -13,6 +13,10 @@ $connection->onEvent[] = function ($event) use (&$queries) {
 
 //////////
 
+class Author extends Entity
+{
+}
+
 /**
  * @property int $id
  * @property Author|null $author m:hasOne
@@ -28,8 +32,8 @@ $book = new Book;
 $book->name = 'Test book';
 $book->author = null;
 
-$book->useMapper(new DefaultMapper);
-$book->markAsAttached(1, 'book', $connection);
+$book->makeAlive($entityFactory, $connection, $mapper);
+$book->attach(1);
 
 $book->getData();
 

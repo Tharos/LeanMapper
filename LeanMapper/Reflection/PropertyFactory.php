@@ -36,14 +36,14 @@ class PropertyFactory
 	 *
 	 * @param string $annotationType
 	 * @param string $annotation
-	 * @param EntityReflection $reflection
+	 * @param EntityReflection $entityReflection
 	 * @param IMapper|null $mapper
 	 * @return Property
 	 * @throws InvalidAnnotationException
 	 */
-	public static function createFromAnnotation($annotationType, $annotation, EntityReflection $reflection, IMapper $mapper = null)
+	public static function createFromAnnotation($annotationType, $annotation, EntityReflection $entityReflection, IMapper $mapper = null)
 	{
-		$aliases = $reflection->getAliases();
+		$aliases = $entityReflection->getAliases();
 
 		$matches = array();
 		$matched = preg_match('~
@@ -62,7 +62,7 @@ class PropertyFactory
 		~xi', $annotation, $matches);
 
 		if (!$matched) {
-			throw new InvalidAnnotationException("Invalid property definition given: @$annotationType $annotation.");
+			throw new InvalidAnnotationException("Invalid property definition given: @$annotationType $annotation in entity {$entityReflection->getName()}.");
 		}
 
 		$propertyType = new PropertyType($matches[2], $aliases);
@@ -71,6 +71,7 @@ class PropertyFactory
 		$isNullable = ($matches[1] !== '' or $matches[4] !== '');
 		$name = substr($matches[5], 1);
 
+		$hasDefaultValue = false;
 		$defaultValue = null;
 		if (isset($matches[6]) and $matches[6] !== '') {
 			$defaultValue = str_replace('\"', '"', $matches[6]);
@@ -80,10 +81,14 @@ class PropertyFactory
 			$defaultValue = $matches[8];
 		}
 		if ($defaultValue !== null) {
-			$defaultValue = self::fixDefaultValue($defaultValue, $propertyType);
+			$hasDefaultValue = true;
+			try {
+				$defaultValue = self::fixDefaultValue($defaultValue, $propertyType, $isNullable);
+			} catch (InvalidAnnotationException $e) {
+				throw new InvalidAnnotationException("Invalid property definition given: @$annotationType $annotation in entity {$entityReflection->getName()}, " . lcfirst($e->getMessage()));
+			}
 		}
-
-		$column = $mapper !== null ? $mapper->getColumn($reflection->getName(), $name) : $name;
+		$column = $mapper !== null ? $mapper->getColumn($entityReflection->getName(), $name) : $name;
 		if (isset($matches[9]) and $matches[9] !== '') {
 			$column = $matches[9];
 		}
@@ -108,10 +113,10 @@ class PropertyFactory
 					case 'belongsToOne':
 					case 'belongsToMany':
 						if ($relationship !== null) {
-							throw new InvalidAnnotationException("It doesn't make sense to have multiple relationship definitions in property definition: @$annotationType $annotation.");
+							throw new InvalidAnnotationException("It doesn't make sense to have multiple relationship definitions in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}.");
 						}
 						$relationship = self::createRelationship(
-							$reflection->getName(),
+							$entityReflection->getName(),
 							$propertyType,
 							$containsCollection,
 							$flag,
@@ -121,37 +126,34 @@ class PropertyFactory
 						break;
 					case 'useMethods':
 						if ($propertyMethods !== null) {
-							throw new InvalidAnnotationException("Multiple m:useMethods flags found in property definition: @$annotationType $annotation.");
+							throw new InvalidAnnotationException("Multiple m:useMethods flags found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}.");
 						}
 						$propertyMethods = new PropertyMethods($name, $isWritable, $flagArgument);
 						break;
 					case 'filter':
 						if ($propertyFilters !== null) {
-							throw new InvalidAnnotationException("Multiple m:filter flags found in property definition: @$annotationType $annotation.");
+							throw new InvalidAnnotationException("Multiple m:filter flags found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}.");
 						}
 						$propertyFilters =  new PropertyFilters($flagArgument);
 						break;
 					case 'passThru':
 						if ($propertyPasses !== null) {
-							throw new InvalidAnnotationException("Multiple m:passThru flags found in property definition: @$annotationType $annotation.");
+							throw new InvalidAnnotationException("Multiple m:passThru flags found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}.");
 						}
 						$propertyPasses = new PropertyPasses($flagArgument);
 						break;
 					case 'enum':
 						if ($propertyValuesEnum !== null) {
-							throw new InvalidAnnotationException("Multiple values enumerations found in property definition: @$annotationType $annotation.");
+							throw new InvalidAnnotationException("Multiple values enumerations found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}.");
 						}
 						if ($flagArgument === null) {
-							throw new InvalidAnnotationException("Parameter of m:enum flag was not found in property definition: @$annotationType $annotation");
+							throw new InvalidAnnotationException("Parameter of m:enum flag was not found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}.");
 						}
-						if (!$propertyType->isBasicType() or $propertyType->getType() === 'array') {
-							throw new InvalidAnnotationException("Values of {$propertyType->getType()} property cannot be enumerated.");
-						}
-						$propertyValuesEnum = new PropertyValuesEnum($flagArgument, $reflection);
+						$propertyValuesEnum = new PropertyValuesEnum($flagArgument, $entityReflection);
 						break;
 					default:
 						if (array_key_exists($flag, $customFlags)) {
-							throw new InvalidAnnotationException("Multiple m:$flag flags found in property definition: @$annotationType $annotation");
+							throw new InvalidAnnotationException("Multiple m:$flag flags found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}.");
 						}
 						$customFlags[$flag] = $flagArgument;
 				}
@@ -165,11 +167,13 @@ class PropertyFactory
 		}
 		return new Property(
 			$name,
+			$entityReflection,
 			$column,
 			$propertyType,
 			$isWritable,
 			$isNullable,
 			$containsCollection,
+			$hasDefaultValue,
 			$defaultValue,
 			$relationship,
 			$propertyMethods,
@@ -195,19 +199,6 @@ class PropertyFactory
 	 */
 	private static function createRelationship($sourceClass, PropertyType $propertyType, $containsCollection, $relationshipType, $definition = null, IMapper $mapper = null)
 	{
-		// logic validation
-		if ($propertyType->isBasicType()) {
-			throw new InvalidAnnotationException("Invalid property definition given: {$propertyType->getType()} property cannot have relationship.");
-		}
-		if ($relationshipType === 'hasMany' or $relationshipType === 'belongsToMany') {
-			if (!$containsCollection) {
-				throw new InvalidAnnotationException("Invalid property definition given: property with '$relationshipType' relationship must contain collection.");
-			}
-		} else {
-			if ($containsCollection) {
-				throw new InvalidAnnotationException("Invalid property definition given: property with '$relationshipType' relationship must not contain collection.");
-			}
-		}
 		if ($relationshipType !== 'hasOne') {
 			$strategy = Result::STRATEGY_IN; // default strategy
 			if ($definition !== null and substr($definition, -6) === '#union') {
@@ -273,12 +264,15 @@ class PropertyFactory
 	/**
 	 * @param mixed $value
 	 * @param PropertyType $propertyType
+	 * @param bool $isNullable
 	 * @return mixed
 	 * @throws InvalidAnnotationException
 	 */
-	private static function fixDefaultValue($value, PropertyType $propertyType)
+	private static function fixDefaultValue($value, PropertyType $propertyType, $isNullable)
 	{
-		if (!$propertyType->isBasicType()) {
+		if ($isNullable and strtolower($value) === 'null') {
+			return null;
+		} elseif (!$propertyType->isBasicType()) {
 			throw new InvalidAnnotationException('Only properties of basic types may have default values specified.');
 		}
 		switch ($propertyType->getType()) {
@@ -303,7 +297,12 @@ class PropertyFactory
 					throw new InvalidAnnotationException("Property of type array cannot have default value '$value'.");
 				}
 				return array();
-			default: // string
+			case 'string':
+				if ($value === '\'\'' or $value === '""') {
+					return '';
+				}
+				return $value;
+			default:
 				return $value;
 		}
 	}

@@ -13,10 +13,7 @@ namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
-use LeanMapper\Relationship\BelongsToMany;
-use LeanMapper\Relationship\BelongsToOne;
-use LeanMapper\Relationship\HasMany;
-use LeanMapper\Relationship\HasOne;
+use LeanMapper\Relationship;
 
 /**
  * Reflection of entity's property
@@ -32,6 +29,9 @@ class Property
 	/** @var string|null */
 	private $column;
 
+	/** @var EntityReflection */
+	private $entityReflection;
+
 	/** @var PropertyType */
 	private $type;
 
@@ -41,13 +41,16 @@ class Property
 	/** @var bool */
 	private $isNullable;
 
+	/** @var bool */
+	private $hasDefaultValue;
+
 	/** @var mixed|null */
 	private $defaultValue;
 
 	/** @var bool */
 	private $containsCollection;
 
-	/** @var HasOne|HasMany|BelongsToOne|BelongsToMany|null */
+	/** @var Relationship\HasOne|Relationship\HasMany|Relationship\BelongsToOne|Relationship\BelongsToMany|null */
 	private $relationship;
 
 	/** @var PropertyMethods|null */
@@ -68,13 +71,15 @@ class Property
 
 	/**
 	 * @param string $name
+	 * @param EntityReflection $entityReflection
 	 * @param string|null $column
 	 * @param PropertyType $type
 	 * @param bool $isWritable
 	 * @param bool $isNullable
 	 * @param bool $containsCollection
+	 * @param bool $hasDefaultValue
 	 * @param mixed|null $defaultValue
-	 * @param HasOne|HasMany|BelongsToOne|BelongsToMany|null $relationship
+	 * @param Relationship\HasOne|Relationship\HasMany|Relationship\BelongsToOne|Relationship\BelongsToMany|null $relationship
 	 * @param PropertyMethods|null $propertyMethods
 	 * @param PropertyFilters|null $propertyFilters
 	 * @param PropertyPasses|null $propertyPasses
@@ -82,17 +87,35 @@ class Property
 	 * @param array|null $customFlags
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct($name, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $defaultValue = null, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
+	public function __construct($name, EntityReflection $entityReflection, $column, PropertyType $type, $isWritable, $isNullable, $containsCollection, $hasDefaultValue, $defaultValue = null, $relationship = null, PropertyMethods $propertyMethods = null, PropertyFilters $propertyFilters = null, PropertyPasses $propertyPasses = null, PropertyValuesEnum $propertyValuesEnum = null, array $customFlags = array())
 	{
-		if ($propertyFilters !== null and $relationship === null) {
-			throw new InvalidArgumentException('Cannot bind filter to property without relationship.');
+		if ($relationship !== null) {
+			if (!is_subclass_of($type->getType(), 'LeanMapper\Entity')) {
+				throw new InvalidArgumentException("Property '$name' in entity {$entityReflection->getName()} cannot contain relationship since it doesn't contain entity (or collection of entities).");
+			}
+			if (($relationship instanceof Relationship\HasMany) or ($relationship instanceof Relationship\BelongsToMany)) {
+				if (!$containsCollection) {
+					throw new InvalidArgumentException("Property '$name' with HasMany or BelongsToMany in entity {$entityReflection->getName()} relationship must contain collection.");
+				}
+			} else {
+				if ($containsCollection) {
+					throw new InvalidArgumentException("Property '$name' with HasOney or BelongsToOne in entity {$entityReflection->getName()} relationship cannot contain collection.");
+				}
+			}
+		} elseif ($propertyFilters !== null) {
+			throw new InvalidArgumentException("Cannot bind filter to property '$name' in entity {$entityReflection->getName()} since it doesn't contain relationship.");
+		}
+		if ($propertyValuesEnum !== null and (!$type->isBasicType() or $type->getType() === 'array' or $containsCollection)) {
+			throw new InvalidArgumentException("Values of property '$name' in entity {$entityReflection->getName()} cannot be enumerated.");
 		}
 		$this->name = $name;
+		$this->entityReflection = $entityReflection;
 		$this->column = $column;
 		$this->type = $type;
 		$this->isWritable = $isWritable;
 		$this->isNullable = $isNullable;
 		$this->containsCollection = $containsCollection;
+		$this->hasDefaultValue = $hasDefaultValue;
 		$this->defaultValue = $defaultValue;
 		$this->relationship = $relationship;
 		$this->propertyMethods = $propertyMethods;
@@ -140,7 +163,7 @@ class Property
 	 */
 	public function hasDefaultValue()
 	{
-		return $this->defaultValue !== null;
+		return $this->hasDefaultValue;
 	}
 
 	/**
@@ -206,7 +229,7 @@ class Property
 	/**
 	 * Returns relationship that property represents
 	 *
-	 * @return BelongsToMany|BelongsToOne|HasMany|HasOne|null
+	 * @return Relationship\BelongsToMany|Relationship\BelongsToOne|Relationship\HasMany|Relationship\HasOne|null
 	 */
 	public function getRelationship()
 	{
@@ -248,11 +271,11 @@ class Property
 	 * Gets filters arguments hard-coded in annotation
 	 *
 	 * @param int $index
-	 * @return array|string|null
+	 * @return array|null
 	 */
-	public function getFiltersAnnotationArgs($index = 0)
+	public function getFiltersTargetedArgs($index = 0)
 	{
-		return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersAnnotationArgs($index) : null;
+		return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersTargetedArgs($index) : null;
 	}
 
 	/**
@@ -330,7 +353,7 @@ class Property
 	public function getCustomFlagValue($name)
 	{
 		if (!$this->hasCustomFlag($name)) {
-			throw new InvalidArgumentException("Property doesn't have custom flag '$name'.");
+			throw new InvalidArgumentException("Property '{$this->name}' in entity {$this->entityReflection->getName()} doesn't have custom flag '$name'.");
 		}
 		return $this->customFlags[$name];
 	}
@@ -343,7 +366,7 @@ class Property
 	private function checkContainsEnumeration()
 	{
 		if (!$this->containsEnumeration()) {
-			throw new InvalidMethodCallException("It doesn't make sense to call this method on property that doesn't contain enumeration.");
+			throw new InvalidMethodCallException("It doesn't make sense to call enumeration related method on property '{$this->name}' in entity {$this->entityReflection->getName()} since it doesn't contain enumeration.");
 		}
 	}
 

@@ -14,6 +14,6 @@ namespace LeanMapper\Exception;
 /**
  * @author Vojtěch Kohout
  */
-class InvalidAnnotationException extends \Exception
+class InvalidAnnotationException extends Exception
 {
 }

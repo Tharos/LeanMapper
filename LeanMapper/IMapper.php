@@ -87,5 +87,14 @@ interface IMapper
 	 * @return string
 	 */
 	public function getTableByRepositoryClass($repositoryClass);
+
+	/**
+	 * Gets filters that should be used used every time when given entity is loaded from database
+	 *
+	 * @param string $entityClass
+	 * @param Caller|null $caller
+	 * @return array|ImplicitFilters
+	 */
+	public function getImplicitFilters($entityClass, Caller $caller = null);
 	
 }

@@ -14,6 +14,6 @@ namespace LeanMapper\Exception;
 /**
  * @author Vojtěch Kohout
  */
-class InvalidMethodCallException extends \Exception
+class InvalidMethodCallException extends Exception
 {
 }

@@ -5,4 +5,4 @@ php-win.ini
 RunTests.bat
 coverage.dat
 db/library.sq3
-LeanMapper/dev.phpt
+LeanMapper/dev*.phpt
