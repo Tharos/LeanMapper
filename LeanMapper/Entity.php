@@ -36,6 +36,10 @@ abstract class Entity
 
 	const ACTION_REMOVE = 'remove';
 
+	const SCOPE_GET = 'get';
+
+	const SCOPE_SET = 'set';
+
 	/** @var Row */
 	protected $row;
 
@@ -50,6 +54,12 @@ abstract class Entity
 
 	/** @var EntityReflection */
 	private $currentReflection;
+
+	/** @var array */
+	private $scope = array(
+		self::SCOPE_GET => array(),
+		self::SCOPE_GET => array()
+	);
 
 
 	/**
@@ -115,19 +125,25 @@ abstract class Entity
 	{
 		$reflection = $this->getCurrentReflection();
 		$nativeGetter = $reflection->getGetter('get' . ucfirst($name));
-		if ($nativeGetter !== null) {
-			return $nativeGetter->invoke($this); // filters are not relevant here
+		if ($nativeGetter !== null and !$this->isInScope(self::SCOPE_GET, $name)) {
+			$this->enterScope(self::SCOPE_GET, $name);
+			$value = $nativeGetter->invoke($this); // filters are not relevant here
+			$this->leaveScope(self::SCOPE_GET, $name);
+			return $value;
 		}
 		$property = $reflection->getEntityProperty($name);
 		if ($property === null) {
 			throw new MemberAccessException("Cannot access undefined property '$name' in entity " . get_called_class() . '.');
 		}
 		$customGetter = $property->getGetter();
-		if ($customGetter !== null) {
+		if ($customGetter !== null and !$this->isInScope(self::SCOPE_GET, $name)) {
 			if (!method_exists($this, $customGetter)) {
 				throw new InvalidMethodCallException("Missing getter method '$customGetter' in entity " . get_called_class() . '.');
 			}
-			return $this->$customGetter(); // filters are not relevant here
+			$this->enterScope(self::SCOPE_GET, $name);
+			$value = $this->$customGetter(); // filters are not relevant here
+			$this->leaveScope(self::SCOPE_GET, $name);
+			return $value;
 		}
 		$pass = $property->getGetterPass();
 		if ($property->isBasicType()) {
@@ -229,8 +245,10 @@ abstract class Entity
 	{
 		$reflection = $this->getCurrentReflection();
 		$nativeSetter = $reflection->getSetter('set' . ucfirst($name));
-		if ($nativeSetter !== null) {
+		if ($nativeSetter !== null and !$this->isInScope(self::SCOPE_SET, $name)) {
+			$this->enterScope(self::SCOPE_SET, $name);
 			$nativeSetter->invoke($this, $value);
+			$this->leaveScope(self::SCOPE_SET, $name);
 			return;
 		}
 		$property = $reflection->getEntityProperty($name);
@@ -241,11 +259,13 @@ abstract class Entity
 			throw new MemberAccessException("Cannot write to read-only property '$name' in entity " . get_called_class() . '.');
 		}
 		$customSetter = $property->getSetter();
-		if ($customSetter !== null) {
+		if ($customSetter !== null and !$this->isInScope(self::SCOPE_SET, $name)) {
 			if (!method_exists($this, $customSetter)) {
 				throw new InvalidMethodCallException("Missing setter method '$customSetter' in entity " . get_called_class() . '.');
 			}
+			$this->enterScope(self::SCOPE_SET, $name);
 			$this->$customSetter($value);
+			$this->leaveScope(self::SCOPE_SET, $name);
 			return;
 		}
 		if (($pass = $property->getSetterPass()) !== null) {
@@ -894,6 +914,34 @@ abstract class Entity
 			}
 		}
 		return $filters1;
+	}
+
+	/**
+	 * @param string $type self::SCOPE_GET|self::SCOPE_SET
+	 * @param string $propertyName
+	 * @return bool
+	 */
+	private function isInScope($type, $propertyName)
+	{
+		return isset($this->scope[$type][$propertyName]);
+	}
+
+	/**
+	 * @param string $type self::SCOPE_GET|self::SCOPE_SET
+	 * @param string $propertyName
+	 */
+	private function enterScope($type, $propertyName)
+	{
+		$this->scope[$type][$propertyName] = true;
+	}
+
+	/**
+	 * @param string $type self::SCOPE_GET|self::SCOPE_SET
+	 * @param string $propertyName
+	 */
+	private function leaveScope($type, $propertyName)
+	{
+		unset($this->scope[$type][$propertyName]);
 	}
 
 }
