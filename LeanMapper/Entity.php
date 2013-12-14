@@ -58,7 +58,7 @@ abstract class Entity
 	/** @var array */
 	private $scope = array(
 		self::SCOPE_GET => array(),
-		self::SCOPE_GET => array()
+		self::SCOPE_SET => array()
 	);
 
 
