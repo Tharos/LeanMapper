@@ -758,7 +758,7 @@ class Result implements \Iterator
 	 */
 	private function createTableSelection($table)
 	{
-		return $this->connection->select('%n.*', $table)->from($table);
+		return $this->connection->select('%n.*', $table)->from('%n', $table);
 	}
 
 	/**
