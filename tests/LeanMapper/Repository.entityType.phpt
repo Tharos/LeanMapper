@@ -53,8 +53,8 @@ $author->name = 'Victor Grubbs';
 
 Assert::exception(function () use ($author, $bookRepository) {
 	$bookRepository->persist($author);
-}, 'LeanMapper\Exception\InvalidArgumentException', 'Repository BookRepository cannot handle Author entity.');
+}, 'LeanMapper\Exception\InvalidArgumentException', 'Repository BookRepository can only handle Book entites. Use different repository to handle Author.');
 
 Assert::exception(function () use ($author, $bookRepository) {
 	$bookRepository->delete($author);
-}, 'LeanMapper\Exception\InvalidArgumentException', 'Repository BookRepository cannot handle Author entity.');
+}, 'LeanMapper\Exception\InvalidArgumentException', 'Repository BookRepository can only handle Book entites. Use different repository to handle Author.');

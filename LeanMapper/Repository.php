@@ -337,7 +337,7 @@ abstract class Repository
 	{
 		$entityClass = $this->mapper->getEntityClass($this->getTable());
 		if (!($entity instanceof $entityClass)) {
-			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
+			throw new InvalidArgumentException('Repository ' . get_called_class() . ' can only handle ' . $entityClass . ' entites. Use different repository to handle ' . get_class($entity) . '.');
 		}
 	}
 
