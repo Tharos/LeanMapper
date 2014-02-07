@@ -144,6 +144,7 @@ abstract class Repository
 	 * Removes given entity (or entity with given id) from database
 	 *
 	 * @param mixed $arg
+	 * @return mixed
 	 * @throws InvalidStateException
 	 */
 	public function delete($arg)
@@ -155,11 +156,12 @@ abstract class Repository
 				throw new InvalidStateException('Cannot delete detached entity.');
 			}
 		}
-		$this->deleteFromDatabase($arg);
+		$result = $this->deleteFromDatabase($arg);
 		if ($arg instanceof Entity) {
 			$arg->detach();
 		}
 		$this->events->invokeCallbacks(Events::EVENT_AFTER_DELETE, $arg);
+		return $result;
 	}
 
 	/**
@@ -198,6 +200,7 @@ abstract class Repository
 	 * Performs database delete (can be customized)
 	 *
 	 * @param mixed $arg
+	 * @return mixed
 	 */
 	protected function deleteFromDatabase($arg)
 	{
@@ -205,7 +208,7 @@ abstract class Repository
 		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
 
 		$id = ($arg instanceof Entity) ? $arg->$idField : $arg;
-		$this->connection->query(
+		return $this->connection->query(
 			'DELETE FROM %n WHERE %n = ?', $this->getTable(), $primaryKey, $id
 		);
 	}
