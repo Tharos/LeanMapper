@@ -118,7 +118,6 @@ class PropertyFactory
 						$relationship = self::createRelationship(
 							$entityReflection->getName(),
 							$propertyType,
-							$containsCollection,
 							$flag,
 							$flagArgument,
 							$mapper
@@ -190,14 +189,13 @@ class PropertyFactory
 	/**
 	 * @param string $sourceClass
 	 * @param PropertyType $propertyType
-	 * @param bool $containsCollection
 	 * @param string $relationshipType
 	 * @param string|null $definition
 	 * @param IMapper|null $mapper
 	 * @return mixed
 	 * @throws InvalidAnnotationException
 	 */
-	private static function createRelationship($sourceClass, PropertyType $propertyType, $containsCollection, $relationshipType, $definition = null, IMapper $mapper = null)
+	private static function createRelationship($sourceClass, PropertyType $propertyType, $relationshipType, $definition = null, IMapper $mapper = null)
 	{
 		if ($relationshipType !== 'hasOne') {
 			$strategy = Result::STRATEGY_IN; // default strategy
