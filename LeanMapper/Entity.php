@@ -335,7 +335,7 @@ abstract class Entity
 	{
 		try {
 			return $this->$name !== null;
-		} catch (Exception $e) {
+		} catch (MemberAccessException $e) {
 			return false;
 		}
 	}
