@@ -54,6 +54,20 @@ class Connection extends DibiConnection
 		$this->filters[$name] = array($callback, $this->translateWiringSchema($wiringSchema));
 	}
 
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasFilter($name)
+    {
+        try {
+            $this->checkFilterExistence($name);
+        } catch (InvalidArgumentException $e) {
+            return false;
+        }
+        return true;
+    }
+
 	/**
 	 * Gets callable filter's callback
 	 *
@@ -87,20 +101,6 @@ class Connection extends DibiConnection
 	{
 		return new Fluent($this);
 	}
-
-    /**
-     * @param string $name
-     * @return bool
-     */
-    public function hasFilter($name)
-    {
-        try {
-            $this->checkFilterExistence($name);
-        } catch (InvalidArgumentException $e) {
-            return false;
-        }
-        return true;
-    }
 
 	////////////////////
 	////////////////////
