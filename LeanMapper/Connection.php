@@ -88,6 +88,20 @@ class Connection extends DibiConnection
 		return new Fluent($this);
 	}
 
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasFilter($name)
+    {
+        try {
+            $this->checkFilterExistence($name);
+        } catch (InvalidArgumentException $e) {
+            return false;
+        }
+        return true;
+    }
+
 	////////////////////
 	////////////////////
 
