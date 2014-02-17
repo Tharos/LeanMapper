@@ -54,10 +54,10 @@ class Connection extends DibiConnection
 		$this->filters[$name] = array($callback, $this->translateWiringSchema($wiringSchema));
 	}
 
-    /**
-     * @param string $name
-     * @return bool
-     */
+	/**
+	 * @param string $name
+	 * @return bool
+	 */
 	public function hasFilter($name)
 	{
 		try {
