@@ -335,7 +335,7 @@ abstract class Entity
 	{
 		try {
 			return $this->$name !== null;
-		} catch (Exception $e) {
+		} catch (MemberAccessException $e) {
 			return false;
 		}
 	}
@@ -425,7 +425,6 @@ abstract class Entity
 	 */
 	public function getData(array $whitelist = null)
 	{
-
 		$data = array();
 		if ($whitelist !== null) {
 			$whitelist = array_flip($whitelist);

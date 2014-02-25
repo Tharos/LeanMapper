@@ -27,7 +27,7 @@ class Fluent extends DibiFluent
 	 *
 	 * @param Closure|string $filter
 	 * @param mixed|null $args
-	 * @return $this
+	 * @return self
 	 */
 	public function applyFilter($filter, $args = null)
 	{
@@ -38,6 +38,15 @@ class Fluent extends DibiFluent
 			$args
 		);
 		return $this;
+	}
+
+	/**
+	 * @param array|null $args
+	 * @return self
+	 */
+	public function createSelect($args = null)
+	{
+		return call_user_func_array(array($this->getConnection(), 'select'), func_get_args());
 	}
 
 	/**
