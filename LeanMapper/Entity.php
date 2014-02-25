@@ -425,7 +425,6 @@ abstract class Entity
 	 */
 	public function getData(array $whitelist = null)
 	{
-
 		$data = array();
 		if ($whitelist !== null) {
 			$whitelist = array_flip($whitelist);
