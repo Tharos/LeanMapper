@@ -294,7 +294,9 @@ abstract class Entity
 				$this->row->$column = $value;
 				return;
 			}
-			settype($value, $property->getType());
+			if ($pass === null) {
+				settype($value, $property->getType());
+			}
 			if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
 				throw new InvalidValueException("Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.');
 			}
