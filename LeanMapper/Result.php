@@ -33,6 +33,8 @@ class Result implements \Iterator
 
 	const DETACHED_ROW_ID = -1;
 
+	const PRELOADED_KEY = 'preloaded';
+
 	/** @var bool */
 	private $isDetached;
 
@@ -618,6 +620,9 @@ class Result implements \Iterator
 			throw new InvalidStateException('Cannot get referenced Result for detached Result.');
 		}
 		$key = "$table($viaColumn)";
+		if (isset($this->referenced[$preloadedKey = $key . '#' . self::PRELOADED_KEY])) {
+			return $this->referenced[$preloadedKey];
+		}
 		$primaryKey = $this->mapper->getPrimaryKey($table);
 		if ($filtering === null) {
 			if (!isset($this->referenced[$key])) {
@@ -642,6 +647,19 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * @param self $referencedResult
+	 * @param string $table
+	 * @param string $viaColumn
+	 */
+	public function setReferencedResult(self $referencedResult, $table, $viaColumn = null)
+	{
+		if ($viaColumn === null) {
+			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
+		}
+		$this->referenced["$table($viaColumn)#" . self::PRELOADED_KEY] = $referencedResult;
+	}
+
+	/**
 	 * @param string $table
 	 * @param string $viaColumn
 	 * @param Filtering|null $filtering
@@ -660,6 +678,9 @@ class Result implements \Iterator
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
 		$key = "$table($viaColumn)$strategy";
+		if (isset($this->referencing[$preloadedKey = $key . '#' . self::PRELOADED_KEY])) {
+			return $this->referencing[$preloadedKey];
+		}
 		$primaryKey = $this->mapper->getPrimaryKey($this->table);
 		if ($strategy === self::STRATEGY_IN) {
 			if ($filtering === null) {
@@ -723,6 +744,22 @@ class Result implements \Iterator
 			}
 		}
 		return $this->referencing[$key];
+	}
+
+	/**
+	 * @param Result $referencingResult
+	 * @param string $table
+	 * @param string $viaColumn
+	 * @param string $strategy
+	 */
+	public function setReferencingResult(self $referencingResult, $table, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	{
+		$strategy = $this->translateStrategy($strategy);
+		if ($viaColumn === null) {
+			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
+		}
+		$this->referencing["$table($viaColumn)$strategy#" . self::PRELOADED_KEY] = $referencingResult;
+		unset($this->index[$referencingResult->getOriginKey()]);
 	}
 
 	/**
