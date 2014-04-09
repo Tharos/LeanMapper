@@ -75,7 +75,7 @@ $authorsResult->setReferencingResult($booksResult, 'book', 'author_id');
 $entities = [];
 
 foreach ($authors as $author) {
-	$entity = $entityFactory->createEntity(Author::class, $authorsResult->getRow($author->id));
+	$entity = $entityFactory->createEntity('Author', $authorsResult->getRow($author->id));
 	$entity->makeAlive($entityFactory);
 	$entities[$author->id] = $entity;
 }
