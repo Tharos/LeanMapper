@@ -520,6 +520,17 @@ abstract class Entity
 	public function markAsUpdated()
 	{
 		$this->row->markAsUpdated();
+		foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
+			if ($property->hasRelationship() and ($property->getRelationship() instanceof Relationship\HasMany)) {
+				$relationship = $property->getRelationship();
+				$this->row->cleanReferencingAddedAndRemovedMeta(
+					$relationship->getRelationshipTable(),
+					$relationship->getColumnReferencingSourceTable(),
+					null,
+					$relationship->getStrategy()
+				);
+			}
+		}
 	}
 
 	/**

@@ -77,3 +77,19 @@ Assert::equal('ebook,popular', implodeTags($book->tags));
 $book->removeFromTags(array(1));
 
 Assert::equal('ebook', implodeTags($book->tags));
+
+////////////////////
+
+$book = $bookRepository->find(2);
+
+$book->addToTags(1);
+
+$bookRepository->persist($book);
+$bookRepository->persist($book);
+
+$book->addToTags(2);
+
+$bookRepository->persist($book);
+$bookRepository->persist($book);
+
+Assert::equal([1, 2], $connection->query('SELECT [tag_id] FROM [book_tag] WHERE [book_id] = %i', 2)->fetchPairs());

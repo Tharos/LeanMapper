@@ -127,13 +127,15 @@ abstract class Repository
 			$result = $id = $this->insertIntoDatabase($entity);
 			$entity->attach($id);
 			$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
-		} elseif ($entity->isModified()) {
-			$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
-			$result = $this->updateInDatabase($entity);
+		} else {
+			if ($entity->isModified()) {
+				$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
+				$result = $this->updateInDatabase($entity);
+				$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
+			}
+			$this->persistHasManyChanges($entity);
 			$entity->markAsUpdated();
-			$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
 		}
-		$this->persistHasManyChanges($entity);
 		$this->events->invokeCallbacks(Events::EVENT_AFTER_PERSIST, $entity);
 
 		return isset($result) ? $result : null;
