@@ -222,7 +222,7 @@ abstract class Entity
 		if (!$property->containsCollection()) {
 			$type = $property->getType();
 			if (!($value instanceof $type)) {
-				throw new InvalidValueException("Property '$name' in entity " . get_called_class() . " is expected to contain an instance of $type, instance of " . get_class($value) . " given.");
+				throw new InvalidValueException("Property '$name' in entity " . get_called_class() . " is expected to contain an instance of $type, " . (is_object($value) ? 'instance of ' . get_class($value) : gettype($value)) . " given.");
 			}
 			return $value;
 		}
