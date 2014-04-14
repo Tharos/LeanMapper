@@ -11,6 +11,7 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\Connection;
 use LeanMapper\Exception\InvalidAnnotationException;
 
 /**
@@ -50,7 +51,7 @@ class PropertyMethods
 			if ($method === '') {
 				continue;
 			}
-			if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $method)) {
+			if (!preg_match('#^'.Connection::PHP_VARIABLE.'$#', $method)) {
 				throw new InvalidAnnotationException("Malformed access method name given: '$method'.");
 			}
 			if ($counter === 1) {

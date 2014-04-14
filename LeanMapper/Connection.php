@@ -22,6 +22,13 @@ use LeanMapper\Exception\InvalidArgumentException;
 class Connection extends DibiConnection
 {
 
+	const PHP_VARIABLE_FIRST_LETTER = '[a-zA-Z_\x7f-\xff]';
+
+	const PHP_VARIABLE_OTHER_LETTER = '[a-zA-Z0-9_\x7f-\xff]';
+
+	const PHP_VARIABLE = '[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*';
+
+
 	const WIRE_ENTITY = 1;
 
 	const WIRE_PROPERTY = 2;
@@ -42,7 +49,7 @@ class Connection extends DibiConnection
 	 */
 	public function registerFilter($name, $callback, $wiringSchema = null)
 	{
-		if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $name)) {
+		if (!preg_match('#^'.self::PHP_VARIABLE.'$#', $name)) {
 			throw new InvalidArgumentException("Invalid filter name given: '$name'. For filter names apply the same rules as for function names in PHP.");
 		}
 		if (isset($this->filters[$name])) {
