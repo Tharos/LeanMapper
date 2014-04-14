@@ -30,7 +30,7 @@ class AuthorRepository extends LeanMapper\Repository
 		}
 		return $this->createEntity($entry);
 	}
-	
+
 }
 
 //////////

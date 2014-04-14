@@ -96,5 +96,5 @@ interface IMapper
 	 * @return array|ImplicitFilters
 	 */
 	public function getImplicitFilters($entityClass, Caller $caller = null);
-	
+
 }
