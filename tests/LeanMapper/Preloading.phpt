@@ -49,8 +49,8 @@ $result = $connection->select('[author.id] [author_id], [author.name] [author_na
 		->where('LENGTH([book].[name]) > %i', 13)
 		->fetchAll();
 
-$authors = [];
-$books = [];
+$authors = array();
+$books = array();
 
 foreach ($result as $row) {
 	if (!isset($authors[$row['author_id']])) {
@@ -72,7 +72,7 @@ $booksResult = Result::createInstance($books, 'book', $connection, $mapper);
 
 $authorsResult->setReferencingResult($booksResult, 'book', 'author_id');
 
-$entities = [];
+$entities = array();
 
 foreach ($authors as $author) {
 	$entity = $entityFactory->createEntity('Author', $authorsResult->getRow($author->id));
