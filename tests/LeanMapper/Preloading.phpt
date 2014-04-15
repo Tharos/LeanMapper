@@ -54,17 +54,17 @@ $books = array();
 
 foreach ($result as $row) {
 	if (!isset($authors[$row['author_id']])) {
-		$authors[$row['author_id']] = new DibiRow([
+		$authors[$row['author_id']] = new DibiRow(array(
 			'id' => $row['author_id'],
 			'name' => $row['author_name'],
-		]);
+		));
 	}
 	if (!isset($books[$row['book_id']])) {
-		$books[$row['book_id']] = new DibiRow([
+		$books[$row['book_id']] = new DibiRow(array(
 			'id' => $row['book_id'],
 			'name' => $row['book_name'],
 			'author_id' => $row['book_author_id'],
-		]);
+		));
 	}
 }
 $authorsResult = Result::createInstance($authors, 'author', $connection, $mapper);
