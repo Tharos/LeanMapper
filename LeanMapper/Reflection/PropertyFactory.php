@@ -68,6 +68,9 @@ class PropertyFactory
 		$propertyType = new PropertyType($matches[2], $aliases);
 		$isWritable = $annotationType === 'property';
 		$containsCollection = $matches[3] !== '';
+		if ($propertyType->isBasicType() and $containsCollection) {
+			throw new InvalidAnnotationException("Invalid property type definition given: @$annotationType $annotation in entity {$entityReflection->getName()}. Lean Mapper doesn't support <type>[] notation for basic types.");
+		}
 		$isNullable = ($matches[1] !== '' or $matches[4] !== '');
 		$name = substr($matches[5], 1);
 
