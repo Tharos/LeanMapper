@@ -13,6 +13,7 @@ namespace LeanMapper;
 
 use Closure;
 use DibiFluent;
+use LeanMapper\Exception\InvalidArgumentException;
 
 /**
  * DibiFluent with filter support
@@ -21,6 +22,10 @@ use DibiFluent;
  */
 class Fluent extends DibiFluent
 {
+
+	/** @var array */
+	private $relatedKeys;
+
 
 	/**
 	 * Applies given filter to current statement
@@ -59,6 +64,28 @@ class Fluent extends DibiFluent
 	public function _export($clause = null, $args = null)
 	{
 		return parent::_export($clause, $args);
+	}
+
+	/**
+	 * @return array|null
+	 */
+	public function getRelatedKeys()
+	{
+		return $this->relatedKeys;
+	}
+
+	/**
+	 * @param array|null $keys
+	 * @return self
+	 * @throws InvalidArgumentException
+	 */
+	public function setRelatedKeys($keys)
+	{
+		if (!is_array($keys) and $keys !== null) {
+			throw new InvalidArgumentException('Invalid related keys given. Expected array or null, ' . gettype($keys) . ' given.');
+		}
+		$this->relatedKeys = $keys;
+		return $this;
 	}
 
 }

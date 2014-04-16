@@ -151,7 +151,7 @@ abstract class Entity
 			try {
 				$value = $this->row->$column;
 			} catch (LeanMapperException $e) {
-				throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . lcfirst($e->getMessage()));
+				throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . $e->getMessage());
 			}
 			if ($pass !== null) {
 				$value = $this->$pass($value);
@@ -208,7 +208,7 @@ abstract class Entity
 		try {
 			$value = $this->row->$column;
 		} catch (LeanMapperException $e) {
-			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . lcfirst($e->getMessage()));
+			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . $e->getMessage());
 		}
 		if ($pass !== null) {
 			$value = $this->$pass($value);
@@ -623,7 +623,7 @@ abstract class Entity
 		try {
 			return $this->$method($property, $relationship, $targetTableFiltering, $relationshipTableFiltering);
 		} catch (Exception $e) {
-			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . lcfirst($e->getMessage()));
+			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . $e->getMessage());
 		}
 	}
 

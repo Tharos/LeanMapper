@@ -628,20 +628,23 @@ class Result implements \Iterator
 			if (!isset($this->referenced[$key])) {
 				$data = array();
 				if ($ids = $this->extractIds($viaColumn)) {
-					$data = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $ids)
+					$data = $this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids)
 							->fetchAll();
 				}
 				$this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper, $key);
 			}
-		} else {
-			$statement = $this->createTableSelection($table)->where('%n.%n IN %in', $table, $primaryKey, $this->extractIds($viaColumn));
-			$this->applyFiltering($statement, $filtering);
-			$args = $statement->_export();
-			$key .= '#' . $this->calculateArgumentsHash($args);
+			return $this->referenced[$key];
+		}
 
-			if (!isset($this->referenced[$key])) {
-				$this->referenced[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
-			}
+		// $filtering !== null
+		$ids = $this->extractIds($viaColumn);
+		$statement = $this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids);
+		$this->applyFiltering($statement, $filtering);
+		$args = $statement->_export();
+		$key .= '#' . $this->calculateArgumentsHash($args);
+
+		if (!isset($this->referenced[$key])) {
+			$this->referenced[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 		}
 		return $this->referenced[$key];
 	}
@@ -685,20 +688,22 @@ class Result implements \Iterator
 		if ($strategy === self::STRATEGY_IN) {
 			if ($filtering === null) {
 				if (!isset($this->referencing[$key])) {
-					$statement = $this->createTableSelection($table);
+					$ids = $this->extractIds($primaryKey);
+					$statement = $this->createTableSelection($table, $ids);
 					if ($this->isAlias($viaColumn)) {
-						$statement->where('%n IN %in', $this->trimAlias($viaColumn), $this->extractIds($primaryKey));
+						$statement->where('%n IN %in', $this->trimAlias($viaColumn), $ids);
 					} else {
-						$statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
+						$statement->where('%n.%n IN %in', $table, $viaColumn, $ids);
 					}
 					$this->referencing[$key] = self::createInstance($statement->fetchAll(), $table, $this->connection, $this->mapper, $key);
 				}
 			} else {
-				$statement = $this->createTableSelection($table);
+				$ids = $this->extractIds($primaryKey);
+				$statement = $this->createTableSelection($table, $ids);
 				if ($this->isAlias($viaColumn)) {
-					$statement->where('%n IN %in', $this->trimAlias($viaColumn), $this->extractIds($primaryKey));
+					$statement->where('%n IN %in', $this->trimAlias($viaColumn), $ids);
 				} else {
-					$statement->where('%n.%n IN %in', $table, $viaColumn, $this->extractIds($primaryKey));
+					$statement->where('%n.%n IN %in', $table, $viaColumn, $ids);
 				}
 				$this->applyFiltering($statement, $filtering);
 				$args = $statement->_export();
@@ -708,38 +713,40 @@ class Result implements \Iterator
 					$this->referencing[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 				}
 			}
-		} else { // self::STRATEGY_UNION
-			if ($filtering === null) {
-				if (!isset($this->referencing[$key])) {
-					$ids = $this->extractIds($primaryKey);
-					if (count($ids) === 0) {
-						$data = array();
-					} else {
-						$data = $this->connection->query(
-							$this->buildUnionStrategySql($ids, $table, $viaColumn)
-						)->fetchAll();
-					}
-					$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper, $key);
-				}
-			} else {
+			return $this->referencing[$key];
+		}
+
+		// $strategy === self::STRATEGY_UNION
+		if ($filtering === null) {
+			if (!isset($this->referencing[$key])) {
 				$ids = $this->extractIds($primaryKey);
 				if (count($ids) === 0) {
-					$this->referencing[$key] = self::createInstance(array(), $table, $this->connection, $this->mapper, $key);
+					$data = array();
 				} else {
-					$firstStatement = $this->createTableSelection($table);
-					if ($this->isAlias($viaColumn)) {
-						$firstStatement->where('%n = ?', $this->trimAlias($viaColumn), reset($ids));
-					} else {
-						$firstStatement->where('%n.%n = ?', $table, $viaColumn, reset($ids));
-					}
-					$this->applyFiltering($firstStatement, $filtering);
-					$args = $firstStatement->_export();
-					$key .= '#' . $this->calculateArgumentsHash($args);
+					$data = $this->connection->query(
+						$this->buildUnionStrategySql($ids, $table, $viaColumn)
+					)->fetchAll();
+				}
+				$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper, $key);
+			}
+		} else {
+			$ids = $this->extractIds($primaryKey);
+			if (count($ids) === 0) {
+				$this->referencing[$key] = self::createInstance(array(), $table, $this->connection, $this->mapper, $key);
+			} else {
+				$firstStatement = $this->createTableSelection($table, array(reset($ids)));
+				if ($this->isAlias($viaColumn)) {
+					$firstStatement->where('%n = ?', $this->trimAlias($viaColumn), reset($ids));
+				} else {
+					$firstStatement->where('%n.%n = ?', $table, $viaColumn, reset($ids));
+				}
+				$this->applyFiltering($firstStatement, $filtering);
+				$args = $firstStatement->_export();
+				$key .= '#' . $this->calculateArgumentsHash($args);
 
-					if (!isset($this->referencing[$key])) {
-						$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
-						$this->referencing[$key] = self::createInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
-					}
+				if (!isset($this->referencing[$key])) {
+					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
+					$this->referencing[$key] = self::createInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
 				}
 			}
 		}
@@ -793,7 +800,7 @@ class Result implements \Iterator
 			$viaColumn = $this->trimAlias($viaColumn);
 		}
 		foreach ($ids as $id) {
-			$statement = $this->createTableSelection($table);
+			$statement = $this->createTableSelection($table, array($id));
 			if ($isAlias) {
 				$statement->where('%n = ?', $viaColumn, $id);
 			} else {
@@ -822,11 +829,13 @@ class Result implements \Iterator
 
 	/**
 	 * @param string $table
+	 * @param array $relatedKeys
 	 * @return Fluent
 	 */
-	private function createTableSelection($table)
+	private function createTableSelection($table, $relatedKeys = null)
 	{
-		return $this->connection->select('%n.*', $table)->from('%n', $table);
+		$selection = $this->connection->select('%n.*', $table)->from('%n', $table);
+		return $relatedKeys !== null ? $selection->setRelatedKeys($relatedKeys) : $selection;
 	}
 
 	/**
