@@ -68,6 +68,9 @@ class PropertyFactory
 		$propertyType = new PropertyType($matches[2], $aliases);
 		$isWritable = $annotationType === 'property';
 		$containsCollection = $matches[3] !== '';
+		if ($propertyType->isBasicType() and $containsCollection) {
+			throw new InvalidAnnotationException("Invalid property type definition given: @$annotationType $annotation in entity {$entityReflection->getName()}. Lean Mapper doesn't support <type>[] notation for basic types.");
+		}
 		$isNullable = ($matches[1] !== '' or $matches[4] !== '');
 		$name = substr($matches[5], 1);
 
@@ -118,7 +121,6 @@ class PropertyFactory
 						$relationship = self::createRelationship(
 							$entityReflection->getName(),
 							$propertyType,
-							$containsCollection,
 							$flag,
 							$flagArgument,
 							$mapper
@@ -190,14 +192,13 @@ class PropertyFactory
 	/**
 	 * @param string $sourceClass
 	 * @param PropertyType $propertyType
-	 * @param bool $containsCollection
 	 * @param string $relationshipType
 	 * @param string|null $definition
 	 * @param IMapper|null $mapper
 	 * @return mixed
 	 * @throws InvalidAnnotationException
 	 */
-	private static function createRelationship($sourceClass, PropertyType $propertyType, $containsCollection, $relationshipType, $definition = null, IMapper $mapper = null)
+	private static function createRelationship($sourceClass, PropertyType $propertyType, $relationshipType, $definition = null, IMapper $mapper = null)
 	{
 		if ($relationshipType !== 'hasOne') {
 			$strategy = Result::STRATEGY_IN; // default strategy

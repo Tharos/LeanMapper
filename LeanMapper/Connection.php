@@ -55,6 +55,20 @@ class Connection extends DibiConnection
 	}
 
 	/**
+	 * @param string $name
+	 * @return bool
+	 */
+	public function hasFilter($name)
+	{
+		try {
+			$this->checkFilterExistence($name);
+		} catch (InvalidArgumentException $e) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
 	 * Gets callable filter's callback
 	 *
 	 * @param string $name

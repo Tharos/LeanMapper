@@ -58,7 +58,7 @@ abstract class Entity
 	/** @var array */
 	private $scope = array(
 		self::SCOPE_GET => array(),
-		self::SCOPE_GET => array()
+		self::SCOPE_SET => array()
 	);
 
 
@@ -151,7 +151,7 @@ abstract class Entity
 			try {
 				$value = $this->row->$column;
 			} catch (LeanMapperException $e) {
-				throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . lcfirst($e->getMessage()));
+				throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . $e->getMessage());
 			}
 			if ($pass !== null) {
 				$value = $this->$pass($value);
@@ -208,7 +208,7 @@ abstract class Entity
 		try {
 			$value = $this->row->$column;
 		} catch (LeanMapperException $e) {
-			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . lcfirst($e->getMessage()));
+			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . $e->getMessage());
 		}
 		if ($pass !== null) {
 			$value = $this->$pass($value);
@@ -222,7 +222,7 @@ abstract class Entity
 		if (!$property->containsCollection()) {
 			$type = $property->getType();
 			if (!($value instanceof $type)) {
-				throw new InvalidValueException("Property '$name' in entity " . get_called_class() . " is expected to contain an instance of $type, instance of " . get_class($value) . " given.");
+				throw new InvalidValueException("Property '$name' in entity " . get_called_class() . " is expected to contain an instance of $type, " . (is_object($value) ? 'instance of ' . get_class($value) : gettype($value)) . " given.");
 			}
 			return $value;
 		}
@@ -294,7 +294,9 @@ abstract class Entity
 				$this->row->$column = $value;
 				return;
 			}
-			settype($value, $property->getType());
+			if ($pass === null) {
+				settype($value, $property->getType());
+			}
 			if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
 				throw new InvalidValueException("Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.');
 			}
@@ -335,7 +337,7 @@ abstract class Entity
 	{
 		try {
 			return $this->$name !== null;
-		} catch (Exception $e) {
+		} catch (MemberAccessException $e) {
 			return false;
 		}
 	}
@@ -425,7 +427,6 @@ abstract class Entity
 	 */
 	public function getData(array $whitelist = null)
 	{
-
 		$data = array();
 		if ($whitelist !== null) {
 			$whitelist = array_flip($whitelist);
@@ -519,6 +520,17 @@ abstract class Entity
 	public function markAsUpdated()
 	{
 		$this->row->markAsUpdated();
+		foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
+			if ($property->hasRelationship() and ($property->getRelationship() instanceof Relationship\HasMany)) {
+				$relationship = $property->getRelationship();
+				$this->row->cleanReferencingAddedAndRemovedMeta(
+					$relationship->getRelationshipTable(),
+					$relationship->getColumnReferencingSourceTable(),
+					null,
+					$relationship->getStrategy()
+				);
+			}
+		}
 	}
 
 	/**
@@ -611,7 +623,7 @@ abstract class Entity
 		try {
 			return $this->$method($property, $relationship, $targetTableFiltering, $relationshipTableFiltering);
 		} catch (Exception $e) {
-			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . lcfirst($e->getMessage()));
+			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . $e->getMessage());
 		}
 	}
 

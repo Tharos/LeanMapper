@@ -84,13 +84,12 @@ abstract class Repository
 		$statement = $this->connection->select('%n.*', $table)->from($table);
 		$filters = $this->mapper->getImplicitFilters($this->mapper->getEntityClass($table), new Caller($this));
 		if (!empty($filters)) {
-			$targetedArgs = array();
 			$funcArgs = func_get_args();
-			if ($filters instanceof ImplicitFilters) {
-				$targetedArgs = $filters->getTargetedArgs();
-				$filters = $filters->getFilters();
+			if (!($filters instanceof ImplicitFilters)) {
+				$filters = new ImplicitFilters($filters);
 			}
-			foreach ($filters as $filter) {
+			$targetedArgs = $filters->getTargetedArgs();
+			foreach ($filters->getFilters() as $filter) {
 				$args = array($filter);
 				if (is_string($filter) and array_key_exists($filter, $targetedArgs)) {
 					$args = array_merge($args, $targetedArgs[$filter]);
@@ -128,13 +127,15 @@ abstract class Repository
 			$result = $id = $this->insertIntoDatabase($entity);
 			$entity->attach($id);
 			$this->events->invokeCallbacks(Events::EVENT_AFTER_CREATE, $entity);
-		} elseif ($entity->isModified()) {
-			$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
-			$result = $this->updateInDatabase($entity);
+		} else {
+			if ($entity->isModified()) {
+				$this->events->invokeCallbacks(Events::EVENT_BEFORE_UPDATE, $entity);
+				$result = $this->updateInDatabase($entity);
+				$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
+			}
+			$this->persistHasManyChanges($entity);
 			$entity->markAsUpdated();
-			$this->events->invokeCallbacks(Events::EVENT_AFTER_UPDATE, $entity);
 		}
-		$this->persistHasManyChanges($entity);
 		$this->events->invokeCallbacks(Events::EVENT_AFTER_PERSIST, $entity);
 
 		return isset($result) ? $result : null;
@@ -144,6 +145,7 @@ abstract class Repository
 	 * Removes given entity (or entity with given id) from database
 	 *
 	 * @param mixed $arg
+	 * @return mixed
 	 * @throws InvalidStateException
 	 */
 	public function delete($arg)
@@ -155,11 +157,12 @@ abstract class Repository
 				throw new InvalidStateException('Cannot delete detached entity.');
 			}
 		}
-		$this->deleteFromDatabase($arg);
+		$result = $this->deleteFromDatabase($arg);
 		if ($arg instanceof Entity) {
 			$arg->detach();
 		}
 		$this->events->invokeCallbacks(Events::EVENT_AFTER_DELETE, $arg);
+		return $result;
 	}
 
 	/**
@@ -198,6 +201,7 @@ abstract class Repository
 	 * Performs database delete (can be customized)
 	 *
 	 * @param mixed $arg
+	 * @return mixed
 	 */
 	protected function deleteFromDatabase($arg)
 	{
@@ -205,7 +209,7 @@ abstract class Repository
 		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
 
 		$id = ($arg instanceof Entity) ? $arg->$idField : $arg;
-		$this->connection->query(
+		return $this->connection->query(
 			'DELETE FROM %n WHERE %n = ?', $this->getTable(), $primaryKey, $id
 		);
 	}
@@ -337,7 +341,7 @@ abstract class Repository
 	{
 		$entityClass = $this->mapper->getEntityClass($this->getTable());
 		if (!($entity instanceof $entityClass)) {
-			throw new InvalidArgumentException('Repository ' . get_called_class() . ' cannot handle ' . get_class($entity) . ' entity.');
+			throw new InvalidArgumentException('Repository ' . get_called_class() . ' can only handle ' . $entityClass . ' entites. Use different repository to handle ' . get_class($entity) . '.');
 		}
 	}
 

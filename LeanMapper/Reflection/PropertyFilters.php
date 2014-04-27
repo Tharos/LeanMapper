@@ -46,7 +46,11 @@ class PropertyFilters
 				if (empty($matches)) {
 					throw new InvalidAnnotationException("Malformed filter name given: '$filter'.");
 				}
-				$filters[] = $filterName = $matches[1];
+				$filterName = $matches[1];
+				if (isset($filters[$filterName])) {
+					unset($filters[$filterName], $targetedArgs[$filterName]);
+				}
+				$filters[$filterName] = $filterName;
 				if (isset($matches[2])) {
 					$targetedArgs[$filterName] = array($matches[2]);
 				}

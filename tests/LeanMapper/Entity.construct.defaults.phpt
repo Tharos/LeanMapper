@@ -47,8 +47,8 @@ Assert::equal('Default name', $book->name);
 
 Assert::exception(function () use ($book) {
 	$book->id;
-}, 'LeanMapper\Exception\Exception', "Cannot get value of property 'id' in entity Book due to low-level failure: missing 'id' column in row with id -1.");
+}, 'LeanMapper\Exception\Exception', "Cannot get value of property 'id' in entity Book due to low-level failure: Missing 'id' column in row with id -1.");
 
 Assert::exception(function () use ($book) {
 	$book->getData();
-}, 'LeanMapper\Exception\Exception', "Cannot get value of property 'id' in entity Book due to low-level failure: missing 'id' column in row with id -1.");
+}, 'LeanMapper\Exception\Exception', "Cannot get value of property 'id' in entity Book due to low-level failure: Missing 'id' column in row with id -1.");

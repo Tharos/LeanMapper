@@ -37,5 +37,5 @@ interface IEntityFactory
 	 * @return mixed
 	 */
 	public function createCollection(array $entities);
-	
+
 }
