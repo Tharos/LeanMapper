@@ -310,4 +310,13 @@ class Row
 		$this->result->cleanReferencingAddedAndRemovedMeta($table, $viaColumn, $filtering, $strategy);
 	}
 
+	/**
+	 * @param string $proxyClass
+	 * @return ResultProxy
+	 */
+	public function getResultProxy($proxyClass = 'LeanMapper\ResultProxy')
+	{
+		return $this->result->getProxy($proxyClass);
+	}
+
 }
