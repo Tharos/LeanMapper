@@ -14,7 +14,7 @@ namespace LeanMapper;
 /**
  * @author Vojtěch Kohout
  */
-class ResultProxy
+class ResultProxy implements \Iterator
 {
 
 	/** @var Result */
@@ -27,6 +27,15 @@ class ResultProxy
 	public function __construct(Result $result)
 	{
 		$this->result = $result;
+	}
+
+	/**
+	 * @param int $id
+	 * @return array
+	 */
+	public function getData($id)
+	{
+		return $this->result->getData($id);
 	}
 
 	/**
@@ -47,7 +56,43 @@ class ResultProxy
 	 */
 	public function setReferencingResult(Result $referencingResult, $table, $viaColumn = null, $strategy = Result::STRATEGY_IN)
 	{
-		$this->setReferencingResult($referencingResult, $table, $viaColumn, $strategy);
+		$this->result->setReferencingResult($referencingResult, $table, $viaColumn, $strategy);
+	}
+
+	//========== interface \Iterator ====================
+
+	/**
+	 * @return mixed
+	 */
+	public function current()
+	{
+		return $this->result->current();
+	}
+
+	public function next()
+	{
+		$this->result->next();
+	}
+
+	/**
+	 * @return int
+	 */
+	public function key()
+	{
+		return $this->result->key();
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function valid()
+	{
+		return $this->result->valid();
+	}
+
+	public function rewind()
+	{
+		$this->result->rewind();
 	}
 
 }
