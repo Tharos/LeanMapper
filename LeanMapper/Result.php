@@ -74,6 +74,9 @@ class Result implements \Iterator
 	/** @var array */
 	private $index = array();
 
+	/** @var ResultProxy */
+	private $proxy;
+
 
 	/**
 	 * Creates new common instance (it means persisted)
@@ -575,6 +578,22 @@ class Result implements \Iterator
 	{
 		$this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
 				->cleanAddedAndRemovedMeta();
+	}
+
+	/**
+	 * @param string $proxyClass
+	 * @throws InvalidArgumentException
+	 * @return ResultProxy
+	 */
+	public function getProxy($proxyClass)
+	{
+		if ($this->proxy === null) {
+			$this->proxy = new $proxyClass($this);
+		}
+		if (!is_a($this->proxy, $proxyClass)) {
+			throw new InvalidArgumentException('Inconsistent proxy class requested.');
+		}
+		return $this->proxy;
 	}
 
 	//========== interface \Iterator ====================

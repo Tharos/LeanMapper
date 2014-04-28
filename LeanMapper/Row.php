@@ -311,11 +311,12 @@ class Row
 	}
 
 	/**
+	 * @param string $proxyClass
 	 * @return ResultProxy
 	 */
-	public function getResultProxy()
+	public function getResultProxy($proxyClass = 'LeanMapper\ResultProxy')
 	{
-		return new ResultProxy($this->result);
+		return $this->result->getProxy($proxyClass);
 	}
 
 }
