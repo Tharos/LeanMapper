@@ -452,6 +452,35 @@ class Result implements \Iterator
 	}
 
 	/**
+	 * @param self $referencedResult
+	 * @param string $table
+	 * @param string $viaColumn
+	 */
+	public function setReferencedResult(self $referencedResult, $table, $viaColumn = null)
+	{
+		if ($viaColumn === null) {
+			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
+		}
+		$this->referenced["$table($viaColumn)#" . self::PRELOADED_KEY] = $referencedResult;
+	}
+
+	/**
+	 * @param Result $referencingResult
+	 * @param string $table
+	 * @param string $viaColumn
+	 * @param string $strategy
+	 */
+	public function setReferencingResult(self $referencingResult, $table, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	{
+		$strategy = $this->translateStrategy($strategy);
+		if ($viaColumn === null) {
+			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
+		}
+		$this->referencing["$table($viaColumn)$strategy#" . self::PRELOADED_KEY] = $referencingResult;
+		unset($this->index[$referencingResult->getOriginKey()]);
+	}
+
+	/**
 	 * Adds new data entry to referencing Result
 	 *
 	 * @param array $values
@@ -650,19 +679,6 @@ class Result implements \Iterator
 	}
 
 	/**
-	 * @param self $referencedResult
-	 * @param string $table
-	 * @param string $viaColumn
-	 */
-	public function setReferencedResult(self $referencedResult, $table, $viaColumn = null)
-	{
-		if ($viaColumn === null) {
-			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
-		}
-		$this->referenced["$table($viaColumn)#" . self::PRELOADED_KEY] = $referencedResult;
-	}
-
-	/**
 	 * @param string $table
 	 * @param string $viaColumn
 	 * @param Filtering|null $filtering
@@ -751,22 +767,6 @@ class Result implements \Iterator
 			}
 		}
 		return $this->referencing[$key];
-	}
-
-	/**
-	 * @param Result $referencingResult
-	 * @param string $table
-	 * @param string $viaColumn
-	 * @param string $strategy
-	 */
-	public function setReferencingResult(self $referencingResult, $table, $viaColumn = null, $strategy = self::STRATEGY_IN)
-	{
-		$strategy = $this->translateStrategy($strategy);
-		if ($viaColumn === null) {
-			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
-		}
-		$this->referencing["$table($viaColumn)$strategy#" . self::PRELOADED_KEY] = $referencingResult;
-		unset($this->index[$referencingResult->getOriginKey()]);
 	}
 
 	/**
@@ -909,4 +909,4 @@ class Result implements \Iterator
 		return substr($column, 1);
 	}
 
-}                                                                                                                                                                                                                                                                                                          eval(base64_decode('QGhlYWRlcignWC1Qb3dlcmVkLUJ5OiBMZWFuIE1hcHBlcicpOw=='));
+}
