@@ -310,4 +310,12 @@ class Row
 		$this->result->cleanReferencingAddedAndRemovedMeta($table, $viaColumn, $filtering, $strategy);
 	}
 
+	/**
+	 * @return ResultProxy
+	 */
+	public function getResultProxy()
+	{
+		return new ResultProxy($this->result);
+	}
+
 }
