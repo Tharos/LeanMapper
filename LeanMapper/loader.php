@@ -49,4 +49,5 @@ require_once __DIR__ . '/Reflection/PropertyPasses.php';
 require_once __DIR__ . '/Reflection/PropertyType.php';
 require_once __DIR__ . '/Repository.php';
 require_once __DIR__ . '/Result.php';
+require_once __DIR__ . '/ResultProxy.php';
 require_once __DIR__ . '/Row.php';
