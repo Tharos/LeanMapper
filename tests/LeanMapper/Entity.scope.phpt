@@ -18,17 +18,17 @@ class Author extends Entity
 
 	public function readName()
 	{
-		return $this->__get('name');
+		return $this->get('name');
 	}
 
 	public function assignName($name)
 	{
-		$this->__set('name', $name);
+		$this->set('name', $name);
 	}
 
 	public function getWeb()
 	{
-		return $this->__get('web');
+		return $this->get('web');
 	}
 
 }

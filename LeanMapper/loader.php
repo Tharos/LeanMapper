@@ -26,7 +26,6 @@ require_once __DIR__ . '/Exception/InvalidMethodCallException.php';
 require_once __DIR__ . '/Exception/InvalidStateException.php';
 require_once __DIR__ . '/Exception/InvalidValueException.php';
 require_once __DIR__ . '/Exception/MemberAccessException.php';
-require_once __DIR__ . '/Exception/RuntimeException.php';
 require_once __DIR__ . '/Exception/UtilityClassException.php';
 require_once __DIR__ . '/Fluent.php';
 require_once __DIR__ . '/ImplicitFilters.php';
