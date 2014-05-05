@@ -662,6 +662,23 @@ abstract class Entity
 	}
 
 	/**
+	 * @param array $filters1
+	 * @param array $filters2
+	 * @return array
+	 */
+	protected function mergeFilters(array $filters1, array $filters2)
+	{
+		if (!empty($filters2)) {
+			foreach (array_reverse($filters2) as $filter) {
+				if (!in_array($filter, $filters1)) {
+					array_unshift($filters1, $filter);
+				}
+			}
+		}
+		return $filters1;
+	}
+
+	/**
 	 * Allows initialize properties' default values
 	 */
 	protected function initDefaults()
@@ -903,23 +920,6 @@ abstract class Entity
 				throw new InvalidMethodCallException("Method '$methodName' in entity " . get_called_class() . " expects exactly $expectedCount argument" . ($expectedCount > 1 ? 's' : '') . '.');
 			}
 		}
-	}
-
-	/**
-	 * @param array $filters1
-	 * @param array $filters2
-	 * @return array
-	 */
-	private function mergeFilters(array $filters1, array $filters2)
-	{
-		if (!empty($filters2)) {
-			foreach (array_reverse($filters2) as $filter) {
-				if (!in_array($filter, $filters1)) {
-					array_unshift($filters1, $filter);
-				}
-			}
-		}
-		return $filters1;
 	}
 
 }
