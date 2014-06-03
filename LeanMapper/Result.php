@@ -35,6 +35,8 @@ class Result implements \Iterator
 
 	const PRELOADED_KEY = 'preloaded';
 
+	const ERROR_MISSING_COLUMN = 1;
+
 	/** @var bool */
 	private $isDetached;
 
@@ -210,7 +212,7 @@ class Result implements \Iterator
 			$key = $this->trimAlias($key);
 		}
 		if (!array_key_exists($key, $this->data[$id])) {
-			throw new InvalidArgumentException("Missing '$key' column in row with id $id.");
+			throw new InvalidArgumentException("Missing '$key' column in row with id $id.", self::ERROR_MISSING_COLUMN);
 		}
 		return $this->data[$id][$key];
 	}

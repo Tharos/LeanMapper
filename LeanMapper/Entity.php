@@ -161,6 +161,7 @@ abstract class Entity
 	 * Tells whether given property exists and is not null
 	 *
 	 * @param string $name
+	 * @throws LeanMapperException
 	 * @return bool
 	 */
 	public function __isset($name)
@@ -169,6 +170,11 @@ abstract class Entity
 			return $this->$name !== null;
 		} catch (MemberAccessException $e) {
 			return false;
+		} catch (LeanMapperException $e) {
+			if ($this->isDetached() and $e->getCode() === Result::ERROR_MISSING_COLUMN) {
+				return false;
+			}
+			throw $e;
 		}
 	}
 
@@ -447,7 +453,7 @@ abstract class Entity
 			try {
 				$value = $this->row->$column;
 			} catch (LeanMapperException $e) {
-				throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . $e->getMessage());
+				throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . $e->getMessage(), $e->getCode());
 			}
 			if ($pass !== null) {
 				$value = $this->$pass($value);
@@ -491,7 +497,7 @@ abstract class Entity
 		try {
 			$value = $this->row->$column;
 		} catch (LeanMapperException $e) {
-			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . $e->getMessage());
+			throw new LeanMapperException("Cannot get value of property '{$property->getName()}' in entity " . get_called_class() . ' due to low-level failure: ' . $e->getMessage(), $e->getCode());
 		}
 		if ($pass !== null) {
 			$value = $this->$pass($value);
@@ -707,6 +713,7 @@ abstract class Entity
 			return null;
 		} else {
 			$entityClass = $this->mapper->getEntityClass($targetTable, $row);
+
 			$entity = $this->entityFactory->createEntity($entityClass, $row);
 			$this->checkConsistency($property, $entityClass, $entity);
 			$entity->makeAlive($this->entityFactory);
