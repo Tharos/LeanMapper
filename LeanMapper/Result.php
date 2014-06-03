@@ -71,9 +71,6 @@ class Result implements \Iterator
 	/** @var self[] */
 	private $referencing = array();
 
-	/** @var string|null */
-	private $originKey;
-
 	/** @var array */
 	private $index = array();
 
@@ -88,11 +85,10 @@ class Result implements \Iterator
 	 * @param string $table
 	 * @param Connection $connection
 	 * @param IMapper $mapper
-	 * @param string|null $originKey
 	 * @return self
 	 * @throws InvalidArgumentException
 	 */
-	public static function createInstance($data, $table, Connection $connection, IMapper $mapper, $originKey = null)
+	public static function createInstance($data, $table, Connection $connection, IMapper $mapper)
 	{
 		$dataArray = array();
 		$primaryKey = $mapper->getPrimaryKey($table);
@@ -162,14 +158,6 @@ class Result implements \Iterator
 	public function getMapper()
 	{
 		return $this->mapper;
-	}
-
-	/**
-	 * @return string|null
-	 */
-	public function getOriginKey()
-	{
-		return $this->originKey;
 	}
 
 	/**
@@ -442,18 +430,18 @@ class Result implements \Iterator
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
 		$referencingResult = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
-		$originKey = $referencingResult->getOriginKey();
-		if (!isset($this->index[$originKey])) {
+		$resultHash = spl_object_hash($referencingResult);
+		if (!isset($this->index[$resultHash])) {
 			$column = $this->isAlias($viaColumn) ? $this->trimAlias($viaColumn) : $viaColumn;
-			$this->index[$originKey] = array();
+			$this->index[$resultHash] = array();
 			foreach ($referencingResult as $key => $row) {
-				$this->index[$originKey][$row[$column]][] = new Row($referencingResult, $key);
+				$this->index[$resultHash][$row[$column]][] = new Row($referencingResult, $key);
 			}
 		}
-		if (!isset($this->index[$originKey][$id])) {
+		if (!isset($this->index[$resultHash][$id])) {
 			return array();
 		}
-		return $this->index[$originKey][$id];
+		return $this->index[$resultHash][$id];
 	}
 
 	/**
@@ -482,7 +470,7 @@ class Result implements \Iterator
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
 		$this->referencing["$table($viaColumn)$strategy#" . self::PRELOADED_KEY] = $referencingResult;
-		unset($this->index[$referencingResult->getOriginKey()]);
+		unset($this->index[spl_object_hash($referencingResult)]);
 	}
 
 	/**
@@ -498,7 +486,7 @@ class Result implements \Iterator
 	{
 		$result = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
 		$result->addDataEntry($values);
-		unset($this->index[$result->getOriginKey()]);
+		unset($this->index[spl_object_hash($result)]);
 	}
 
 	/**
@@ -514,7 +502,7 @@ class Result implements \Iterator
 	{
 		$result = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
 		$result->removeDataEntry($values);
-		unset($this->index[$result->getOriginKey()]);
+		unset($this->index[spl_object_hash($result)]);
 	}
 
 	/**
@@ -563,8 +551,8 @@ class Result implements \Iterator
 			foreach ($this->referencing as $key => $value) {
 				$strategies = '(' . self::STRATEGY_IN . '|' . self::STRATEGY_UNION . ')';
 				if (preg_match("~^$table\\($viaColumn\\)$strategies(#.*)?$~", $key)) {
-					$originKey = $this->referencing[$key]->getOriginKey();
-					unset($this->referencing[$key], $this->index[$originKey]);
+					unset($this->index[spl_object_hash($this->referencing[$key])]);
+					unset($this->referencing[$key]);
 				}
 			}
 		}
@@ -644,15 +632,13 @@ class Result implements \Iterator
 	 * @param string|null $table
 	 * @param Connection|null $connection
 	 * @param IMapper|null $mapper
-	 * @param string|null $originKey
 	 */
-	private function __construct(array $data = null, $table = null, Connection $connection = null, IMapper $mapper = null, $originKey = null)
+	private function __construct(array $data = null, $table = null, Connection $connection = null, IMapper $mapper = null)
 	{
 		$this->data = $data !== null ? $data : array(self::DETACHED_ROW_ID => array());
 		$this->table = $table;
 		$this->connection = $connection;
 		$this->mapper = $mapper;
-		$this->originKey = $originKey;
 		$this->isDetached = ($table === null or $connection === null or $mapper === null);
 	}
 
