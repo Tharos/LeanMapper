@@ -41,17 +41,16 @@ class Fluent extends DibiFluent
 	 *
 	 * @param Closure|string $filter
 	 * @param mixed|null $args
-	 * @return self
+	 * @return FilteringResult|null
 	 */
 	public function applyFilter($filter, $args = null)
 	{
 		$args = func_get_args();
 		$args[0] = $this;
-		call_user_func_array(
+		return call_user_func_array(
 			$filter instanceof Closure ? $filter : $this->getConnection()->getFilterCallback($filter),
 			$args
 		);
-		return $this;
 	}
 
 	/**

@@ -667,7 +667,7 @@ class Result implements \Iterator
 					$data = $this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids)
 							->fetchAll();
 				}
-				$this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper, $key);
+				$this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 			}
 			return $this->referenced[$key];
 		}
@@ -675,12 +675,15 @@ class Result implements \Iterator
 		// $filtering !== null
 		$ids = $this->extractIds($viaColumn);
 		$statement = $this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids);
-		$this->applyFiltering($statement, $filtering);
-		$args = $statement->_export();
+		$filteringResult = $this->applyFiltering($statement, $filtering);
+
+		$args = $filteringResult instanceof FilteringResult ? $filteringResult->getArguments() : $statement->_export();
 		$key .= '#' . $this->calculateArgumentsHash($args);
 
 		if (!isset($this->referenced[$key])) {
-			$this->referenced[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
+			$this->referenced[$key] = $filteringResult instanceof FilteringResult ?
+					$filteringResult->getResult() :
+					self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper);
 		}
 		return $this->referenced[$key];
 	}
@@ -718,7 +721,7 @@ class Result implements \Iterator
 					} else {
 						$statement->where('%n.%n IN %in', $table, $viaColumn, $ids);
 					}
-					$this->referencing[$key] = self::createInstance($statement->fetchAll(), $table, $this->connection, $this->mapper, $key);
+					$this->referencing[$key] = self::createInstance($statement->fetchAll(), $table, $this->connection, $this->mapper);
 				}
 			} else {
 				$ids = $this->extractIds($primaryKey);
@@ -728,12 +731,15 @@ class Result implements \Iterator
 				} else {
 					$statement->where('%n.%n IN %in', $table, $viaColumn, $ids);
 				}
-				$this->applyFiltering($statement, $filtering);
-				$args = $statement->_export();
+				$filteringResult = $this->applyFiltering($statement, $filtering);
+
+				$args = $filteringResult instanceof FilteringResult ? $filteringResult->getArguments() : $statement->_export();
 				$key .= '#' . $this->calculateArgumentsHash($args);
 
 				if (!isset($this->referencing[$key])) {
-					$this->referencing[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
+					$this->referencing[$key] = $filteringResult instanceof FilteringResult ?
+							$filteringResult->getResult() :
+							self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper);
 				}
 			}
 			return $this->referencing[$key];
@@ -750,12 +756,12 @@ class Result implements \Iterator
 						$this->buildUnionStrategySql($ids, $table, $viaColumn)
 					)->fetchAll();
 				}
-				$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper, $key);
+				$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 			}
 		} else {
 			$ids = $this->extractIds($primaryKey);
 			if (count($ids) === 0) {
-				$this->referencing[$key] = self::createInstance(array(), $table, $this->connection, $this->mapper, $key);
+				$this->referencing[$key] = self::createInstance(array(), $table, $this->connection, $this->mapper);
 			} else {
 				$firstStatement = $this->createTableSelection($table, array(reset($ids)));
 				if ($this->isAlias($viaColumn)) {
@@ -763,13 +769,19 @@ class Result implements \Iterator
 				} else {
 					$firstStatement->where('%n.%n = ?', $table, $viaColumn, reset($ids));
 				}
-				$this->applyFiltering($firstStatement, $filtering);
-				$args = $firstStatement->_export();
+				$filteringResult = $this->applyFiltering($firstStatement, $filtering);
+
+				$args = $filteringResult instanceof FilteringResult ? $filteringResult->getArguments() : $firstStatement->_export();
 				$key .= '#' . $this->calculateArgumentsHash($args);
 
 				if (!isset($this->referencing[$key])) {
-					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
-					$this->referencing[$key] = self::createInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
+					if ($filteringResult instanceof FilteringResult) {
+						$result = $filteringResult->getResult();
+					} else {
+						$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
+						$result = self::createInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper);
+					}
+					$this->referencing[$key] = $result;
 				}
 			}
 		}
@@ -865,6 +877,7 @@ class Result implements \Iterator
 	/**
 	 * @param Fluent $statement
 	 * @param Filtering|null $filtering
+	 * @return FilteringResult|null
 	 * @throws InvalidArgumentException
 	 */
 	private function applyFiltering(Fluent $statement, Filtering $filtering)
@@ -885,7 +898,10 @@ class Result implements \Iterator
 				}
 			}
 			$args = array_merge($args, $filtering->getArgs());
-			call_user_func_array(array($statement, 'applyFilter'), $args);
+			$result = call_user_func_array(array($statement, 'applyFilter'), $args);
+			if ($result instanceof FilteringResult) {
+				return $result;
+			}
 		}
 	}
 
