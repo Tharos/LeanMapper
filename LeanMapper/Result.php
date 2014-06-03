@@ -34,7 +34,7 @@ class Result implements \Iterator
 
 	const DETACHED_ROW_ID = -1;
 
-	const PRELOADED_KEY = 'preloaded';
+	const KEY_PRELOADED = 'preloaded';
 
 	const ERROR_MISSING_COLUMN = 1;
 
@@ -454,7 +454,7 @@ class Result implements \Iterator
 		if ($viaColumn === null) {
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
-		$this->referenced["$table($viaColumn)#" . self::PRELOADED_KEY] = $referencedResult;
+		$this->referenced["$table($viaColumn)#" . self::KEY_PRELOADED] = $referencedResult;
 	}
 
 	/**
@@ -469,7 +469,7 @@ class Result implements \Iterator
 		if ($viaColumn === null) {
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
-		$this->referencing["$table($viaColumn)$strategy#" . self::PRELOADED_KEY] = $referencingResult;
+		$this->referencing["$table($viaColumn)$strategy#" . self::KEY_PRELOADED] = $referencingResult;
 		unset($this->index[spl_object_hash($referencingResult)]);
 	}
 
@@ -656,7 +656,7 @@ class Result implements \Iterator
 			throw new InvalidStateException('Cannot get referenced Result for detached Result.');
 		}
 		$key = "$table($viaColumn)";
-		if (isset($this->referenced[$preloadedKey = $key . '#' . self::PRELOADED_KEY])) {
+		if (isset($this->referenced[$preloadedKey = $key . '#' . self::KEY_PRELOADED])) {
 			return $this->referenced[$preloadedKey];
 		}
 		$primaryKey = $this->mapper->getPrimaryKey($table);
@@ -707,7 +707,7 @@ class Result implements \Iterator
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
 		$key = "$table($viaColumn)$strategy";
-		if (isset($this->referencing[$preloadedKey = $key . '#' . self::PRELOADED_KEY])) {
+		if (isset($this->referencing[$preloadedKey = $key . '#' . self::KEY_PRELOADED])) {
 			return $this->referencing[$preloadedKey];
 		}
 		$primaryKey = $this->mapper->getPrimaryKey($this->table);
