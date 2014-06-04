@@ -43,7 +43,7 @@ $author->detach();
 
 Assert::exception(function () use ($authorRepository, $author) {
 	$authorRepository->persist($author);
-}, 'DibiDriverException', "PRIMARY KEY must be unique");
+}, 'DibiDriverException', "UNIQUE constraint failed: author.id");
 
 //////////
 

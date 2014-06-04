@@ -11,6 +11,7 @@
 
 namespace LeanMapper;
 
+use ArrayAccess;
 use Closure;
 use DibiSqliteDriver;
 use DibiSqlite3Driver;
@@ -98,23 +99,22 @@ class Result implements \Iterator
 		if ($data instanceof DibiRow) {
 			$dataArray = array(isset($data->$primaryKey) ? $data->$primaryKey : self::DETACHED_ROW_ID => $data->toArray());
 		} else {
-			$e = new InvalidArgumentException('Invalid type of data given, only DibiRow or array of DibiRow is supported at this moment.');
-			if (is_array($data)) {
-				foreach ($data as $record) {
-					if (!($record instanceof DibiRow)) {
-						throw $e;
-					}
-					if (isset($record->$primaryKey)) {
-						$dataArray[$record->$primaryKey] = $record->toArray();
-					} else {
-						$dataArray[] = $record->toArray();
-					}
-				}
-			} else {
+			$e = new InvalidArgumentException('Invalid type of data given, only DibiRow, DibiRow[], ArrayAccess[] or array of arrays is supported at this moment.');
+			if (!is_array($data)) {
 				throw $e;
 			}
+			foreach ($data as $record) {
+				if (!($record instanceof DibiRow) and !is_array($record) and (!$record instanceof ArrayAccess)) {
+					throw $e;
+				}
+				if (isset($record[$primaryKey])) {
+					$dataArray[$record[$primaryKey]] = (array) $record;
+				} else {
+					$dataArray[] = (array) $record;
+				}
+			}
 		}
-		return new self($dataArray, $table, $connection, $mapper, $originKey);
+		return new self($dataArray, $table, $connection, $mapper);
 	}
 
 	/**
