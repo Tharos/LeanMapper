@@ -11,6 +11,9 @@
 
 namespace LeanMapper;
 
+use Closure;
+use LeanMapper\Exception\InvalidMethodCallException;
+
 /**
  * @author Vojtěch Kohout
  */
@@ -20,27 +23,19 @@ class FilteringResult
 	/** @var Result */
 	private $result;
 
-	/** @var array */
-	private $arguments;
+	/** @var Closure */
+	private $validationFunction;
+
 
 	/**
 	 * @param Result $result
-	 * @param array $arguments
+	 * @param Closure $validationFunction
 	 */
-	public function __construct(Result $result, array $arguments)
+	public function __construct(Result $result, Closure $validationFunction = null)
 	{
 		$this->result = $result;
-		$this->arguments = $arguments;
+		$this->validationFunction = $validationFunction;
 	}
-
-	/**
-	 * @return array
-	 */
-	public function getArguments()
-	{
-		return $this->arguments;
-	}
-
 
 	/**
 	 * @return Result
@@ -48,6 +43,26 @@ class FilteringResult
 	public function getResult()
 	{
 		return $this->result;
+	}
+
+	/**
+	 * @return Closure
+	 * @throws InvalidMethodCallException
+	 */
+	public function getValidationFunction()
+	{
+		if ($this->validationFunction === null) {
+			throw new InvalidMethodCallException("FilteringResult doesn't have validation function.");
+		}
+		return $this->validationFunction;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function hasValidationFunction()
+	{
+		return $this->validationFunction !== null;
 	}
 
 }

@@ -20,6 +20,7 @@ require_once __DIR__ . '/Entity.php';
 require_once __DIR__ . '/Events.php';
 require_once __DIR__ . '/Filtering.php';
 require_once __DIR__ . '/FilteringResult.php';
+require_once __DIR__ . '/FilteringResultDecorator.php';
 require_once __DIR__ . '/Exception/Exception.php';
 require_once __DIR__ . '/Exception/InvalidAnnotationException.php';
 require_once __DIR__ . '/Exception/InvalidArgumentException.php';
