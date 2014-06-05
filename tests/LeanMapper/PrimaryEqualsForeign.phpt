@@ -166,5 +166,5 @@ $authorRepository->persist($author);
 
 Assert::equal(array(
 	"UPDATE [authorcontract] SET [number]='12345' WHERE [author_id] = 1",
-    "UPDATE [author] SET [name]='Vojtěch Kohout' WHERE [id] = 1",
+	"UPDATE [author] SET [name]='Vojtěch Kohout' WHERE [id] = 1",
 ), $queries);
