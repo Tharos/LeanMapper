@@ -659,9 +659,9 @@ class Result implements \Iterator
 		}
 		$key = "$table($viaColumn)";
 		if (isset($this->referenced[$forcedKey = $key . '#' . self::KEY_FORCED])) {
-			$ids = $this->extractIds(
-				$primaryKey = $this->mapper->getPrimaryKey($this->table)
-			);
+			$ids = $this->extractIds($viaColumn);
+			$primaryKey = $this->mapper->getPrimaryKey($this->table);
+
 			foreach ($this->referenced[$forcedKey] as $filteringResult) {
 				if ($filteringResult->isValidFor($ids, $filtering->getArgs())) {
 					return $filteringResult->getResult();
@@ -673,23 +673,24 @@ class Result implements \Iterator
 		}
 		if ($filtering === null) {
 			if (!isset($this->referenced[$key])) {
-				isset($ids) or $ids = $this->extractIds(
-					$primaryKey = $this->mapper->getPrimaryKey($this->table)
-				);
-				$data = array();
-				if ($ids = $this->extractIds($viaColumn)) {
-					$data = $this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids)
-							->fetchAll();
+				if (!isset($ids)) {
+					$ids = $this->extractIds($viaColumn);
+					$primaryKey = $this->mapper->getPrimaryKey($this->table);
 				}
+				$data = empty($ids) ?
+					array() :
+					$this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids)->fetchAll();
+
 				$this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 			}
 			return $this->referenced[$key];
 		}
 
 		// $filtering !== null
-		isset($ids) or $ids = $this->extractIds(
-			$primaryKey = $this->mapper->getPrimaryKey($this->table)
-		);
+		if (!isset($ids)) {
+			$ids = $this->extractIds($viaColumn);
+			$primaryKey = $this->mapper->getPrimaryKey($this->table);
+		}
 		$statement = $this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids);
 		$filteringResult = $this->applyFiltering($statement, $filtering);
 
