@@ -36,6 +36,8 @@ class Result implements \Iterator
 
 	const KEY_PRELOADED = 'preloaded';
 
+	const KEY_FORCED = 'forced';
+
 	const ERROR_MISSING_COLUMN = 1;
 
 	/** @var bool */
@@ -656,34 +658,54 @@ class Result implements \Iterator
 			throw new InvalidStateException('Cannot get referenced Result for detached Result.');
 		}
 		$key = "$table($viaColumn)";
+		if (isset($this->referenced[$forcedKey = $key . '#' . self::KEY_FORCED])) {
+			$ids = $this->extractIds($viaColumn);
+			$primaryKey = $this->mapper->getPrimaryKey($this->table);
+
+			foreach ($this->referenced[$forcedKey] as $filteringResult) {
+				if ($filteringResult->isValidFor($ids, $filtering->getArgs())) {
+					return $filteringResult->getResult();
+				}
+			}
+		}
 		if (isset($this->referenced[$preloadedKey = $key . '#' . self::KEY_PRELOADED])) {
 			return $this->referenced[$preloadedKey];
 		}
-		$primaryKey = $this->mapper->getPrimaryKey($table);
 		if ($filtering === null) {
 			if (!isset($this->referenced[$key])) {
-				$data = array();
-				if ($ids = $this->extractIds($viaColumn)) {
-					$data = $this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids)
-							->fetchAll();
+				if (!isset($ids)) {
+					$ids = $this->extractIds($viaColumn);
+					$primaryKey = $this->mapper->getPrimaryKey($this->table);
 				}
+				$data = empty($ids) ?
+					array() :
+					$this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids)->fetchAll();
+
 				$this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 			}
 			return $this->referenced[$key];
 		}
 
 		// $filtering !== null
-		$ids = $this->extractIds($viaColumn);
+		if (!isset($ids)) {
+			$ids = $this->extractIds($viaColumn);
+			$primaryKey = $this->mapper->getPrimaryKey($this->table);
+		}
 		$statement = $this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids);
 		$filteringResult = $this->applyFiltering($statement, $filtering);
 
-		$args = $filteringResult instanceof FilteringResult ? $filteringResult->getArguments() : $statement->_export();
+		if ($filteringResult instanceof FilteringResultDecorator) {
+			if (!isset($this->referenced[$forcedKey])) {
+				$this->referenced[$forcedKey] = array();
+			}
+			return $this->referenced[$forcedKey][] = $filteringResult;
+		}
+
+		$args = $statement->_export();
 		$key .= '#' . $this->calculateArgumentsHash($args);
 
 		if (!isset($this->referenced[$key])) {
-			$this->referenced[$key] = $filteringResult instanceof FilteringResult ?
-					$filteringResult->getResult() :
-					self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper);
+			$this->referenced[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper);
 		}
 		return $this->referenced[$key];
 	}
@@ -707,14 +729,21 @@ class Result implements \Iterator
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
 		$key = "$table($viaColumn)$strategy";
+		if (isset($this->referencing[$forcedKey = $key . '#' . self::KEY_FORCED])) {
+			$ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
+			foreach ($this->referencing[$forcedKey] as $filteringResult) {
+				if ($filteringResult->isValidFor($ids, $filtering->getArgs())) {
+					return $filteringResult->getResult();
+				}
+			}
+		}
 		if (isset($this->referencing[$preloadedKey = $key . '#' . self::KEY_PRELOADED])) {
 			return $this->referencing[$preloadedKey];
 		}
-		$primaryKey = $this->mapper->getPrimaryKey($this->table);
 		if ($strategy === self::STRATEGY_IN) {
 			if ($filtering === null) {
 				if (!isset($this->referencing[$key])) {
-					$ids = $this->extractIds($primaryKey);
+					isset($ids) or $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
 					$statement = $this->createTableSelection($table, $ids);
 					if ($this->isAlias($viaColumn)) {
 						$statement->where('%n IN %in', $this->trimAlias($viaColumn), $ids);
@@ -724,7 +753,7 @@ class Result implements \Iterator
 					$this->referencing[$key] = self::createInstance($statement->fetchAll(), $table, $this->connection, $this->mapper);
 				}
 			} else {
-				$ids = $this->extractIds($primaryKey);
+				isset($ids) or $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
 				$statement = $this->createTableSelection($table, $ids);
 				if ($this->isAlias($viaColumn)) {
 					$statement->where('%n IN %in', $this->trimAlias($viaColumn), $ids);
@@ -733,13 +762,17 @@ class Result implements \Iterator
 				}
 				$filteringResult = $this->applyFiltering($statement, $filtering);
 
-				$args = $filteringResult instanceof FilteringResult ? $filteringResult->getArguments() : $statement->_export();
+				if ($filteringResult instanceof FilteringResultDecorator) {
+					if (!isset($this->referencing[$forcedKey])) {
+						$this->referencing[$forcedKey] = array();
+					}
+					return $this->referencing[$forcedKey][] = $filteringResult;
+				}
+				$args = $statement->_export();
 				$key .= '#' . $this->calculateArgumentsHash($args);
 
 				if (!isset($this->referencing[$key])) {
-					$this->referencing[$key] = $filteringResult instanceof FilteringResult ?
-							$filteringResult->getResult() :
-							self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper);
+					$this->referencing[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper);
 				}
 			}
 			return $this->referencing[$key];
@@ -748,7 +781,7 @@ class Result implements \Iterator
 		// $strategy === self::STRATEGY_UNION
 		if ($filtering === null) {
 			if (!isset($this->referencing[$key])) {
-				$ids = $this->extractIds($primaryKey);
+				isset($ids) or $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
 				if (count($ids) === 0) {
 					$data = array();
 				} else {
@@ -759,7 +792,7 @@ class Result implements \Iterator
 				$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 			}
 		} else {
-			$ids = $this->extractIds($primaryKey);
+			isset($ids) or $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
 			if (count($ids) === 0) {
 				$this->referencing[$key] = self::createInstance(array(), $table, $this->connection, $this->mapper);
 			} else {
@@ -771,11 +804,11 @@ class Result implements \Iterator
 				}
 				$filteringResult = $this->applyFiltering($firstStatement, $filtering);
 
-				$args = $filteringResult instanceof FilteringResult ? $filteringResult->getArguments() : $firstStatement->_export();
+				$args = $filteringResult instanceof FilteringResultDecorator ? $filteringResult->getArguments() : $firstStatement->_export();
 				$key .= '#' . $this->calculateArgumentsHash($args);
 
 				if (!isset($this->referencing[$key])) {
-					if ($filteringResult instanceof FilteringResult) {
+					if ($filteringResult instanceof FilteringResultDecorator) {
 						$result = $filteringResult->getResult();
 					} else {
 						$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
@@ -884,23 +917,22 @@ class Result implements \Iterator
 	{
 		$targetedArgs = $filtering->getTargetedArgs();
 		foreach ($filtering->getFilters() as $filter) {
-			$args = array($filter);
+			$baseArgs = array();
 			if (!($filter instanceof Closure)) {
 				foreach (str_split($this->connection->getWiringSchema($filter)) as $autowiredArg) {
 					if ($autowiredArg === 'e') {
-						$args[] = $filtering->getEntity();
+						$baseArgs[] = $filtering->getEntity();
 					} elseif ($autowiredArg === 'p') {
-						$args[] = $filtering->getProperty();
+						$baseArgs[] = $filtering->getProperty();
 					}
 				}
 				if (isset($targetedArgs[$filter])) {
-					$args = array_merge($args, $targetedArgs[$filter]);
+					$baseArgs = array_merge($baseArgs, $targetedArgs[$filter]);
 				}
 			}
-			$args = array_merge($args, $filtering->getArgs());
-			$result = call_user_func_array(array($statement, 'applyFilter'), $args);
+			$result = call_user_func_array(array($statement, 'applyFilter'), array_merge(array($filter), $baseArgs, $filtering->getArgs()));
 			if ($result instanceof FilteringResult) {
-				return $result;
+				return new FilteringResultDecorator($result, $baseArgs);
 			}
 		}
 	}
