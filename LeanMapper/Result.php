@@ -101,14 +101,18 @@ class Result implements \Iterator
 			if (!is_array($data)) {
 				throw $e;
 			}
-			foreach ($data as $record) {
+			if (!empty($data)) {
+				$record = reset($data);
 				if (!($record instanceof DibiRow) and !is_array($record) and (!$record instanceof ArrayAccess)) {
 					throw $e;
 				}
+			}
+			foreach ($data as $record) {
+				$record = (array) $record;
 				if (isset($record[$primaryKey])) {
-					$dataArray[$record[$primaryKey]] = (array) $record;
+					$dataArray[$record[$primaryKey]] = $record;
 				} else {
-					$dataArray[] = (array) $record;
+					$dataArray[] = $record;
 				}
 			}
 		}
@@ -677,10 +681,12 @@ class Result implements \Iterator
 					$ids = $this->extractIds($viaColumn);
 					$primaryKey = $this->mapper->getPrimaryKey($table);
 				}
-				$data = empty($ids) ?
-					array() :
-					$this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids)->fetchAll();
-
+				$data = array();
+				if (!empty($ids)) {
+					$data = $this->createTableSelection($table, $ids)
+						->where('%n.%n IN %in', $table, $primaryKey, $ids)
+						->execute()->setRowClass(null)->fetchAll();
+				}
 				$this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 			}
 			return $this->referenced[$key];
@@ -705,7 +711,8 @@ class Result implements \Iterator
 		$key .= '#' . $this->calculateArgumentsHash($args);
 
 		if (!isset($this->referenced[$key])) {
-			$this->referenced[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper);
+			$data = $this->connection->query($args)->setRowClass(null)->fetchAll();
+			$this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 		}
 		return $this->referenced[$key];
 	}
@@ -750,7 +757,8 @@ class Result implements \Iterator
 					} else {
 						$statement->where('%n.%n IN %in', $table, $viaColumn, $ids);
 					}
-					$this->referencing[$key] = self::createInstance($statement->fetchAll(), $table, $this->connection, $this->mapper);
+					$data = $statement->execute()->setRowClass(null)->fetchAll();
+					$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 				}
 			} else {
 				isset($ids) or $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
@@ -772,7 +780,8 @@ class Result implements \Iterator
 				$key .= '#' . $this->calculateArgumentsHash($args);
 
 				if (!isset($this->referencing[$key])) {
-					$this->referencing[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper);
+					$data = $this->connection->query($args)->setRowClass(null)->fetchAll();
+					$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 				}
 			}
 			return $this->referencing[$key];
@@ -787,7 +796,7 @@ class Result implements \Iterator
 				} else {
 					$data = $this->connection->query(
 						$this->buildUnionStrategySql($ids, $table, $viaColumn)
-					)->fetchAll();
+					)->setRowClass(null)->fetchAll();
 				}
 				$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 			}
@@ -812,7 +821,8 @@ class Result implements \Iterator
 						$result = $filteringResult->getResult();
 					} else {
 						$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
-						$result = self::createInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper);
+						$data = $this->connection->query($sql)->setRowClass(null)->fetchAll();
+						$result = self::createInstance($data, $table, $this->connection, $this->mapper);
 					}
 					$this->referencing[$key] = $result;
 				}
