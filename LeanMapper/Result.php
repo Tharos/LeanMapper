@@ -704,7 +704,8 @@ class Result implements \Iterator
 			if (!isset($this->referenced[$forcedKey])) {
 				$this->referenced[$forcedKey] = array();
 			}
-			return $this->referenced[$forcedKey][] = $filteringResult;
+			$this->referenced[$forcedKey][] = $filteringResult;
+			return $filteringResult->getResult();
 		}
 
 		$args = $statement->_export();
@@ -774,7 +775,8 @@ class Result implements \Iterator
 					if (!isset($this->referencing[$forcedKey])) {
 						$this->referencing[$forcedKey] = array();
 					}
-					return $this->referencing[$forcedKey][] = $filteringResult;
+					$this->referencing[$forcedKey][] = $filteringResult;
+					return $filteringResult->getResult();
 				}
 				$args = $statement->_export();
 				$key .= '#' . $this->calculateArgumentsHash($args);
@@ -813,17 +815,20 @@ class Result implements \Iterator
 				}
 				$filteringResult = $this->applyFiltering($firstStatement, $filtering);
 
-				$args = $filteringResult instanceof FilteringResultDecorator ? $filteringResult->getArguments() : $firstStatement->_export();
+				if ($filteringResult instanceof FilteringResultDecorator) {
+					if (!isset($this->referencing[$forcedKey])) {
+						$this->referencing[$forcedKey] = array();
+					}
+					$this->referencing[$forcedKey][] = $filteringResult;
+					return $filteringResult->getResult();
+				}
+				$args = $firstStatement->_export();
 				$key .= '#' . $this->calculateArgumentsHash($args);
 
 				if (!isset($this->referencing[$key])) {
-					if ($filteringResult instanceof FilteringResultDecorator) {
-						$result = $filteringResult->getResult();
-					} else {
-						$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
-						$data = $this->connection->query($sql)->setRowClass(null)->fetchAll();
-						$result = self::createInstance($data, $table, $this->connection, $this->mapper);
-					}
+					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
+					$data = $this->connection->query($sql)->setRowClass(null)->fetchAll();
+					$result = self::createInstance($data, $table, $this->connection, $this->mapper);
 					$this->referencing[$key] = $result;
 				}
 			}
