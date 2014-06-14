@@ -421,7 +421,7 @@ abstract class Entity
 			throw new InvalidStateException('Missing entity factory in entity ' . get_called_class() . '.');
 		}
 		if ($this->mapper === null) {
-			throw new InvalidStateException('Missing entity factory in entity ' . get_called_class() . '.');
+			throw new InvalidStateException('Missing mapper in entity ' . get_called_class() . '.');
 		}
 		if (!$this->row->hasConnection()) {
 			throw new InvalidStateException('Missing connection in Result in entity ' . get_called_class() . '.');
