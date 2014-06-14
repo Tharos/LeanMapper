@@ -99,7 +99,7 @@ class Property
 				}
 			} else {
 				if ($containsCollection) {
-					throw new InvalidArgumentException("Property '$name' with HasOney or BelongsToOne in entity {$entityReflection->getName()} relationship cannot contain collection.");
+					throw new InvalidArgumentException("Property '$name' with HasOne or BelongsToOne in entity {$entityReflection->getName()} relationship cannot contain collection.");
 				}
 			}
 			if ($propertyPasses !== null) {
