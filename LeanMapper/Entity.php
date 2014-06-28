@@ -87,7 +87,6 @@ abstract class Entity
 					$this->$propertyName = $property->getDefaultValue();
 				}
 			}
-			$this->initDefaults();
 			if ($arg !== null) {
 				if (!is_array($arg) and !($arg instanceof Traversable)) {
 					$type = gettype($arg) !== 'object' ? gettype($arg) : 'instance of ' . get_class($arg);
@@ -95,6 +94,7 @@ abstract class Entity
 				}
 				$this->assign($arg);
 			}
+			$this->initDefaults();
 		}
 	}
 
