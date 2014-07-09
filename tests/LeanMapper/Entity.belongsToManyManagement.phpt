@@ -27,7 +27,6 @@ class Author extends Entity
 /**
  * @property int $id
  * @property string $name
- * @property Author $author m:hasOne
  */
 class Book extends Entity
 {
@@ -56,30 +55,8 @@ class AuthorRepository extends \LeanMapper\Repository
 class BookRepository extends \LeanMapper\Repository
 {
 
-	/**
-	 * @param $id
-	 *
-	 * @return Book
-	 * @throws Exception
-	 */
-	public function find($id)
-	{
-		$row = $this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch();
-		if ($row === false) {
-			throw new \Exception('Entity was not found.');
-		}
-		return $this->createEntity($row);
-	}
-
 }
 
-function implodeBooks(array $books) {
-	$result = array();
-	foreach ($books as $book) {
-		$result[] = $book->name;
-	}
-	return implode(' || ', $result);
-}
 
 ////////////////////
 
@@ -94,4 +71,4 @@ foreach($author->books as $book) {
 	}
 }
 
-Assert::equal('Refactoring: Improving the Design of Existing Code', implodeBooks($author->books));
+Assert::equal(1, count($author->books));
