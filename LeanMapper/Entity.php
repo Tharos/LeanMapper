@@ -637,8 +637,6 @@ abstract class Entity
 		if ($entity !== null) {
 			$this->useMapper($entity->mapper);
 			$this->setEntityFactory($entity->entityFactory);
-			$table = $this->mapper->getTable(get_class($entity));
-			$idProperty = $this->mapper->getEntityField($table, $this->mapper->getPrimaryKey($table));
 		}
 		if (is_string($property)) {
 			$property = $this->getCurrentReflection()->getEntityProperty($property);
@@ -648,11 +646,17 @@ abstract class Entity
 			throw new InvalidMethodCallException("Cannot assign value to property '{$property->getName()}' in entity " . get_called_class() . '. Only properties with m:hasOne relationship can be set via magic __set.');
 		}
 		$column = $relationship->getColumnReferencingTargetTable();
+
 		if ($entity !== null) {
-			$this->row->setReferencedRow($entity->row, $column);
-			$this->row->$column = $entity->$idProperty;
+			$row = $entity->row;
+			$pkColumn = $this->mapper->getPrimaryKey(
+				$this->mapper->getTable(get_class($entity))
+			);
+			$this->row->$column = $row->$pkColumn;
+			$this->row->setReferencedRow($row, $column);
 		} else {
 			$this->row->$column = null;
+			$this->row->setReferencedRow(null, $column);
 		}
 	}
 
