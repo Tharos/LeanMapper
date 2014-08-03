@@ -542,54 +542,52 @@ abstract class Entity
 				throw new MemberAccessException("Cannot write to read-only property '$name' in entity " . get_called_class() . '.');
 			}
 		}
-		if (($pass = $property->getSetterPass()) !== null) {
-			$value = $this->$pass($value);
+		if ($value === null and !$property->isNullable()) {
+			throw new InvalidValueException("Property '$name' in entity " . get_called_class() . ' cannot be null.');
 		}
+		$pass = $property->getSetterPass();
 		$column = $property->getColumn();
-		if ($value === null) {
-			if (!$property->isNullable()) {
-				throw new InvalidValueException("Property '$name' in entity " . get_called_class() . ' cannot be null.');
-			}
-			$relationship = $property->getRelationship();
-			if ($relationship !== null and !($relationship instanceof Relationship\HasOne)) {
-				throw new InvalidMethodCallException("Property '$name' in entity " . get_called_class() . " cannot be null since it contains relationship that doesn't support it.");
-			}
-			$this->row->$column = $value;
-			return;
-		} // value is not null
-		$givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
+
 		if ($property->isBasicType()) {
-			if ($pass === null) {
-				settype($value, $property->getType());
+			if ($value === null) {
+				$this->row->$column = ($pass !== null ? $this->$pass($value) : $value);
+				return;
 			}
+			settype($value, $property->getType());
 			if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
 				throw new InvalidValueException("Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.');
 			}
-			$this->row->$column = $value;
+			$this->row->$column = ($pass !== null ? $this->$pass($value) : $value);
 			return;
-		} // value is not null and property doesn't contain basic type
+		}
+		// property doesn't contain basic type
 		$type = $property->getType();
+		$givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
+
 		if ($property->hasRelationship()) {
-			if (!($value instanceof $type)) {
-				throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given.");
+			if ($value !== null) {
+				if (!($value instanceof $type)) {
+					throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given.");
+				}
+				if ($value->isDetached()) { // the value should be entity
+					throw new InvalidValueException("Detached entity cannot be assigned to property '{$property->getName()}' with relationship in entity " . get_called_class() . '.');
+				}
 			}
-			if ($value->isDetached()) { // we are sure that the value is entity
-				throw new InvalidValueException("Detached entity cannot be assigned to property '{$property->getName()}' with relationship in entity " . get_called_class() . '.');
-			}
-			$this->assignEntityToProperty($value, $name);
+			$this->assignEntityToProperty($value, $name); // $pass is irrelevant relevant here
 			return;
-		} // value is not null, property doesn't contain basic type and property doesn't contain relationship
+		}
+		//property doesn't contain basic type and property doesn't contain relationship
 		if ($property->containsCollection()) {
 			if (!is_array($value)) {
 				throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", array of {$property->getType()} expected, $givenType given.");
 			}
-			$this->row->$column = $value;
+			$this->row->$column = ($pass !== null ? $this->$pass($value) : $value);
 			return;
 		}
-		if (!($value instanceof $type)) {
+		if ($value !== null and !($value instanceof $type)) {
 			throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given.");
 		}
-		$this->row->$column = $value;
+		$this->row->$column = ($pass !== null ? $this->$pass($value) : $value);
 	}
 
 	/**
