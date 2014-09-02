@@ -375,6 +375,7 @@ abstract class Entity
 	public function detach()
 	{
 		$this->row->detach();
+		$this->entityFactory = null;
 		$this->mapper = null;
 	}
 
