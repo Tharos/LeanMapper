@@ -135,9 +135,13 @@ class Result implements \Iterator
 	/**
 	 * @param Connection $connection
 	 */
-	public static function storeConnection(Connection $connection)
+	public static function enableSerialization(Connection $connection)
 	{
-		self::$storedConnection = $connection;
+		if (self::$storedConnection === null) {
+			self::$storedConnection = $connection;
+		} elseif (self::$storedConnection !== $connection) {
+			throw new InvalidStateException("Given connection doesn't equal to connection already present in Result.");
+		}
 	}
 
 	/**
@@ -609,7 +613,7 @@ class Result implements \Iterator
 	public function __sleep()
 	{
 		if (self::$storedConnection === NULL and $this->connection !== null) {
-			self::storeConnection($this->connection);
+			self::enableSerialization($this->connection);
 		}
 
 		return array('isDetached', 'data', 'modified', 'added', 'removed', 'table', 'mapper', 'keys', 'referenced', 'referencing', 'index', 'proxy');
