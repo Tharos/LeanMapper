@@ -592,6 +592,14 @@ abstract class Entity
 	}
 
 	/**
+	 * @return array
+	 */
+	public function __sleep()
+	{
+		return array('row', 'mapper', 'entityFactory');
+	}
+
+	/**
 	 * Gets current entity's reflection (cached in memory)
 	 *
 	 * @return EntityReflection
