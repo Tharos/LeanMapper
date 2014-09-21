@@ -40,6 +40,9 @@ class Result implements \Iterator
 
 	const ERROR_MISSING_COLUMN = 1;
 
+	/** @var Connection */
+	private static $storedConnection;
+
 	/** @var bool */
 	private $isDetached;
 
@@ -127,6 +130,14 @@ class Result implements \Iterator
 	public static function createDetachedInstance()
 	{
 		return new self;
+	}
+
+	/**
+	 * @param Connection $connection
+	 */
+	public static function storeConnection(Connection $connection)
+	{
+		self::$storedConnection = $connection;
 	}
 
 	/**
@@ -590,6 +601,25 @@ class Result implements \Iterator
 			throw new InvalidArgumentException('Inconsistent proxy class requested.');
 		}
 		return $this->proxy;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function __sleep()
+	{
+		if (self::$storedConnection === NULL and $this->connection !== null) {
+			self::storeConnection($this->connection);
+		}
+
+		return array('isDetached', 'data', 'modified', 'added', 'removed', 'table', 'mapper', 'keys', 'referenced', 'referencing', 'index', 'proxy');
+	}
+
+	public function __wakeup()
+	{
+		if (self::$storedConnection !== null) {
+			$this->setConnection(self::$storedConnection);
+		}
 	}
 
 	//========== interface \Iterator ====================
