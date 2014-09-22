@@ -612,7 +612,7 @@ class Result implements \Iterator
 	 */
 	public function __sleep()
 	{
-		if (self::$storedConnection === NULL and $this->connection !== null) {
+		if (self::$storedConnection === null and $this->connection !== null) {
 			self::enableSerialization($this->connection);
 		}
 
