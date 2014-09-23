@@ -839,8 +839,8 @@ abstract class Entity
 			$this->mapper = $mapper;
 			$this->row->setMapper($mapper);
 			$this->currentReflection = null;
-		} elseif ($this->mapper !== $mapper) {
-			throw new InvalidStateException("Given mapper doesn't equal to mapper already present in entity " . get_called_class() . '.');
+		} elseif ($this->mapper != $mapper) { // intentionally !=, we want to ensure that types and states are same
+			throw new InvalidStateException("Given mapper isn't same as mapper already present in entity " . get_called_class() . '.');
 		}
 	}
 
@@ -852,8 +852,8 @@ abstract class Entity
 	{
 		if ($this->entityFactory === null) {
 			$this->entityFactory = $entityFactory;
-		} elseif ($this->entityFactory !== $entityFactory) {
-			throw new InvalidStateException("Given entity factory doesn't equal to entity factory already present in entity " . get_called_class() . '.');
+		} elseif ($this->entityFactory != $entityFactory) { // intentionally !=, we want to ensure that types and states are same
+			throw new InvalidStateException("Given entity factory isn't same as entity factory already present in entity " . get_called_class() . '.');
 		}
 	}
 
