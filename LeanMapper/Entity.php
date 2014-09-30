@@ -111,7 +111,7 @@ abstract class Entity
 		$nativeGetter = $reflection->getGetter('get' . ucfirst($name));
 		if ($nativeGetter !== null) {
 			try {
-				return $nativeGetter->invoke($this); // filters are not relevant here
+				return $nativeGetter->invoke($this); // filters arguments are not relevant here
 			} catch (ReflectionException $e) {
 				throw new MemberAccessException("Cannot invoke native getter of property '$name' in entity " . get_called_class() . '.');
 			}
@@ -125,7 +125,7 @@ abstract class Entity
 			if (!method_exists($this, $customGetter)) {
 				throw new InvalidMethodCallException("Missing getter method '$customGetter' in entity " . get_called_class() . '.');
 			}
-			return $this->$customGetter(); // filters are not relevant here
+			return $this->$customGetter(); // filters arguments are not relevant here
 		}
 		return $this->get($property);
 	}
