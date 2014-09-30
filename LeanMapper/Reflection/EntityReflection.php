@@ -178,7 +178,7 @@ class EntityReflection extends \ReflectionClass
 	private function initGettersAndSetters()
 	{
 		$this->getters = $this->setters = array();
-		foreach ($this->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+		foreach ($this->getMethods() as $method) {
 			$name = $method->getName();
 			if (strlen($name) > 3) {
 				$prefix = substr($name, 0, 3);

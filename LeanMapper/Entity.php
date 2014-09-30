@@ -21,6 +21,7 @@ use LeanMapper\Exception\MemberAccessException;
 use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
 use LeanMapper\Relationship;
+use ReflectionException;
 use Traversable;
 
 /**
@@ -109,7 +110,11 @@ abstract class Entity
 		$reflection = $this->getCurrentReflection();
 		$nativeGetter = $reflection->getGetter('get' . ucfirst($name));
 		if ($nativeGetter !== null) {
-			return $nativeGetter->invoke($this); // filters are not relevant here
+			try {
+				return $nativeGetter->invoke($this); // filters are not relevant here
+			} catch (ReflectionException $e) {
+				throw new MemberAccessException("Cannot invoke native getter of property '$name' in entity " . get_called_class() . '.');
+			}
 		}
 		$property = $reflection->getEntityProperty($name);
 		if ($property === null) {
@@ -136,8 +141,12 @@ abstract class Entity
 		$reflection = $this->getCurrentReflection();
 		$nativeSetter = $reflection->getSetter('set' . ucfirst($name));
 		if ($nativeSetter !== null) {
-			$nativeSetter->invoke($this, $value);
-			return;
+			try {
+				$nativeSetter->invoke($this, $value);
+				return;
+			} catch (ReflectionException $e) {
+				throw new MemberAccessException("Cannot invoke native setter of property '$name' in entity " . get_called_class() . '.');
+			}
 		}
 		$property = $reflection->getEntityProperty($name);
 		if ($property === null) {
@@ -198,7 +207,16 @@ abstract class Entity
 			if (count($arguments) !== 1) {
 				throw new InvalidMethodCallException("Method $name in entity " . get_called_class() . ' expects exactly one argument.');
 			}
-			$this->set(lcfirst(substr($name, 3)), reset($arguments));
+			$property = $this->getCurrentReflection()->getEntityProperty(
+				$propertyName = lcfirst(substr($name, 3))
+			);
+			if ($property === null) {
+				throw new MemberAccessException("Cannot access undefined property '$propertyName' in entity " . get_called_class() . '.');
+			}
+			if (!$property->isWritable()) {
+				throw new MemberAccessException("Cannot write to read-only property '$propertyName' in entity " . get_called_class() . '.');
+			}
+			$this->set($property, reset($arguments));
 
 		} elseif (substr($name, 0, 5) === 'addTo' and strlen($name) > 5) { // addTo<Name>
 			$this->checkMethodArgumentsCount(1, $arguments, $name);
@@ -430,6 +448,14 @@ abstract class Entity
 	}
 
 	/**
+	 * @return array
+	 */
+	public function __sleep()
+	{
+		return array('row', 'mapper', 'entityFactory');
+	}
+
+	/**
 	 * @param $property
 	 * @param array $filterArgs
 	 * @throws InvalidValueException
@@ -529,7 +555,7 @@ abstract class Entity
 	 * @throws InvalidValueException
 	 * @throws MemberAccessException
 	 */
-	public function set($property, $value)
+	protected function set($property, $value)
 	{
 		if ($property instanceof Property) {
 			$name = $property->getName();
@@ -538,9 +564,6 @@ abstract class Entity
 			$property = $this->getCurrentReflection()->getEntityProperty($name);
 			if ($property === null) {
 				throw new MemberAccessException("Cannot access undefined property '$name' in entity " . get_called_class() . '.');
-			}
-			if (!$property->isWritable()) {
-				throw new MemberAccessException("Cannot write to read-only property '$name' in entity " . get_called_class() . '.');
 			}
 		}
 		if ($value === null and !$property->isNullable()) {
@@ -589,14 +612,6 @@ abstract class Entity
 			throw new InvalidValueException("Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given.");
 		}
 		$this->row->$column = ($pass !== null ? $this->$pass($value) : $value);
-	}
-
-	/**
-	 * @return array
-	 */
-	public function __sleep()
-	{
-		return array('row', 'mapper', 'entityFactory');
 	}
 
 	/**
