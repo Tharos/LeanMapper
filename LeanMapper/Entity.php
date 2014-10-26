@@ -85,7 +85,7 @@ abstract class Entity
 			foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
 				if ($property->hasDefaultValue()) {
 					$propertyName = $property->getName();
-					$this->$propertyName = $property->getDefaultValue();
+					$this->set($propertyName, $property->getDefaultValue());
 				}
 			}
 			if ($arg !== null) {
