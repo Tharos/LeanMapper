@@ -729,6 +729,10 @@ abstract class Entity
 	 */
 	private function getHasOneValue(Property $property, Relationship\HasOne $relationship, Filtering $filtering = null)
 	{
+		$column = $property->getColumn();
+		if ($this->row->{$column} === null) {
+			return null;
+		}
 		$targetTable = $relationship->getTargetTable();
 		$row = $this->row->referenced($targetTable, $relationship->getColumnReferencingTargetTable(), $filtering);
 		if ($row === null) {
