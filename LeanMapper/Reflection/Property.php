@@ -99,8 +99,11 @@ class Property
 				}
 			} else {
 				if ($containsCollection) {
-					throw new InvalidArgumentException("Property '$name' with HasOney or BelongsToOne in entity {$entityReflection->getName()} relationship cannot contain collection.");
+					throw new InvalidArgumentException("Property '$name' with HasOne or BelongsToOne in entity {$entityReflection->getName()} relationship cannot contain collection.");
 				}
+			}
+			if ($propertyPasses !== null) {
+				throw new InvalidArgumentException("Property '$name' in entity {$entityReflection->getName()} cannot have defined m:passThru since it contains relationship.");
 			}
 		} elseif ($propertyFilters !== null) {
 			throw new InvalidArgumentException("Cannot bind filter to property '$name' in entity {$entityReflection->getName()} since it doesn't contain relationship.");

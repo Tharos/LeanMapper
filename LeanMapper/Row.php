@@ -26,7 +26,7 @@ class Row
 	private $id;
 
 	/** @var array */
-	private $referencedRows;
+	private $referencedRows = array();
 
 
 	/**
@@ -58,6 +58,13 @@ class Row
 	 */
 	public function __set($name, $value)
 	{
+		if (array_key_exists($name, $this->referencedRows)) {
+			if ($value === null) {
+				$this->referencedRows[$name] = null;
+			} else {
+				unset($this->referencedRows[$name]);
+			}
+		}
 		$this->result->setDataEntry($this->id, $name, $value);
 	}
 
@@ -208,7 +215,7 @@ class Row
 	 */
 	public function referenced($table, $viaColumn = null, Filtering $filtering = null)
 	{
-		if (isset($this->referencedRows[$viaColumn])) {
+		if (array_key_exists($viaColumn, $this->referencedRows)) {
 			return $this->referencedRows[$viaColumn];
 		}
 		return $this->result->getReferencedRow($this->id, $table, $viaColumn, $filtering);
@@ -232,7 +239,7 @@ class Row
 	 * @param Row $row
 	 * @param string $viaColumn
 	 */
-	public function setReferencedRow(self $row, $viaColumn)
+	public function setReferencedRow(self $row = null, $viaColumn)
 	{
 		$this->referencedRows[$viaColumn] = $row;
 	}
@@ -308,6 +315,15 @@ class Row
 	public function cleanReferencingAddedAndRemovedMeta($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
 	{
 		$this->result->cleanReferencingAddedAndRemovedMeta($table, $viaColumn, $filtering, $strategy);
+	}
+
+	/**
+	 * @param string $proxyClass
+	 * @return ResultProxy
+	 */
+	public function getResultProxy($proxyClass = 'LeanMapper\ResultProxy')
+	{
+		return $this->result->getProxy($proxyClass);
 	}
 
 }

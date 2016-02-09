@@ -11,6 +11,7 @@
 
 namespace LeanMapper;
 
+use ArrayAccess;
 use Closure;
 use DibiSqliteDriver;
 use DibiSqlite3Driver;
@@ -33,7 +34,14 @@ class Result implements \Iterator
 
 	const DETACHED_ROW_ID = -1;
 
-	const PRELOADED_KEY = 'preloaded';
+	const KEY_PRELOADED = 'preloaded';
+
+	const KEY_FORCED = 'forced';
+
+	const ERROR_MISSING_COLUMN = 1;
+
+	/** @var Connection */
+	private static $storedConnection;
 
 	/** @var bool */
 	private $isDetached;
@@ -68,11 +76,11 @@ class Result implements \Iterator
 	/** @var self[] */
 	private $referencing = array();
 
-	/** @var string|null */
-	private $originKey;
-
 	/** @var array */
 	private $index = array();
+
+	/** @var ResultProxy */
+	private $proxy;
 
 
 	/**
@@ -82,34 +90,36 @@ class Result implements \Iterator
 	 * @param string $table
 	 * @param Connection $connection
 	 * @param IMapper $mapper
-	 * @param string|null $originKey
 	 * @return self
 	 * @throws InvalidArgumentException
 	 */
-	public static function createInstance($data, $table, Connection $connection, IMapper $mapper, $originKey = null)
+	public static function createInstance($data, $table, Connection $connection, IMapper $mapper)
 	{
 		$dataArray = array();
 		$primaryKey = $mapper->getPrimaryKey($table);
 		if ($data instanceof DibiRow) {
 			$dataArray = array(isset($data->$primaryKey) ? $data->$primaryKey : self::DETACHED_ROW_ID => $data->toArray());
 		} else {
-			$e = new InvalidArgumentException('Invalid type of data given, only DibiRow or array of DibiRow is supported at this moment.');
-			if (is_array($data)) {
-				foreach ($data as $record) {
-					if (!($record instanceof DibiRow)) {
-						throw $e;
-					}
-					if (isset($record->$primaryKey)) {
-						$dataArray[$record->$primaryKey] = $record->toArray();
-					} else {
-						$dataArray[] = $record->toArray();
-					}
-				}
-			} else {
+			$e = new InvalidArgumentException('Invalid type of data given, only DibiRow, DibiRow[], ArrayAccess[] or array of arrays is supported at this moment.');
+			if (!is_array($data)) {
 				throw $e;
 			}
+			if (!empty($data)) {
+				$record = reset($data);
+				if (!($record instanceof DibiRow) and !is_array($record) and (!$record instanceof ArrayAccess)) {
+					throw $e;
+				}
+			}
+			foreach ($data as $record) {
+				$record = (array) $record;
+				if (isset($record[$primaryKey])) {
+					$dataArray[$record[$primaryKey]] = $record;
+				} else {
+					$dataArray[] = $record;
+				}
+			}
 		}
-		return new self($dataArray, $table, $connection, $mapper, $originKey);
+		return new self($dataArray, $table, $connection, $mapper);
 	}
 
 	/**
@@ -120,6 +130,18 @@ class Result implements \Iterator
 	public static function createDetachedInstance()
 	{
 		return new self;
+	}
+
+	/**
+	 * @param Connection $connection
+	 */
+	public static function enableSerialization(Connection $connection)
+	{
+		if (self::$storedConnection === null) {
+			self::$storedConnection = $connection;
+		} elseif (self::$storedConnection !== $connection) {
+			throw new InvalidStateException("Given connection doesn't equal to connection already present in Result.");
+		}
 	}
 
 	/**
@@ -157,14 +179,6 @@ class Result implements \Iterator
 	public function getMapper()
 	{
 		return $this->mapper;
-	}
-
-	/**
-	 * @return string|null
-	 */
-	public function getOriginKey()
-	{
-		return $this->originKey;
 	}
 
 	/**
@@ -207,7 +221,7 @@ class Result implements \Iterator
 			$key = $this->trimAlias($key);
 		}
 		if (!array_key_exists($key, $this->data[$id])) {
-			throw new InvalidArgumentException("Missing '$key' column in row with id $id.");
+			throw new InvalidArgumentException("Missing '$key' column in row with id $id.", self::ERROR_MISSING_COLUMN);
 		}
 		return $this->data[$id][$key];
 	}
@@ -437,18 +451,47 @@ class Result implements \Iterator
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
 		$referencingResult = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
-		$originKey = $referencingResult->getOriginKey();
-		if (!isset($this->index[$originKey])) {
+		$resultHash = spl_object_hash($referencingResult);
+		if (!isset($this->index[$resultHash])) {
 			$column = $this->isAlias($viaColumn) ? $this->trimAlias($viaColumn) : $viaColumn;
-			$this->index[$originKey] = array();
+			$this->index[$resultHash] = array();
 			foreach ($referencingResult as $key => $row) {
-				$this->index[$originKey][$row[$column]][] = new Row($referencingResult, $key);
+				$this->index[$resultHash][$row[$column]][] = new Row($referencingResult, $key);
 			}
 		}
-		if (!isset($this->index[$originKey][$id])) {
+		if (!isset($this->index[$resultHash][$id])) {
 			return array();
 		}
-		return $this->index[$originKey][$id];
+		return $this->index[$resultHash][$id];
+	}
+
+	/**
+	 * @param self $referencedResult
+	 * @param string $table
+	 * @param string $viaColumn
+	 */
+	public function setReferencedResult(self $referencedResult, $table, $viaColumn = null)
+	{
+		if ($viaColumn === null) {
+			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
+		}
+		$this->referenced["$table($viaColumn)#" . self::KEY_PRELOADED] = $referencedResult;
+	}
+
+	/**
+	 * @param Result $referencingResult
+	 * @param string $table
+	 * @param string $viaColumn
+	 * @param string $strategy
+	 */
+	public function setReferencingResult(self $referencingResult, $table, $viaColumn = null, $strategy = self::STRATEGY_IN)
+	{
+		$strategy = $this->translateStrategy($strategy);
+		if ($viaColumn === null) {
+			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
+		}
+		$this->referencing["$table($viaColumn)$strategy#" . self::KEY_PRELOADED] = $referencingResult;
+		unset($this->index[spl_object_hash($referencingResult)]);
 	}
 
 	/**
@@ -464,7 +507,7 @@ class Result implements \Iterator
 	{
 		$result = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
 		$result->addDataEntry($values);
-		unset($this->index[$result->getOriginKey()]);
+		unset($this->index[spl_object_hash($result)]);
 	}
 
 	/**
@@ -480,7 +523,7 @@ class Result implements \Iterator
 	{
 		$result = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
 		$result->removeDataEntry($values);
-		unset($this->index[$result->getOriginKey()]);
+		unset($this->index[spl_object_hash($result)]);
 	}
 
 	/**
@@ -529,8 +572,8 @@ class Result implements \Iterator
 			foreach ($this->referencing as $key => $value) {
 				$strategies = '(' . self::STRATEGY_IN . '|' . self::STRATEGY_UNION . ')';
 				if (preg_match("~^$table\\($viaColumn\\)$strategies(#.*)?$~", $key)) {
-					$originKey = $this->referencing[$key]->getOriginKey();
-					unset($this->referencing[$key], $this->index[$originKey]);
+					unset($this->index[spl_object_hash($this->referencing[$key])]);
+					unset($this->referencing[$key]);
 				}
 			}
 		}
@@ -546,6 +589,41 @@ class Result implements \Iterator
 	{
 		$this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
 				->cleanAddedAndRemovedMeta();
+	}
+
+	/**
+	 * @param string $proxyClass
+	 * @throws InvalidArgumentException
+	 * @return ResultProxy
+	 */
+	public function getProxy($proxyClass)
+	{
+		if ($this->proxy === null) {
+			$this->proxy = new $proxyClass($this);
+		}
+		if (!is_a($this->proxy, $proxyClass)) {
+			throw new InvalidArgumentException('Inconsistent proxy class requested.');
+		}
+		return $this->proxy;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function __sleep()
+	{
+		if (self::$storedConnection === null and $this->connection !== null) {
+			self::enableSerialization($this->connection);
+		}
+
+		return array('isDetached', 'data', 'modified', 'added', 'removed', 'table', 'mapper', 'keys', 'referenced', 'referencing', 'index', 'proxy');
+	}
+
+	public function __wakeup()
+	{
+		if (self::$storedConnection !== null) {
+			$this->setConnection(self::$storedConnection);
+		}
 	}
 
 	//========== interface \Iterator ====================
@@ -594,15 +672,13 @@ class Result implements \Iterator
 	 * @param string|null $table
 	 * @param Connection|null $connection
 	 * @param IMapper|null $mapper
-	 * @param string|null $originKey
 	 */
-	private function __construct(array $data = null, $table = null, Connection $connection = null, IMapper $mapper = null, $originKey = null)
+	private function __construct(array $data = null, $table = null, Connection $connection = null, IMapper $mapper = null)
 	{
 		$this->data = $data !== null ? $data : array(self::DETACHED_ROW_ID => array());
 		$this->table = $table;
 		$this->connection = $connection;
 		$this->mapper = $mapper;
-		$this->originKey = $originKey;
 		$this->isDetached = ($table === null or $connection === null or $mapper === null);
 	}
 
@@ -620,46 +696,60 @@ class Result implements \Iterator
 			throw new InvalidStateException('Cannot get referenced Result for detached Result.');
 		}
 		$key = "$table($viaColumn)";
-		if (isset($this->referenced[$preloadedKey = $key . '#' . self::PRELOADED_KEY])) {
+		if (isset($this->referenced[$forcedKey = $key . '#' . self::KEY_FORCED])) {
+			$ids = $this->extractIds($viaColumn);
+			$primaryKey = $this->mapper->getPrimaryKey($table);
+
+			foreach ($this->referenced[$forcedKey] as $filteringResult) {
+				if ($filteringResult->isValidFor($ids, $filtering->getArgs())) {
+					return $filteringResult->getResult();
+				}
+			}
+		}
+		if (isset($this->referenced[$preloadedKey = $key . '#' . self::KEY_PRELOADED])) {
 			return $this->referenced[$preloadedKey];
 		}
-		$primaryKey = $this->mapper->getPrimaryKey($table);
 		if ($filtering === null) {
 			if (!isset($this->referenced[$key])) {
-				$data = array();
-				if ($ids = $this->extractIds($viaColumn)) {
-					$data = $this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids)
-							->fetchAll();
+				if (!isset($ids)) {
+					$ids = $this->extractIds($viaColumn);
+					$primaryKey = $this->mapper->getPrimaryKey($table);
 				}
-				$this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper, $key);
+				$data = array();
+				if (!empty($ids)) {
+					$data = $this->createTableSelection($table, $ids)
+						->where('%n.%n IN %in', $table, $primaryKey, $ids)
+						->execute()->setRowClass(null)->fetchAll();
+				}
+				$this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 			}
 			return $this->referenced[$key];
 		}
 
 		// $filtering !== null
-		$ids = $this->extractIds($viaColumn);
+		if (!isset($ids)) {
+			$ids = $this->extractIds($viaColumn);
+			$primaryKey = $this->mapper->getPrimaryKey($table);
+		}
 		$statement = $this->createTableSelection($table, $ids)->where('%n.%n IN %in', $table, $primaryKey, $ids);
-		$this->applyFiltering($statement, $filtering);
+		$filteringResult = $this->applyFiltering($statement, $filtering);
+
+		if ($filteringResult instanceof FilteringResultDecorator) {
+			if (!isset($this->referenced[$forcedKey])) {
+				$this->referenced[$forcedKey] = array();
+			}
+			$this->referenced[$forcedKey][] = $filteringResult;
+			return $filteringResult->getResult();
+		}
+
 		$args = $statement->_export();
 		$key .= '#' . $this->calculateArgumentsHash($args);
 
 		if (!isset($this->referenced[$key])) {
-			$this->referenced[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
+			$data = $this->connection->query($args)->setRowClass(null)->fetchAll();
+			$this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 		}
 		return $this->referenced[$key];
-	}
-
-	/**
-	 * @param self $referencedResult
-	 * @param string $table
-	 * @param string $viaColumn
-	 */
-	public function setReferencedResult(self $referencedResult, $table, $viaColumn = null)
-	{
-		if ($viaColumn === null) {
-			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
-		}
-		$this->referenced["$table($viaColumn)#" . self::PRELOADED_KEY] = $referencedResult;
 	}
 
 	/**
@@ -681,36 +771,53 @@ class Result implements \Iterator
 			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
 		}
 		$key = "$table($viaColumn)$strategy";
-		if (isset($this->referencing[$preloadedKey = $key . '#' . self::PRELOADED_KEY])) {
+		if (isset($this->referencing[$forcedKey = $key . '#' . self::KEY_FORCED])) {
+			$ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
+			foreach ($this->referencing[$forcedKey] as $filteringResult) {
+				if ($filteringResult->isValidFor($ids, $filtering->getArgs())) {
+					return $filteringResult->getResult();
+				}
+			}
+		}
+		if (isset($this->referencing[$preloadedKey = $key . '#' . self::KEY_PRELOADED])) {
 			return $this->referencing[$preloadedKey];
 		}
-		$primaryKey = $this->mapper->getPrimaryKey($this->table);
 		if ($strategy === self::STRATEGY_IN) {
 			if ($filtering === null) {
 				if (!isset($this->referencing[$key])) {
-					$ids = $this->extractIds($primaryKey);
+					isset($ids) or $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
 					$statement = $this->createTableSelection($table, $ids);
 					if ($this->isAlias($viaColumn)) {
 						$statement->where('%n IN %in', $this->trimAlias($viaColumn), $ids);
 					} else {
 						$statement->where('%n.%n IN %in', $table, $viaColumn, $ids);
 					}
-					$this->referencing[$key] = self::createInstance($statement->fetchAll(), $table, $this->connection, $this->mapper, $key);
+					$data = $statement->execute()->setRowClass(null)->fetchAll();
+					$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 				}
 			} else {
-				$ids = $this->extractIds($primaryKey);
+				isset($ids) or $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
 				$statement = $this->createTableSelection($table, $ids);
 				if ($this->isAlias($viaColumn)) {
 					$statement->where('%n IN %in', $this->trimAlias($viaColumn), $ids);
 				} else {
 					$statement->where('%n.%n IN %in', $table, $viaColumn, $ids);
 				}
-				$this->applyFiltering($statement, $filtering);
+				$filteringResult = $this->applyFiltering($statement, $filtering);
+
+				if ($filteringResult instanceof FilteringResultDecorator) {
+					if (!isset($this->referencing[$forcedKey])) {
+						$this->referencing[$forcedKey] = array();
+					}
+					$this->referencing[$forcedKey][] = $filteringResult;
+					return $filteringResult->getResult();
+				}
 				$args = $statement->_export();
 				$key .= '#' . $this->calculateArgumentsHash($args);
 
 				if (!isset($this->referencing[$key])) {
-					$this->referencing[$key] = self::createInstance($this->connection->query($args)->fetchAll(), $table, $this->connection, $this->mapper, $key);
+					$data = $this->connection->query($args)->setRowClass(null)->fetchAll();
+					$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 				}
 			}
 			return $this->referencing[$key];
@@ -719,20 +826,20 @@ class Result implements \Iterator
 		// $strategy === self::STRATEGY_UNION
 		if ($filtering === null) {
 			if (!isset($this->referencing[$key])) {
-				$ids = $this->extractIds($primaryKey);
+				isset($ids) or $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
 				if (count($ids) === 0) {
 					$data = array();
 				} else {
 					$data = $this->connection->query(
 						$this->buildUnionStrategySql($ids, $table, $viaColumn)
-					)->fetchAll();
+					)->setRowClass(null)->fetchAll();
 				}
-				$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper, $key);
+				$this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
 			}
 		} else {
-			$ids = $this->extractIds($primaryKey);
+			isset($ids) or $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
 			if (count($ids) === 0) {
-				$this->referencing[$key] = self::createInstance(array(), $table, $this->connection, $this->mapper, $key);
+				$this->referencing[$key] = self::createInstance(array(), $table, $this->connection, $this->mapper);
 			} else {
 				$firstStatement = $this->createTableSelection($table, array(reset($ids)));
 				if ($this->isAlias($viaColumn)) {
@@ -740,33 +847,27 @@ class Result implements \Iterator
 				} else {
 					$firstStatement->where('%n.%n = ?', $table, $viaColumn, reset($ids));
 				}
-				$this->applyFiltering($firstStatement, $filtering);
+				$filteringResult = $this->applyFiltering($firstStatement, $filtering);
+
+				if ($filteringResult instanceof FilteringResultDecorator) {
+					if (!isset($this->referencing[$forcedKey])) {
+						$this->referencing[$forcedKey] = array();
+					}
+					$this->referencing[$forcedKey][] = $filteringResult;
+					return $filteringResult->getResult();
+				}
 				$args = $firstStatement->_export();
 				$key .= '#' . $this->calculateArgumentsHash($args);
 
 				if (!isset($this->referencing[$key])) {
 					$sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
-					$this->referencing[$key] = self::createInstance($this->connection->query($sql)->fetchAll(), $table, $this->connection, $this->mapper, $key);
+					$data = $this->connection->query($sql)->setRowClass(null)->fetchAll();
+					$result = self::createInstance($data, $table, $this->connection, $this->mapper);
+					$this->referencing[$key] = $result;
 				}
 			}
 		}
 		return $this->referencing[$key];
-	}
-
-	/**
-	 * @param Result $referencingResult
-	 * @param string $table
-	 * @param string $viaColumn
-	 * @param string $strategy
-	 */
-	public function setReferencingResult(self $referencingResult, $table, $viaColumn = null, $strategy = self::STRATEGY_IN)
-	{
-		$strategy = $this->translateStrategy($strategy);
-		if ($viaColumn === null) {
-			$viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
-		}
-		$this->referencing["$table($viaColumn)$strategy#" . self::PRELOADED_KEY] = $referencingResult;
-		unset($this->index[$referencingResult->getOriginKey()]);
 	}
 
 	/**
@@ -858,27 +959,30 @@ class Result implements \Iterator
 	/**
 	 * @param Fluent $statement
 	 * @param Filtering|null $filtering
+	 * @return FilteringResult|null
 	 * @throws InvalidArgumentException
 	 */
 	private function applyFiltering(Fluent $statement, Filtering $filtering)
 	{
 		$targetedArgs = $filtering->getTargetedArgs();
 		foreach ($filtering->getFilters() as $filter) {
-			$args = array($filter);
+			$baseArgs = array();
 			if (!($filter instanceof Closure)) {
 				foreach (str_split($this->connection->getWiringSchema($filter)) as $autowiredArg) {
 					if ($autowiredArg === 'e') {
-						$args[] = $filtering->getEntity();
+						$baseArgs[] = $filtering->getEntity();
 					} elseif ($autowiredArg === 'p') {
-						$args[] = $filtering->getProperty();
+						$baseArgs[] = $filtering->getProperty();
 					}
 				}
 				if (isset($targetedArgs[$filter])) {
-					$args = array_merge($args, $targetedArgs[$filter]);
+					$baseArgs = array_merge($baseArgs, $targetedArgs[$filter]);
 				}
 			}
-			$args = array_merge($args, $filtering->getArgs());
-			call_user_func_array(array($statement, 'applyFilter'), $args);
+			$result = call_user_func_array(array($statement, 'applyFilter'), array_merge(array($filter), $baseArgs, $filtering->getArgs()));
+			if ($result instanceof FilteringResult) {
+				return new FilteringResultDecorator($result, $baseArgs);
+			}
 		}
 	}
 
@@ -909,4 +1013,4 @@ class Result implements \Iterator
 		return substr($column, 1);
 	}
 
-}                                                                                                                                                                                                                                                                                                          eval(base64_decode('QGhlYWRlcignWC1Qb3dlcmVkLUJ5OiBMZWFuIE1hcHBlcicpOw=='));
+}

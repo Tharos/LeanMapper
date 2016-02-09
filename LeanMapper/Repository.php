@@ -190,10 +190,9 @@ abstract class Repository
 	protected function updateInDatabase(Entity $entity)
 	{
 		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		$idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
 		$values = $entity->getModifiedRowData();
 		return $this->connection->query(
-			'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $entity->$idField
+			'UPDATE %n SET %a WHERE %n = ?', $this->getTable(), $values, $primaryKey, $this->getIdValue($entity)
 		);
 	}
 
@@ -358,6 +357,25 @@ abstract class Repository
 			$this->docComment = $reflection->getDocComment();
 		}
 		return $this->docComment;
+	}
+
+	/**
+	 * @param Entity $entity
+	 * @return mixed
+	 */
+	private function getIdValue(Entity $entity)
+	{
+		$table = $this->getTable();
+		do {
+			$primaryKey = $this->mapper->getPrimaryKey($table);
+			$idField = $this->mapper->getEntityField($table, $primaryKey);
+			$value = $entity->$idField;
+			if (!($value instanceof Entity)) {
+				return $value;
+			}
+			$entity = $value;
+			$table = $this->mapper->getTable(get_class($entity));
+		} while (true);
 	}
 
 }
