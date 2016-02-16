@@ -26,4 +26,4 @@ $author->attach(1);
 
 Assert::exception(function () use ($author) {
 	isset($author->name);
-}, Exception::class, null, Result::ERROR_MISSING_COLUMN);
+}, 'LeanMapper\Exception\Exception', null, Result::ERROR_MISSING_COLUMN);

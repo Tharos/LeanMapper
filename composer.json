@@ -1,5 +1,5 @@
 {
-	"name": "tharos/leanmapper",
+	"name": "joseki/leanmapper",
 	"description": "Tiny ORM based on powerful dibi database abstraction library for PHP 5.",
 	"homepage": "http://www.leanmapper.com",
 	"license": "MIT",
@@ -14,9 +14,12 @@
 		}
 	},
 	"require": {
-		"dg/dibi": "~2.0"
+		"dg/dibi": ">=2.0 <=3.999"
 	},
 	"require-dev": {
-		"nette/tester": "dev-master"
+		"nette/tester": "~1.0"
+	},
+	"replace": {
+		"tharos/leanmapper": "2.*"
 	}
 }

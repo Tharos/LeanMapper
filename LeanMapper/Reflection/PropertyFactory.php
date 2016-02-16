@@ -284,7 +284,7 @@ class PropertyFactory
 				}
 				return $lower === 'true';
 			case 'integer':
-				if (!is_numeric($value)) {
+				if (!is_numeric($value) && !preg_match('~0x[0-9a-f]+~', $value)) {
 					throw new InvalidAnnotationException("Property of type integer cannot have default value '$value'.");
 				}
 				return intval($value, 0);

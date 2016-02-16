@@ -11,15 +11,14 @@
 
 namespace LeanMapper;
 
-use DibiConnection;
 use LeanMapper\Exception\InvalidArgumentException;
 
 /**
- * DibiConnection with filter support
+ * \Dibi\Connection with filter support
  *
  * @author Vojtěch Kohout
  */
-class Connection extends DibiConnection
+class Connection extends \Dibi\Connection
 {
 
 	const WIRE_ENTITY = 1;

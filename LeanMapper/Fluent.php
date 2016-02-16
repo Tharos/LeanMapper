@@ -12,15 +12,14 @@
 namespace LeanMapper;
 
 use Closure;
-use DibiFluent;
 use LeanMapper\Exception\InvalidArgumentException;
 
 /**
- * DibiFluent with filter support
+ * \Dibi\Fluent with filter support
  *
  * @author Vojtěch Kohout
  */
-class Fluent extends DibiFluent
+class Fluent extends \Dibi\Fluent
 {
 
 	/** @var array */

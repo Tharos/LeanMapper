@@ -18,9 +18,9 @@ class Book extends LeanMapper\Entity
 
 $book = new Book;
 
-$book->published = new DibiDateTime;
+$book->published = new \Dibi\DateTime;
 
-Assert::type('DibiDateTime', $book->published);
+Assert::type('\Dibi\DateTime', $book->published);
 
 Assert::exception(function () use ($book) {
 	$book->published = new ArrayObject;
@@ -28,7 +28,7 @@ Assert::exception(function () use ($book) {
 
 //////////
 
-$dibiRow = new DibiRow(array(
+$dibiRow = new \Dibi\Row(array(
 	'published' => new ArrayObject
 ));
 
@@ -40,11 +40,11 @@ Assert::exception(function () use ($book) {
 
 //////////
 
-$dibiRow = new DibiRow(array(
-	'published' => new DibiDateTime
+$dibiRow = new \Dibi\Row(array(
+	'published' => new \Dibi\DateTime
 ));
 
 $book = new Book(Result::createInstance($dibiRow, 'book', $connection, $mapper)->getRow(Result::DETACHED_ROW_ID));
 
-Assert::type('DibiDateTime', $book->published);
+Assert::type('\Dibi\DateTime', $book->published);
 Assert::type('DateTime', $book->published);

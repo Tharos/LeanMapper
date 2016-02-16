@@ -39,7 +39,7 @@ Assert::equal($data, $book->getData());
 
 //////////
 
-$dibiRow = new DibiRow($data);
+$dibiRow = new \Dibi\Row($data);
 $row = new Row(Result::createInstance($dibiRow, 'book', $connection, $mapper), 1);
 $book = new Book($row);
 
@@ -48,7 +48,7 @@ Assert::equal($data, $book->getData());
 
 //////////
 
-$dibiRow = new DibiRow($data);
+$dibiRow = new \Dibi\Row($data);
 $row = Result::createInstance($dibiRow, 'book', $connection, $mapper)->getRow(1);
 $book = new Book($row);
 
@@ -74,7 +74,7 @@ Assert::exception(function () {
 
 //////////
 
-$dibiRow = new DibiRow($data);
+$dibiRow = new \Dibi\Row($data);
 $row = new Row(Result::createInstance($dibiRow, 'book', $connection, $mapper), 1);
 $row->detach();
 

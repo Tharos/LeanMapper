@@ -11,7 +11,7 @@
 
 namespace LeanMapper;
 
-use DibiRow;
+use Dibi\Row as DibiRow;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidStateException;
 use LeanMapper\Reflection\AnnotationsParser;
@@ -249,9 +249,9 @@ abstract class Repository
 	}
 
 	/**
-	 * Creates new Entity instance from given DibiRow instance
+	 * Creates new Entity instance from given \Dibi\Row instance
 	 *
-	 * @param DibiRow $dibiRow
+	 * @param \Dibi\Row $dibiRow
 	 * @param string|null $entityClass
 	 * @param string|null $table
 	 * @return mixed
@@ -274,9 +274,9 @@ abstract class Repository
 	}
 
 	/**
-	 * Creates new set of Entity's instances from given array of DibiRow instances
+	 * Creates new set of Entity's instances from given array of \Dibi\Row instances
 	 *
-	 * @param DibiRow[] $rows
+	 * @param \Dibi\Row[] $rows
 	 * @param string|null $entityClass
 	 * @param string|null $table
 	 * @return array
