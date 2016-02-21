@@ -262,11 +262,11 @@ abstract class Repository
 			$table = $this->getTable();
 		}
 		$result = Result::createInstance($dibiRow, $table, $this->connection, $this->mapper);
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+		$primaryKey = $this->mapper->getPrimaryKey($table);
 
 		$row = $result->getRow($dibiRow->$primaryKey);
 		if ($entityClass === null) {
-			$entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
+			$entityClass = $this->mapper->getEntityClass($table, $row);
 		}
 		$entity = $this->entityFactory->createEntity($entityClass, $row);
 		$entity->makeAlive($this->entityFactory);
