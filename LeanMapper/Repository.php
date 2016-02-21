@@ -325,7 +325,7 @@ abstract class Repository
 					return $this->table = $table;
 				}
 			}
-			return $this->mapper->getTableByRepositoryClass(get_called_class());
+			$this->table = $this->mapper->getTableByRepositoryClass(get_called_class());
 		}
 		return $this->table;
 	}
