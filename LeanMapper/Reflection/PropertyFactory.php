@@ -57,7 +57,7 @@ class PropertyFactory
 				\'((?:\\\\\'|[^\'])+)\' |  # single quoted string
 				([^ ]*))  # unquoted value
 			)?
-			(?:\s+\(([^)]+)\))?
+			(?:\s*\(([^)]+)\))?
 			(?:\s+(.*)\s*)?
 		~xi', $annotation, $matches);
 
