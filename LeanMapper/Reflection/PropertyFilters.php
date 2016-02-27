@@ -11,6 +11,7 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\Connection;
 use LeanMapper\Exception\InvalidAnnotationException;
 
 /**
@@ -42,7 +43,7 @@ class PropertyFilters
 			$filters = $targetedArgs = array();
 			foreach (preg_split('#\s*,\s*#', $set) as $filter) {
 				$matches = array();
-				preg_match('~^([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(?:#(.*))?$~', $filter, $matches);
+				preg_match('~^('.Connection::PHP_VARIABLE.')(?:#(.*))?$~', $filter, $matches);
 				if (empty($matches)) {
 					throw new InvalidAnnotationException("Malformed filter name given: '$filter'.");
 				}

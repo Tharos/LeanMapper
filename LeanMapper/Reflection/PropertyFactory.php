@@ -11,6 +11,7 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\Connection;
 use LeanMapper\Exception\InvalidAnnotationException;
 use LeanMapper\Exception\UtilityClassException;
 use LeanMapper\IMapper;
@@ -48,10 +49,10 @@ class PropertyFactory
 		$matches = array();
 		$matched = preg_match('~
 			^(null\|)?
-			((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+)
+			((?:\\\\?'.Connection::PHP_VARIABLE.')+)
 			(\[\])?
 			(\|null)?\s+
-			(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
+			(\$'.Connection::PHP_VARIABLE.')
 			(?:\s+=\s*(?:
 				"((?:\\\\"|[^"])+)" |  # double quoted string
 				\'((?:\\\\\'|[^\'])+)\' |  # single quoted string
@@ -107,7 +108,7 @@ class PropertyFactory
 
 		if (isset($matches[10])) {
 			$flagMatches = array();
-			preg_match_all('~m:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\(([^)]*)\))?~', $matches[10], $flagMatches, PREG_SET_ORDER);
+			preg_match_all('~m:('.Connection::PHP_VARIABLE.')\s*(?:\(([^)]*)\))?~', $matches[10], $flagMatches, PREG_SET_ORDER);
 			foreach ($flagMatches as $match) {
 				$flag = $match[1];
 				$flagArgument = (isset($match[2]) and $match[2] !== '') ? $match[2] : null;

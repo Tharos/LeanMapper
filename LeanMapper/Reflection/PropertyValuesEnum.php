@@ -11,6 +11,7 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\Connection;
 use LeanMapper\Exception\InvalidAnnotationException;
 use ReflectionClass;
 
@@ -37,7 +38,7 @@ class PropertyValuesEnum
 	public function __construct($definition, EntityReflection $reflection)
 	{
 		$matches = array();
-		preg_match('#^((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+|self|static|parent)::([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+)\*$#', $definition, $matches);
+		preg_match('#^((?:\\\\?'.Connection::PHP_VARIABLE.')+|self|static|parent)::('.Connection::PHP_VARIABLE_FIRST_LETTER.Connection::PHP_VARIABLE_OTHER_LETTER.'+)\*$#', $definition, $matches);
 		if (empty($matches)) {
 			throw new InvalidAnnotationException("Invalid enumeration definition given: '$definition'.");
 		}

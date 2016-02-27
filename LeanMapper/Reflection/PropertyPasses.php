@@ -11,6 +11,7 @@
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper\Connection;
 use LeanMapper\Exception\InvalidAnnotationException;
 
 /**
@@ -43,7 +44,7 @@ class PropertyPasses
 			if ($pass === '') {
 				continue;
 			}
-			if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $pass)) {
+			if (!preg_match('#^'.Connection::PHP_VARIABLE.'$#', $pass)) {
 				throw new InvalidAnnotationException("Malformed method pass name given: '$pass'.");
 			}
 			if ($counter === 1) {
