@@ -1,9 +1,7 @@
 <?php
 
-use LeanMapper\DefaultEntityFactory;
 use LeanMapper\DefaultMapper;
 use LeanMapper\Entity;
-use LeanMapper\Result;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
@@ -13,22 +11,23 @@ require_once __DIR__ . '/../bootstrap.php';
 class Mapper extends DefaultMapper
 {
 
-	public function getPrimaryKey($table)
-	{
-		if ($table === 'author') {
-			return 'customid';
-		}
-		return parent::getPrimaryKey($table);
-	}
+    public function getPrimaryKey($table)
+    {
+        if ($table === 'author') {
+            return 'customid';
+        }
+        return parent::getPrimaryKey($table);
+    }
 
-	public function getEntityField($table, $column)
-	{
-		if ($table === 'author' and $column === $this->getPrimaryKey($table)) {
-			return 'customid';
-		}
-		return parent::getEntityField($table, $column);
-	}
 
+
+    public function getEntityField($table, $column)
+    {
+        if ($table === 'author' and $column === $this->getPrimaryKey($table)) {
+            return 'customid';
+        }
+        return parent::getEntityField($table, $column);
+    }
 
 }
 
@@ -63,10 +62,13 @@ $author->name = 'John Doe';
 $author->makeAlive($entityFactory, $connection, $mapper);
 $author->attach(1);
 
-Assert::equal(array (
-	'customid' => 1,
-	'name' => 'John Doe',
-), $author->getData());
+Assert::equal(
+    array(
+        'customid' => 1,
+        'name' => 'John Doe',
+    ),
+    $author->getData()
+);
 
 $book = new Book;
 $book->author = $author;

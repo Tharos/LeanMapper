@@ -11,7 +11,7 @@ require_once __DIR__ . '/../bootstrap.php';
 class Mapper extends DefaultMapper
 {
 
-	protected $defaultEntityNamespace = null;
+    protected $defaultEntityNamespace = null;
 
 }
 
@@ -31,38 +31,39 @@ class Tag extends Entity
 class Book extends Entity
 {
 
-	public function refreshTags()
-	{
-		$this->row->cleanReferencingRowsCache('book_tag', 'book_id');
-	}
+    public function refreshTags()
+    {
+        $this->row->cleanReferencingRowsCache('book_tag', 'book_id');
+    }
 
 }
 
 class BookRepository extends \LeanMapper\Repository
 {
 
-	/**
-	 * @param int $id
-	 * @return Book
-	 * @throws Exception
-	 */
-	public function find($id)
-	{
-		$row = $this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch();
-		if ($row === false) {
-			throw new \Exception('Entity was not found.');
-		}
-		return $this->createEntity($row);
-	}
+    /**
+     * @param int $id
+     * @return Book
+     * @throws Exception
+     */
+    public function find($id)
+    {
+        $row = $this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch();
+        if ($row === false) {
+            throw new \Exception('Entity was not found.');
+        }
+        return $this->createEntity($row);
+    }
 
 }
 
-function implodeTags(array $tags) {
-	$result = array();
-	foreach ($tags as $tag) {
-		$result[] = $tag->name;
-	}
-	return implode(',', $result);
+function implodeTags(array $tags)
+{
+    $result = array();
+    foreach ($tags as $tag) {
+        $result[] = $tag->name;
+    }
+    return implode(',', $result);
 }
 
 ////////////////////

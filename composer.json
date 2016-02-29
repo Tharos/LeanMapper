@@ -5,12 +5,17 @@
 	"license": "MIT",
 	"authors": [
 		{
-			"name": "Vojtěch Kohout"
+			"name": "Vojtěch Kohout",
+			"role": "Author"
+		},
+		{
+			"name": "Miroslav Paulík",
+			"role": "Maintainer"
 		}
 	],
 	"autoload": {
 		"psr-0": {
-			"LeanMapper": ""
+			"src": ""
 		}
 	},
 	"require": {

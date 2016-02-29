@@ -1,8 +1,8 @@
 <?php
 
-use Tester\Assert;
-use LeanMapper\Repository;
 use LeanMapper\Entity;
+use LeanMapper\Repository;
+use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
@@ -16,37 +16,42 @@ require_once __DIR__ . '/../bootstrap.php';
 class Author extends Entity
 {
 
-	public function readName()
-	{
-		return $this->get('name');
-	}
+    public function readName()
+    {
+        return $this->get('name');
+    }
 
-	public function assignName($name)
-	{
-		$this->set('name', $name);
-	}
 
-	public function getWeb()
-	{
-		return $this->get('web');
-	}
+
+    public function assignName($name)
+    {
+        $this->set('name', $name);
+    }
+
+
+
+    public function getWeb()
+    {
+        return $this->get('web');
+    }
 
 }
 
 class AuthorRepository extends Repository
 {
 
-	protected $defaultEntityNamespace = null;
+    protected $defaultEntityNamespace = null;
 
 
-	public function find($id)
-	{
-		$row = $this->createFluent()->where('id = %i', $id)->fetch();
-		if ($row === false) {
-			throw new \Exception('Entity was not found.');
-		}
-		return $this->createEntity($row);
-	}
+
+    public function find($id)
+    {
+        $row = $this->createFluent()->where('id = %i', $id)->fetch();
+        if ($row === false) {
+            throw new \Exception('Entity was not found.');
+        }
+        return $this->createEntity($row);
+    }
 
 }
 

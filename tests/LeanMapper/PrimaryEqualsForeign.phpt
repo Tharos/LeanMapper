@@ -10,8 +10,8 @@ use Tester\Assert;
 require_once __DIR__ . '/../bootstrap.php';
 
 if (!copy(__DIR__ . '/../db/author-ref.sq3', __DIR__ . '/../db/author.sq3')) {
-	echo 'Failed to copy SQLite database';
-	exit(1);
+    echo 'Failed to copy SQLite database';
+    exit(1);
 }
 
 //////////
@@ -42,74 +42,82 @@ class AuthorContract extends Entity
 {
 }
 
-
 class Mapper extends DefaultMapper
 {
 
-	protected $defaultEntityNamespace = null;
+    protected $defaultEntityNamespace = null;
 
 
-	public function getPrimaryKey($table)
-	{
-		if ($table === 'authordetail' or $table === 'authorcontract') {
-			return 'author_id';
-		}
-		return parent::getPrimaryKey($table);
-	}
 
-	public function getColumn($entityClass, $field)
-	{
-		if ($entityClass === 'AuthorDetail' and $field === 'author') {
-			return 'author_id';
-		}
-		if ($entityClass === 'AuthorContract' and $field === 'authorContract') {
-			return 'author_id';
-		}
-		return parent::getColumn($entityClass, $field);
-	}
+    public function getPrimaryKey($table)
+    {
+        if ($table === 'authordetail' or $table === 'authorcontract') {
+            return 'author_id';
+        }
+        return parent::getPrimaryKey($table);
+    }
 
-	public function getRelationshipColumn($sourceTable, $targetTable)
-	{
-		if ($sourceTable === 'authorcontract' and $targetTable === 'authordetail') {
-			return 'author_id';
-		}
-		if ($sourceTable === 'authordetail' and $targetTable === 'author') {
-			return 'author_id';
-		}
-		return parent::getRelationshipColumn($sourceTable, $targetTable);
-	}
 
-	public function getEntityField($table, $column)
-	{
-		if ($table === 'authordetail' and $column === 'author_id') {
-			return 'author';
-		}
-		if ($table === 'authorcontract' and $column === 'author_id') {
-			return 'authorDetail';
-		}
-		return parent::getEntityField($table, $column);
-	}
+
+    public function getColumn($entityClass, $field)
+    {
+        if ($entityClass === 'AuthorDetail' and $field === 'author') {
+            return 'author_id';
+        }
+        if ($entityClass === 'AuthorContract' and $field === 'authorContract') {
+            return 'author_id';
+        }
+        return parent::getColumn($entityClass, $field);
+    }
+
+
+
+    public function getRelationshipColumn($sourceTable, $targetTable)
+    {
+        if ($sourceTable === 'authorcontract' and $targetTable === 'authordetail') {
+            return 'author_id';
+        }
+        if ($sourceTable === 'authordetail' and $targetTable === 'author') {
+            return 'author_id';
+        }
+        return parent::getRelationshipColumn($sourceTable, $targetTable);
+    }
+
+
+
+    public function getEntityField($table, $column)
+    {
+        if ($table === 'authordetail' and $column === 'author_id') {
+            return 'author';
+        }
+        if ($table === 'authorcontract' and $column === 'author_id') {
+            return 'authorDetail';
+        }
+        return parent::getEntityField($table, $column);
+    }
 
 }
 
 abstract class BaseRepository extends Repository
 {
 
-	public function find($id)
-	{
-		$row = $this->createFluent()->where('%n = %i', $this->mapper->getPrimaryKey($this->getTable()), $id)->fetch();
-		if ($row === false) {
-			throw new \Exception('Entity was not found.');
-		}
-		return $this->createEntity($row);
-	}
+    public function find($id)
+    {
+        $row = $this->createFluent()->where('%n = %i', $this->mapper->getPrimaryKey($this->getTable()), $id)->fetch();
+        if ($row === false) {
+            throw new \Exception('Entity was not found.');
+        }
+        return $this->createEntity($row);
+    }
 
-	public function findAll()
-	{
-		return $this->createEntities(
-			$this->createFluent()->fetchAll()
-		);
-	}
+
+
+    public function findAll()
+    {
+        return $this->createEntities(
+            $this->createFluent()->fetchAll()
+        );
+    }
 
 }
 
@@ -124,14 +132,14 @@ class AuthorContractRepository extends BaseRepository
 //////////
 
 $dbConfig = array(
-	'driver' => 'sqlite3',
-	'database' => __DIR__ . '/../db/author.sq3',
+    'driver' => 'sqlite3',
+    'database' => __DIR__ . '/../db/author.sq3',
 );
 
 $connection = new Connection($dbConfig);
 
 $connection->onEvent[] = function ($event) use (&$queries) {
-	$queries[] = $event->sql;
+    $queries[] = $event->sql;
 };
 
 $mapper = new Mapper;
@@ -164,7 +172,10 @@ $author->name = 'Vojtěch Kohout';
 
 $authorRepository->persist($author);
 
-Assert::equal(array(
-	"UPDATE [authorcontract] SET [number]='12345' WHERE [author_id] = 1",
-	"UPDATE [author] SET [name]='Vojtěch Kohout' WHERE [id] = 1",
-), $queries);
+Assert::equal(
+    array(
+        "UPDATE [authorcontract] SET [number]='12345' WHERE [author_id] = 1",
+        "UPDATE [author] SET [name]='Vojtěch Kohout' WHERE [id] = 1",
+    ),
+    $queries
+);

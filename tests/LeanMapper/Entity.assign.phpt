@@ -1,8 +1,6 @@
 <?php
 
 use LeanMapper\Entity;
-use LeanMapper\Result;
-use LeanMapper\Row;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
@@ -21,9 +19,9 @@ class Book extends Entity
 //////////
 
 $data = array(
-	'id' => 1,
-	'name' => 'PHP guide',
-	'pubdate' => '2013-06-13',
+    'id' => 1,
+    'name' => 'PHP guide',
+    'pubdate' => '2013-06-13',
 );
 
 $book = new Book;
@@ -44,10 +42,18 @@ Assert::equal($data, $book->getData());
 
 $book = new Book;
 
-Assert::exception(function () use ($book) {
-	$book->assign(false);
-}, 'LeanMapper\Exception\InvalidArgumentException', 'Argument $values in Book::assign must contain either array or instance of Traversable, boolean given.');
+Assert::exception(
+    function () use ($book) {
+        $book->assign(false);
+    },
+    'LeanMapper\Exception\InvalidArgumentException',
+    'Argument $values in Book::assign must contain either array or instance of Traversable, boolean given.'
+);
 
-Assert::exception(function () use ($book) {
-	$book->assign('hello');
-}, 'LeanMapper\Exception\InvalidArgumentException', 'Argument $values in Book::assign must contain either array or instance of Traversable, string given.');
+Assert::exception(
+    function () use ($book) {
+        $book->assign('hello');
+    },
+    'LeanMapper\Exception\InvalidArgumentException',
+    'Argument $values in Book::assign must contain either array or instance of Traversable, string given.'
+);

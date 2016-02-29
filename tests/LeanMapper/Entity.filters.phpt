@@ -1,9 +1,9 @@
 <?php
 
+use LeanMapper\Connection;
 use LeanMapper\DefaultMapper;
 use LeanMapper\Entity;
 use Tester\Assert;
-use LeanMapper\Connection;
 
 require_once __DIR__ . '/../bootstrap.php';
 
@@ -12,7 +12,7 @@ require_once __DIR__ . '/../bootstrap.php';
 class Mapper extends DefaultMapper
 {
 
-	protected $defaultEntityNamespace = null;
+    protected $defaultEntityNamespace = null;
 
 }
 
@@ -35,13 +35,20 @@ class Book extends Entity
 
 $args = new ArrayObject;
 
-$connection->registerFilter('first', function () use ($args) {
-	$args->append(func_get_args());
-}, 'ep');
+$connection->registerFilter(
+    'first',
+    function () use ($args) {
+        $args->append(func_get_args());
+    },
+    'ep'
+);
 
-$connection->registerFilter('second', function () use ($args) {
-	$args->append(func_get_args());
-});
+$connection->registerFilter(
+    'second',
+    function () use ($args) {
+        $args->append(func_get_args());
+    }
+);
 
 $book = new Book;
 $book->makeAlive($entityFactory, $connection, $mapper);
@@ -49,7 +56,7 @@ $book->attach(1);
 
 $book->getTags(1, 'argument', true);
 
-$args = (array) $args;
+$args = (array)$args;
 
 Assert::equal(4, count($args));
 

@@ -1,14 +1,12 @@
 <?php
 
-use LeanMapper\DefaultMapper;
 use LeanMapper\Entity;
-use LeanMapper\Result;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
 $connection->onEvent[] = function ($event) use (&$queries) {
-	$queries[] = $event->sql;
+    $queries[] = $event->sql;
 };
 
 //////////
