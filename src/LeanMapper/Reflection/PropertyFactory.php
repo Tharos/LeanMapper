@@ -60,7 +60,7 @@ class PropertyFactory
 				\'((?:\\\\\'|[^\'])+)\' |  # single quoted string
 				([^ ]*))  # unquoted value
 			)?
-			(?:\s+\(([^)]+)\))?
+			(?:\s*\(([^)]+)\))?
 			(?:\s+(.*)\s*)?
 		~xi',
             $annotation,
@@ -116,6 +116,8 @@ class PropertyFactory
         $propertyPasses = null;
         $propertyValuesEnum = null;
         $customFlags = array();
+        $customColumn = null;
+        $customDefault = null;
 
         if (isset($matches[10])) {
             $flagMatches = array();
@@ -141,6 +143,11 @@ class PropertyFactory
                             $flagArgument,
                             $mapper
                         );
+
+                        $column = null;
+                        if ($relationship instanceof Relationship\HasOne) {
+                            $column = $relationship->getColumnReferencingTargetTable();
+                        }
                         break;
                     case 'useMethods':
                         if ($propertyMethods !== null) {
@@ -179,6 +186,52 @@ class PropertyFactory
                         }
                         $propertyValuesEnum = new PropertyValuesEnum($flagArgument, $entityReflection);
                         break;
+                    case 'column':
+                        if ($customColumn !== null) {
+                            throw new InvalidAnnotationException(
+                                "Multiple column name settings found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
+                            );
+                        }
+                        if ($flagArgument === null) {
+                            throw new InvalidAnnotationException(
+                                "Parameter of m:column flag was not found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
+                            );
+                        }
+                        $customColumn = $flagArgument;
+                        break;
+                    case 'default':
+                        if ($customDefault !== null) {
+                            throw new InvalidAnnotationException(
+                                "Multiple default value settings found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
+                            );
+                        }
+                        if ($flagArgument === null) {
+                            throw new InvalidAnnotationException(
+                                "Parameter of m:default flag was not found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
+                            );
+                        }
+                        $matched = preg_match(
+                            '~
+							^\s*(?:
+								"((?:\\\\"|[^"])+)" |      # double quoted string
+								\'((?:\\\\\'|[^\'])+)\' |  # single quoted string
+								([^ ]*)                    # unquoted value
+							)
+						~xi',
+                            $flagArgument,
+                            $matches
+                        );
+                        if (!$matched) {
+                            throw new \Exception;
+                        }
+                        if (isset($matches[1]) and $matches[1] !== '') {
+                            $customDefault = str_replace('\"', '"', $matches[1]);
+                        } elseif (isset($matches[2]) and $matches[2] !== '') {
+                            $customDefault = str_replace("\\'", "'", $matches[2]);
+                        } elseif (isset($matches[3]) and $matches[3] !== '') {
+                            $customDefault = $matches[3];
+                        }
+                        break;
                     default:
                         if (array_key_exists($flag, $customFlags)) {
                             throw new InvalidAnnotationException(
@@ -189,12 +242,10 @@ class PropertyFactory
                 }
             }
         }
-        if ($relationship !== null) {
-            $column = null;
-            if ($relationship instanceof Relationship\HasOne) {
-                $column = $relationship->getColumnReferencingTargetTable();
-            }
-        }
+
+        $column = $customColumn ?: $column;
+        $defaultValue = $customDefault ?: $defaultValue;
+
         return new Property(
             $name,
             $entityReflection,

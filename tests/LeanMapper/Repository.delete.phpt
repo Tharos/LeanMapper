@@ -55,7 +55,7 @@ Assert::exception(
         $book->author->name;
     },
     'LeanMapper\Exception\InvalidStateException',
-    'Missing entity factory in Book.'
+    'Cannot load relationship data from detached entity Book.'
 );
 
 $bookRepository->persist($book);
