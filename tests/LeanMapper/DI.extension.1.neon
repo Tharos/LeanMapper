@@ -1,0 +1,11 @@
+extensions:
+  LeanMapper: LeanMapper\Bridges\Nette\DI\LeanMapperExtension
+
+LeanMapper:
+  db:
+    host: 127.0.0.1
+    username: travis
+    password:
+    driver: mysqli
+    database: testing
+    lazy: TRUE

@@ -41,7 +41,7 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
         }
 
         $container->addDefinition($this->prefix('mapper'))
-            ->setClass('Joseki\LeanMapper\PackageMapper');
+            ->setClass('LeanMapper\DefaultMapper');
 
         $container->addDefinition($this->prefix('entityFactory'))
             ->setClass('LeanMapper\DefaultEntityFactory');
