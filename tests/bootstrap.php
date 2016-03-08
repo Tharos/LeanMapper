@@ -28,6 +28,10 @@ if (!copy(__DIR__ . '/db/library-ref.sq3', __DIR__ . '/db/library.sq3')) {
 	exit(1);
 }
 
+define('TEMP_DIR', __DIR__ . '/tmp');
+@mkdir(TEMP_DIR, 0777);
+\Tester\Environment::lock('database', TEMP_DIR);
+
 class TestMapper extends DefaultMapper
 {
 

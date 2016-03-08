@@ -11,7 +11,7 @@ require_once __DIR__ . '/../bootstrap.php';
 class Mapper extends DefaultMapper
 {
 
-	protected $defaultEntityNamespace = null;
+    protected $defaultEntityNamespace = null;
 
 }
 
@@ -35,23 +35,24 @@ class Book extends Entity
 class BookRepository extends \LeanMapper\Repository
 {
 
-	public function find($id)
-	{
-		$row = $this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch();
-		if ($row === false) {
-			throw new \Exception('Entity was not found.');
-		}
-		return $this->createEntity($row);
-	}
+    public function find($id)
+    {
+        $row = $this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch();
+        if ($row === false) {
+            throw new \Exception('Entity was not found.');
+        }
+        return $this->createEntity($row);
+    }
 
 }
 
-function implodeTags(array $tags) {
-	$result = array();
-	foreach ($tags as $tag) {
-		$result[] = $tag->name;
-	}
-	return implode(',', $result);
+function implodeTags(array $tags)
+{
+    $result = array();
+    foreach ($tags as $tag) {
+        $result[] = $tag->name;
+    }
+    return implode(',', $result);
 }
 
 ////////////////////

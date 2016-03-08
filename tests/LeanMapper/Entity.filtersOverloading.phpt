@@ -1,6 +1,5 @@
 <?php
 
-
 use LeanMapper\Entity;
 use LeanMapper\Fluent;
 use Tester\Assert;
@@ -8,7 +7,7 @@ use Tester\Assert;
 require_once __DIR__ . '/../bootstrap.php';
 
 $connection->onEvent[] = function ($event) use (&$queries, &$i) {
-	$queries[] = $event->sql;
+    $queries[] = $event->sql;
 };
 
 //////////
@@ -31,23 +30,26 @@ class Book extends Entity
 class AuthorRepository extends LeanMapper\Repository
 {
 
-	public function find($id)
-	{
-		$entry = $this->createFluent()->where('[id] = %i', $id)->fetch();
-		if ($entry === false) {
-			throw new \Exception('Entity was not found.');
-		}
-		return $this->createEntity($entry);
-	}
+    public function find($id)
+    {
+        $entry = $this->createFluent()->where('[id] = %i', $id)->fetch();
+        if ($entry === false) {
+            throw new \Exception('Entity was not found.');
+        }
+        return $this->createEntity($entry);
+    }
 
 }
 
 ////////////////////
 ////////////////////
 
-$connection->registerFilter('orderBy', function (Fluent $statement, $orderBy) {
-	$statement->orderBy($orderBy);
-});
+$connection->registerFilter(
+    'orderBy',
+    function (Fluent $statement, $orderBy) {
+        $statement->orderBy($orderBy);
+    }
+);
 
 $authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
 

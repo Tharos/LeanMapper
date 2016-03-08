@@ -10,10 +10,10 @@ require_once __DIR__ . '/../bootstrap.php';
 class CustomEntityFactory extends DefaultEntityFactory
 {
 
-	public function createCollection(array $entites)
-	{
-		return new ArrayObject($entites);
-	}
+    public function createCollection(array $entites)
+    {
+        return new ArrayObject($entites);
+    }
 
 }
 
@@ -40,20 +40,22 @@ class Author extends LeanMapper\Entity
 class AuthorRepository extends LeanMapper\Repository
 {
 
-	public function find($id)
-	{
-		$primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-		return $this->createEntity(
-			$this->createFluent()->where('%n = %i', $primaryKey, $id)->fetch()
-		);
-	}
+    public function find($id)
+    {
+        $primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+        return $this->createEntity(
+            $this->createFluent()->where('%n = %i', $primaryKey, $id)->fetch()
+        );
+    }
 
-	public function findAll()
-	{
-		return $this->createEntities(
-			$this->createFluent()->fetchAll()
-		);
-	}
+
+
+    public function findAll()
+    {
+        return $this->createEntities(
+            $this->createFluent()->fetchAll()
+        );
+    }
 
 }
 

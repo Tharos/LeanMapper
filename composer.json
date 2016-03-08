@@ -5,18 +5,26 @@
 	"license": "MIT",
 	"authors": [
 		{
-			"name": "Vojtěch Kohout"
+			"name": "Vojtěch Kohout",
+			"role": "Author"
+		},
+		{
+			"name": "Miroslav Paulík",
+			"role": "Maintainer"
 		}
 	],
 	"autoload": {
 		"psr-0": {
-			"LeanMapper": ""
+			"LeanMapper": "src/"
 		}
 	},
 	"require": {
-		"dg/dibi": "~2.0"
+		"dg/dibi": "~3.0"
 	},
 	"require-dev": {
-		"nette/tester": "dev-master"
+		"nette/bootstrap": "~2.2",
+		"nette/di": "~2.2",
+		"nette/robot-loader": "~2.2",
+		"nette/tester": "~1.0"
 	}
 }

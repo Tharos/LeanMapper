@@ -1,7 +1,6 @@
 <?php
 
 use LeanMapper\Entity;
-use LeanMapper\Exception\Exception;
 use LeanMapper\Result;
 use Tester\Assert;
 
@@ -24,6 +23,11 @@ isset($author->name);
 $author->makeAlive($entityFactory, $connection, $mapper);
 $author->attach(1);
 
-Assert::exception(function () use ($author) {
-	isset($author->name);
-}, Exception::class, null, Result::ERROR_MISSING_COLUMN);
+Assert::exception(
+    function () use ($author) {
+        isset($author->name);
+    },
+    'LeanMapper\Exception\Exception',
+    null,
+    Result::ERROR_MISSING_COLUMN
+);

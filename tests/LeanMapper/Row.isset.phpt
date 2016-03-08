@@ -6,7 +6,7 @@ use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
-$row = new Row(Result::createInstance(new DibiRow(array('id' => 1, 'name' => true)), 'test', $connection, $mapper), 1);
+$row = new Row(Result::createInstance(new \Dibi\Row(array('id' => 1, 'name' => true)), 'test', $connection, $mapper), 1);
 
 Assert::true(isset($row->name));
 
