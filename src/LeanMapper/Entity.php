@@ -530,10 +530,13 @@ abstract class Entity
             try {
                 $value = $this->row->$column;
             } catch (LeanMapperException $e) {
-                throw new LeanMapperException(
-                    "Cannot get value of property '{$property->getName()}' in entity " . get_called_class(
-                    ) . ' due to low-level failure: ' . $e->getMessage(), $e->getCode(), $e
-                );
+                if (!$property->isNullable()) {
+                    throw new InvalidStateException(
+                        "Cannot get value of property '{$property->getName()}' in entity " . get_called_class(
+                        ) . ' due to low-level failure: ' . $e->getMessage(), $e->getCode(), $e
+                    );
+                }
+                $value = null;
             }
             if ($pass !== null) {
                 $value = $this->$pass($value);
