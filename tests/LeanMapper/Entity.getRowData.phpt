@@ -39,16 +39,16 @@ class AuthorRepository extends LeanMapper\Repository
 
 $author = new Author;
 
-Assert::equal(array(), $author->getRowData());
+Assert::equal([], $author->getRowData());
 
 $author->name = 'John Doe';
 $author->web = null;
 
-Assert::equal(array('name' => 'John Doe', 'web' => null), $author->getRowData());
+Assert::equal(['name' => 'John Doe', 'web' => null], $author->getRowData());
 
 $author->web = 'http://example.org';
 
-Assert::equal(array('name' => 'John Doe', 'web' => 'http://example.org'), $author->getRowData());
+Assert::equal(['name' => 'John Doe', 'web' => 'http://example.org'], $author->getRowData());
 
 //////////
 
@@ -57,21 +57,21 @@ $authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
 $author = $authorRepository->find(3);
 
 Assert::equal(
-    array(
+    [
         'id' => 3,
         'name' => 'Martin Fowler',
-        'web' => 'http://martinfowler.com'
-    ),
+        'web' => 'http://martinfowler.com',
+    ],
     $author->getRowData()
 );
 
 $author->web = null;
 
 Assert::equal(
-    array(
+    [
         'id' => 3,
         'name' => 'Martin Fowler',
-        'web' => null
-    ),
+        'web' => null,
+    ],
     $author->getRowData()
 );

@@ -40,7 +40,7 @@ class AnnotationsParser
      */
     public static function parseSimpleAnnotationValue($annotation, $docComment)
     {
-        $matches = array();
+        $matches = [];
         preg_match("#@$annotation\\s+([^\\s]+)#", $docComment, $matches);
         return !empty($matches) ? $matches[1] : null;
     }
@@ -56,7 +56,7 @@ class AnnotationsParser
      */
     public static function parseAnnotationValues($annotation, $docComment)
     {
-        $matches = array();
+        $matches = [];
         preg_match_all("#@$annotation\\s+([^@\\n\\r]*)#", $docComment, $matches);
         return $matches[1];
     }

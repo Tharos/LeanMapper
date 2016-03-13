@@ -62,7 +62,7 @@ class DataDifference
      */
     public function getByPivot($pivot)
     {
-        $result = array();
+        $result = [];
         foreach ($this->added as $entry) {
             if (!isset($entry[$pivot])) {
                 throw new InvalidArgumentException("Invalid pivot given: '$pivot'.");

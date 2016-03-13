@@ -53,7 +53,7 @@ class Connection extends \Dibi\Connection
         if (!is_callable($callback, true)) {
             throw new InvalidArgumentException("Callback given for filter '$name' is not callable.");
         }
-        $this->filters[$name] = array($callback, $this->translateWiringSchema($wiringSchema));
+        $this->filters[$name] = [$callback, $this->translateWiringSchema($wiringSchema)];
     }
 
 

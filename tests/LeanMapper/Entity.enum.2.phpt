@@ -45,13 +45,13 @@ class Project extends BaseEntity
 $project = new Project;
 
 Assert::equal(
-    array(
+    [
         'STATE_CREATED' => 'created',
         'STATE_APPROVED' => 'approved',
         'STATE_FINISHED' => 'finished',
         'STATE_DELETED' => 'deleted',
         'STATE_CANCELED' => 'canceled',
-    ),
+    ],
     $project->getEnumValues('state')
 );
 

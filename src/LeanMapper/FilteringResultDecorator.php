@@ -59,7 +59,7 @@ class FilteringResultDecorator
         }
         return call_user_func_array(
             $this->filteringResult->getValidationFunction(),
-            array_merge(array($relatedKeys), $this->baseArgs, $args)
+            array_merge([$relatedKeys], $this->baseArgs, $args)
         );
     }
 

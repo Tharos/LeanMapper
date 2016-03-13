@@ -103,7 +103,7 @@ class Property
         PropertyFilters $propertyFilters = null,
         PropertyPasses $propertyPasses = null,
         PropertyValuesEnum $propertyValuesEnum = null,
-        array $customFlags = array()
+        array $customFlags = []
     ) {
         if ($relationship !== null) {
             if (!is_subclass_of($type->getType(), 'LeanMapper\Entity')) {

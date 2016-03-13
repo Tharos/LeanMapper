@@ -11,7 +11,7 @@ class EntityDataDecoder
         if ($maxDepth <= 0) {
             $mapper = $entity->_getMapper();
             $primaryKey = $mapper->getPrimaryKey($mapper->getTable(get_class($entity)));
-            return (isset($primaryKey) && isset($entity->$primaryKey)) ? $entity->$primaryKey: null;
+            return (isset($primaryKey) && isset($entity->$primaryKey)) ? $entity->$primaryKey : null;
         }
         $data = [];
         foreach ($entity->getData() as $name => $value) {

@@ -50,25 +50,25 @@ $result = $connection->select(
     ->where('LENGTH([book].[name]) > %i', 13)
     ->fetchAll();
 
-$authors = array();
-$books = array();
+$authors = [];
+$books = [];
 
 foreach ($result as $row) {
     if (!isset($authors[$row['author_id']])) {
         $authors[$row['author_id']] = new \Dibi\Row(
-            array(
+            [
                 'id' => $row['author_id'],
                 'name' => $row['author_name'],
-            )
+            ]
         );
     }
     if (!isset($books[$row['book_id']])) {
         $books[$row['book_id']] = new \Dibi\Row(
-            array(
+            [
                 'id' => $row['book_id'],
                 'name' => $row['book_name'],
                 'author_id' => $row['book_author_id'],
-            )
+            ]
         );
     }
 }
@@ -77,7 +77,7 @@ $booksResult = Result::createInstance($books, 'book', $connection, $mapper);
 
 $authorsResult->setReferencingResult($booksResult, 'book', 'author_id');
 
-$entities = array();
+$entities = [];
 
 foreach ($authors as $author) {
     $entity = $entityFactory->createEntity('Author', $authorsResult->getRow($author->id));
@@ -88,10 +88,10 @@ $authors = $entityFactory->createCollection($entities);
 
 //////////
 
-$output = array();
+$output = [];
 
 foreach ($authors as $author) {
-    $outputBooks = array();
+    $outputBooks = [];
     foreach ($author->books as $book) {
         $outputBooks[] = $book->name;
     }
@@ -99,11 +99,11 @@ foreach ($authors as $author) {
 }
 
 Assert::equal(
-    array(
-        'Donald Knuth' => array('The Art of Computer Programming'),
-        'Martin Fowler' => array('Refactoring: Improving the Design of Existing Code'),
-        'Thomas H. Cormen' => array('Introduction to Algorithms'),
-    ),
+    [
+        'Donald Knuth' => ['The Art of Computer Programming'],
+        'Martin Fowler' => ['Refactoring: Improving the Design of Existing Code'],
+        'Thomas H. Cormen' => ['Introduction to Algorithms'],
+    ],
     $output
 );
 

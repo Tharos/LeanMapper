@@ -12,7 +12,6 @@
 namespace LeanMapper;
 
 use Exception;
-use LeanMapper\Bridges\Nette\DI\LeanMapperExtension;
 use LeanMapper\Exception\Exception as LeanMapperException;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
@@ -47,7 +46,7 @@ abstract class Entity
     protected $entityFactory;
 
     /** @var EntityReflection[] */
-    protected static $reflections = array();
+    protected static $reflections = [];
 
     /** @var EntityReflection */
     private $currentReflection;
@@ -307,12 +306,12 @@ abstract class Entity
      */
     public function getData(array $whitelist = null)
     {
-        $data = array();
+        $data = [];
         if ($whitelist !== null) {
             $whitelist = array_flip($whitelist);
         }
         $reflection = $this->getCurrentReflection();
-        $usedGetters = array();
+        $usedGetters = [];
         foreach ($reflection->getEntityProperties() as $property) {
             $field = $property->getName();
             if ($whitelist !== null and !isset($whitelist[$field])) {
@@ -372,7 +371,7 @@ abstract class Entity
      */
     public function getHasManyRowDifferences()
     {
-        $differences = array();
+        $differences = [];
         foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
             if ($property->hasRelationship() and ($property->getRelationship() instanceof Relationship\HasMany)) {
                 $relationship = $property->getRelationship();
@@ -501,7 +500,7 @@ abstract class Entity
      */
     public function __sleep()
     {
-        return array('row', 'mapper', 'entityFactory');
+        return ['row', 'mapper', 'entityFactory'];
     }
 
 
@@ -514,7 +513,7 @@ abstract class Entity
      * @throws MemberAccessException
      * @return mixed
      */
-    protected function get($property, array $filterArgs = array())
+    protected function get($property, array $filterArgs = [])
     {
         if ($property instanceof Property) {
             $name = $property->getName();
@@ -556,11 +555,11 @@ abstract class Entity
         if ($property->hasRelationship()) {
             if ($this->entityFactory) {
                 $implicitFilters = $this->createImplicitFilters($property->getType(), new Caller($this, $property));
-                $firstFilters = $property->getFilters(0) ?: array();
+                $firstFilters = $property->getFilters(0) ?: [];
 
                 $relationship = $property->getRelationship();
                 if ($relationship instanceof Relationship\HasMany) {
-                    $secondFilters = $this->mergeFilters($property->getFilters(1) ?: array(), $implicitFilters->getFilters());
+                    $secondFilters = $this->mergeFilters($property->getFilters(1) ?: [], $implicitFilters->getFilters());
                 } else {
                     $firstFilters = $this->mergeFilters($firstFilters, $implicitFilters->getFilters());
                 }
@@ -898,7 +897,7 @@ abstract class Entity
             $relTableFiltering,
             $relationship->getStrategy()
         );
-        $value = array();
+        $value = [];
         foreach ($rows as $row) {
             $valueRow = $row->referenced($targetTable, $columnReferencingTargetTable, $targetTableFiltering);
             if ($valueRow !== null) {
@@ -959,7 +958,7 @@ abstract class Entity
     {
         $targetTable = $relationship->getTargetTable();
         $rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
-        $value = array();
+        $value = [];
         foreach ($rows as $row) {
             $entityClass = $this->mapper->getEntityClass($targetTable, $row);
             $entity = $this->entityFactory->createEntity($entityClass, $row);
@@ -1079,10 +1078,10 @@ abstract class Entity
                 $arg = $data[$this->mapper->getPrimaryKey($relationship->getTargetTable())];
             }
             $table = $this->mapper->getTable($this->getCurrentReflection()->getName());
-            $values = array(
+            $values = [
                 $relationship->getColumnReferencingSourceTable() => $this->row->{$this->mapper->getPrimaryKey($table)},
                 $relationship->getColumnReferencingTargetTable() => $arg,
-            );
+            ];
             $method .= 'Referencing';
             $this->row->$method(
                 $values,

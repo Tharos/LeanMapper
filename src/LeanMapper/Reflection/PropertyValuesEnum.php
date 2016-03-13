@@ -23,10 +23,10 @@ class PropertyValuesEnum
 {
 
     /** @var array */
-    private $values = array();
+    private $values = [];
 
     /** @var array */
-    private $index = array();
+    private $index = [];
 
 
 
@@ -37,7 +37,7 @@ class PropertyValuesEnum
      */
     public function __construct($definition, EntityReflection $reflection)
     {
-        $matches = array();
+        $matches = [];
         preg_match(
             '#^((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+|self|static|parent)::([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+)\*$#',
             $definition,

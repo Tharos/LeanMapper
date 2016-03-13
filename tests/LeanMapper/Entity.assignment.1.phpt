@@ -56,9 +56,9 @@ $book->author = null;
 Assert::equal(null, $book->author);
 
 Assert::equal(
-    array(
+    [
         'author_id' => null,
-    ),
+    ],
     $book->getModifiedRowData()
 );
 

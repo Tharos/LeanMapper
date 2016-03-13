@@ -50,13 +50,13 @@ class AliasesParser
      */
     public static function parseSource($source, $namespace = '')
     {
-        $matches = array();
+        $matches = [];
         preg_match_all('#use[^;()]+?;#im', $source, $matches);
         $source = '<?php ' . implode('', $matches[0]);
 
         $builder = new AliasesBuilder;
 
-        $states = array(
+        $states = [
             self::STATE_WAITING_FOR_USE => function ($token) use ($builder) {
                 if (is_array($token) and $token[0] === T_USE) {
                     $builder->resetCurrent();
@@ -96,8 +96,8 @@ class AliasesParser
                     return AliasesParser::STATE_WAITING_FOR_USE;
                 }
                 return AliasesParser::STATE_GATHERING;
-            }
-        );
+            },
+        ];
 
         $state = $states[self::STATE_WAITING_FOR_USE];
         foreach (token_get_all($source) as $token) {

@@ -125,11 +125,11 @@ Assert::equal('', $property->getDefaultValue());
 
 $property = PropertyFactory::createFromAnnotation('property', 'array $list = array()', $entityReflection);
 
-Assert::equal(array(), $property->getDefaultValue());
+Assert::equal([], $property->getDefaultValue());
 
 $property = PropertyFactory::createFromAnnotation('property', 'array $list = ARRAY()', $entityReflection);
 
-Assert::equal(array(), $property->getDefaultValue());
+Assert::equal([], $property->getDefaultValue());
 
 Assert::exception(
     function () use ($entityReflection) {

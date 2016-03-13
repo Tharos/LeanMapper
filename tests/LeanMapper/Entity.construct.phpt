@@ -26,11 +26,11 @@ Assert::type('Book', $book);
 
 //////////
 
-$data = array(
+$data = [
     'id' => 1,
     'name' => 'PHP guide',
     'pubdate' => '2013-06-13',
-);
+];
 
 $book = new Book($data);
 

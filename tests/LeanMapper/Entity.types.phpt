@@ -33,9 +33,9 @@ Assert::exception(
 //////////
 
 $dibiRow = new \Dibi\Row(
-    array(
-        'published' => new ArrayObject
-    )
+    [
+        'published' => new ArrayObject,
+    ]
 );
 
 $book = new Book(Result::createInstance($dibiRow, 'book', $connection, $mapper)->getRow(Result::DETACHED_ROW_ID));
@@ -51,9 +51,9 @@ Assert::exception(
 //////////
 
 $dibiRow = new \Dibi\Row(
-    array(
-        'published' => new \Dibi\DateTime
-    )
+    [
+        'published' => new \Dibi\DateTime,
+    ]
 );
 
 $book = new Book(Result::createInstance($dibiRow, 'book', $connection, $mapper)->getRow(Result::DETACHED_ROW_ID));

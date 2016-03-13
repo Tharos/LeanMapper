@@ -36,16 +36,16 @@ class Events
     const EVENT_AFTER_DELETE = 'afterDelete';
 
     /** @var array */
-    private $events = array(
-        self::EVENT_BEFORE_PERSIST => array(),
-        self::EVENT_BEFORE_CREATE => array(),
-        self::EVENT_BEFORE_UPDATE => array(),
-        self::EVENT_BEFORE_DELETE => array(),
-        self::EVENT_AFTER_PERSIST => array(),
-        self::EVENT_AFTER_CREATE => array(),
-        self::EVENT_AFTER_UPDATE => array(),
-        self::EVENT_AFTER_DELETE => array(),
-    );
+    private $events = [
+        self::EVENT_BEFORE_PERSIST => [],
+        self::EVENT_BEFORE_CREATE => [],
+        self::EVENT_BEFORE_UPDATE => [],
+        self::EVENT_BEFORE_DELETE => [],
+        self::EVENT_AFTER_PERSIST => [],
+        self::EVENT_AFTER_CREATE => [],
+        self::EVENT_AFTER_UPDATE => [],
+        self::EVENT_AFTER_DELETE => [],
+    ];
 
 
 

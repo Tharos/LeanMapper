@@ -48,7 +48,7 @@ class BookRepository extends \LeanMapper\Repository
 
 function implodeTags(array $tags)
 {
-    $result = array();
+    $result = [];
     foreach ($tags as $tag) {
         $result[] = $tag->name;
     }
@@ -61,7 +61,7 @@ $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 
 $book = $bookRepository->find(2);
 
-$book->addToTags(new ArrayObject(array(1, 2)));
+$book->addToTags(new ArrayObject([1, 2]));
 
 Assert::equal('popular,ebook', implodeTags($book->tags));
 
@@ -71,11 +71,11 @@ $book->addToTags(1);
 
 Assert::equal('popular', implodeTags($book->tags));
 
-$book->replaceAllTags(array(2, 1));
+$book->replaceAllTags([2, 1]);
 
 Assert::equal('ebook,popular', implodeTags($book->tags));
 
-$book->removeFromTags(array(1));
+$book->removeFromTags([1]);
 
 Assert::equal('ebook', implodeTags($book->tags));
 

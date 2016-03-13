@@ -11,7 +11,7 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
     public $defaults = [
         'db' => [],
         'profiler' => true,
-        'scanDirs' => null
+        'scanDirs' => null,
     ];
 
 

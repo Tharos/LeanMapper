@@ -95,14 +95,14 @@ abstract class Repository
             }
             $targetedArgs = $filters->getTargetedArgs();
             foreach ($filters->getFilters() as $filter) {
-                $args = array($filter);
+                $args = [$filter];
                 if (is_string($filter) and array_key_exists($filter, $targetedArgs)) {
                     $args = array_merge($args, $targetedArgs[$filter]);
                 }
                 if (!empty($funcArgs)) {
                     $args = array_merge($args, $funcArgs);
                 }
-                call_user_func_array(array($statement, 'applyFilter'), $args);
+                call_user_func_array([$statement, 'applyFilter'], $args);
             }
         }
         return $statement;
@@ -253,14 +253,14 @@ abstract class Repository
 
         foreach ($entity->getHasManyRowDifferences() as $key => $difference) {
             list($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable) = explode(':', $key);
-            $multiInsert = array();
+            $multiInsert = [];
             foreach ($difference as $value => $count) {
                 if ($count > 0) {
                     for ($i = 0; $i < $count; $i++) {
-                        $multiInsert[] = array(
+                        $multiInsert[] = [
                             $columnReferencingSourceTable => $entity->$idField,
                             $columnReferencingTargetTable => $value,
-                        );
+                        ];
                     }
                 } else {
                     $this->connection->query(
@@ -326,7 +326,7 @@ abstract class Repository
         if ($table === null) {
             $table = $this->getTable();
         }
-        $entities = array();
+        $entities = [];
         $collection = Result::createInstance($rows, $table, $this->connection, $this->mapper);
         $primaryKey = $this->mapper->getPrimaryKey($this->getTable());
         if ($entityClass !== null) {

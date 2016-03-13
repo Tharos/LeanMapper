@@ -69,10 +69,10 @@ $repository->persist($author);
 $repository->delete($author);
 
 Assert::equal(
-    array(
+    [
         'before persist: John Doe',
         'before create: John Doe',
         'after persist: John Doe',
-    ),
+    ],
     $log->getArrayCopy()
 );
