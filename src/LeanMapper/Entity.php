@@ -12,6 +12,7 @@
 namespace LeanMapper;
 
 use Exception;
+use LeanMapper\Bridges\Nette\DI\LeanMapperExtension;
 use LeanMapper\Exception\Exception as LeanMapperException;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
@@ -553,52 +554,52 @@ abstract class Entity
             return $value;
         } // property doesn't contain basic type
         if ($property->hasRelationship()) {
-            if ($this->isDetached()) {
-                throw new InvalidStateException('Cannot load relationship data from detached entity Book.');
-            }
-            if ($this->entityFactory === null) {
-                throw new InvalidStateException('Missing entity factory in ' . get_called_class() . '.');
-            }
-            $implicitFilters = $this->createImplicitFilters($property->getType(), new Caller($this, $property));
-            $firstFilters = $property->getFilters(0) ?: array();
+            if ($this->entityFactory) {
+                $implicitFilters = $this->createImplicitFilters($property->getType(), new Caller($this, $property));
+                $firstFilters = $property->getFilters(0) ?: array();
 
-            $relationship = $property->getRelationship();
-            if ($relationship instanceof Relationship\HasMany) {
-                $secondFilters = $this->mergeFilters($property->getFilters(1) ?: array(), $implicitFilters->getFilters());
-            } else {
-                $firstFilters = $this->mergeFilters($firstFilters, $implicitFilters->getFilters());
-            }
-            if (!empty($firstFilters) or !empty($secondFilters)) {
+                $relationship = $property->getRelationship();
                 if ($relationship instanceof Relationship\HasMany) {
-                    $relationshipTableFiltering = !empty($firstFilters) ? new Filtering(
-                        $firstFilters,
-                        $filterArgs,
-                        $this,
-                        $property,
-                        (array)$property->getFiltersTargetedArgs(0)
-                    ) : null;
-                    $targetTableFiltering = new Filtering(
-                        $secondFilters,
-                        $filterArgs,
-                        $this,
-                        $property,
-                        array_merge($implicitFilters->getTargetedArgs(), (array)$property->getFiltersTargetedArgs(1))
-                    );
+                    $secondFilters = $this->mergeFilters($property->getFilters(1) ?: array(), $implicitFilters->getFilters());
                 } else {
-                    $targetTableFiltering = !empty($firstFilters) ? new Filtering(
-                        $firstFilters,
-                        $filterArgs,
-                        $this,
-                        $property,
-                        array_merge($implicitFilters->getTargetedArgs(), (array)$property->getFiltersTargetedArgs(0))
-                    ) : null;
+                    $firstFilters = $this->mergeFilters($firstFilters, $implicitFilters->getFilters());
+                }
+                if (!empty($firstFilters) or !empty($secondFilters)) {
+                    if ($relationship instanceof Relationship\HasMany) {
+                        $relationshipTableFiltering = !empty($firstFilters) ? new Filtering(
+                            $firstFilters,
+                            $filterArgs,
+                            $this,
+                            $property,
+                            (array)$property->getFiltersTargetedArgs(0)
+                        ) : null;
+                        $targetTableFiltering = new Filtering(
+                            $secondFilters,
+                            $filterArgs,
+                            $this,
+                            $property,
+                            array_merge($implicitFilters->getTargetedArgs(), (array)$property->getFiltersTargetedArgs(1))
+                        );
+                    } else {
+                        $targetTableFiltering = !empty($firstFilters) ? new Filtering(
+                            $firstFilters,
+                            $filterArgs,
+                            $this,
+                            $property,
+                            array_merge($implicitFilters->getTargetedArgs(), (array)$property->getFiltersTargetedArgs(0))
+                        ) : null;
+                    }
                 }
             }
-            return $this->getValueByPropertyWithRelationship(
-                $property,
-                isset($targetTableFiltering) ? $targetTableFiltering : null,
-                isset($relationshipTableFiltering) ? $relationshipTableFiltering : null
-            );
+            try {
+                return $this->getValueByPropertyWithRelationship(
+                    $property,
+                    isset($targetTableFiltering) ? $targetTableFiltering : null,
+                    isset($relationshipTableFiltering) ? $relationshipTableFiltering : null
+                );
+            } catch (LeanMapperException $e) {
+                throw new InvalidStateException($e->getMessage(), $e->getCode(), $e);
+            }
         } // property doesn't contain basic type and doesn't contain relationship
         $column = $property->getColumn();
         try {

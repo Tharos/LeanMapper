@@ -11,7 +11,7 @@ require_once __DIR__ . '/../bootstrap.php';
 class Mapper extends DefaultMapper
 {
 
-	protected $defaultEntityNamespace = null;
+    protected $defaultEntityNamespace = null;
 
 }
 
@@ -34,15 +34,19 @@ class Book extends Entity
 
 class BookRepository extends \LeanMapper\Repository
 {
-
-	public function find($id)
-	{
-		$row = $this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch();
-		if ($row === false) {
-			throw new \Exception('Entity was not found.');
-		}
-		return $this->createEntity($row);
-	}
+    /**
+     * @param $id
+     * @return Book
+     * @throws Exception
+     */
+    public function find($id)
+    {
+        $row = $this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch();
+        if ($row === false) {
+            throw new \Exception('Entity was not found.');
+        }
+        return $this->createEntity($row);
+    }
 }
 
 ////////////////////
@@ -52,7 +56,7 @@ $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 Assert::exception(function () {
 	$book = new Book();
 	$book->revieverId;
-}, 'LeanMapper\Exception\InvalidStateException', 'Cannot load relationship data from detached entity Book.');
+}, 'LeanMapper\Exception\InvalidStateException', 'Cannot get value of property \'revieverId\' in entity Book due to low-level failure: Cannot get referenced Result for detached Result.');
 
 $book = $bookRepository->find(1);
 Assert::true($book->revieverId === null);

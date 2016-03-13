@@ -55,7 +55,7 @@ Assert::exception(
         $book->author->name;
     },
     'LeanMapper\Exception\InvalidStateException',
-    'Cannot load relationship data from detached entity Book.'
+    'Cannot get value of property \'author\' in entity Book due to low-level failure: Cannot get referenced Result for detached Result.'
 );
 
 $bookRepository->persist($book);
