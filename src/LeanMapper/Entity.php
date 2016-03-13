@@ -547,6 +547,10 @@ abstract class Entity
                 }
                 return $value;
             }
+            if ($pass !== null) {
+                return $value;
+            }
+
             settype($value, $property->getType());
             if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
                 throw new InvalidValueException(
@@ -667,17 +671,18 @@ abstract class Entity
         $column = $property->getColumn();
 
         if ($property->isBasicType()) {
-            if ($value === null) {
-                $this->row->$column = ($pass !== null ? $this->$pass($value) : $value);
-                return;
+            if ($pass !== null) {
+                $value = $this->$pass($value);
             }
-            settype($value, $property->getType());
+            if ($value !== null) {
+                settype($value, $property->getType());
+            }
             if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
                 throw new InvalidValueException(
                     "Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.'
                 );
             }
-            $this->row->$column = ($pass !== null ? $this->$pass($value) : $value);
+            $this->row->$column = $value;
             return;
         }
         // property doesn't contain basic type
