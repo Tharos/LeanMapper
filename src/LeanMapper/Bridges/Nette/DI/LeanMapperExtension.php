@@ -12,6 +12,7 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
         'db' => [],
         'profiler' => true,
         'scanDirs' => null,
+        'logFile' => null,
     ];
 
 
