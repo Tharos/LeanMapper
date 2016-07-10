@@ -8,7 +8,7 @@ require_once __DIR__ . '/../bootstrap.php';
 $configurator = new Configurator;
 $configurator->setTempDirectory(TEMP_DIR);
 $configurator->addParameters(['container' => ['class' => 'SystemContainer_' . Random::generate()]]);
-$configurator->addConfig(__DIR__ . '/DI.extension.1.neon', $configurator::NONE);
+$configurator->addConfig(__DIR__ . '/DI.extension.1.neon');
 
 /** @var \Nette\DI\Container $container */
 $container = $configurator->createContainer();
@@ -31,7 +31,7 @@ class MyMapper extends \LeanMapper\DefaultMapper
 $configurator = new Configurator;
 $configurator->setTempDirectory(TEMP_DIR);
 $configurator->addParameters(['container' => ['class' => 'SystemContainer_' . Random::generate()]]);
-$configurator->addConfig(__DIR__ . '/DI.extension.2.neon', $configurator::NONE);
+$configurator->addConfig(__DIR__ . '/DI.extension.2.neon');
 
 /** @var \Nette\DI\Container $container */
 $container = $configurator->createContainer();
