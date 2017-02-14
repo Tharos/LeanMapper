@@ -21,9 +21,20 @@ class BaseEntity extends Entity
 
 }
 
+class WhenEnum {
+
+    const NEVER = 'never';
+
+    const ONCE = 'once';
+
+    const EACH_TIME = 'eachTime';
+
+}
+
 /**
  * @property int $id
  * @property string $state m:enum(self::STATE_*)
+ * @property string $when m:enum(WhenEnum::*)
  */
 class Project extends BaseEntity
 {
@@ -65,4 +76,27 @@ Assert::throws(
     },
     'LeanMapper\Exception\InvalidValueException',
     "Given value is not from possible values enumeration in property 'state' in entity Project."
+);
+
+//////////
+
+Assert::equal(
+    [
+        'NEVER' => 'never',
+        'ONCE' => 'once',
+        'EACH_TIME' => 'eachTime',
+    ],
+    $project->getEnumValues('when')
+);
+
+$project->when = WhenEnum::ONCE;
+
+Assert::equal(WhenEnum::ONCE, $project->when);
+
+Assert::throws(
+    function () use ($project) {
+        $project->when = 'onceUponATime';
+    },
+    'LeanMapper\Exception\InvalidValueException',
+    "Given value is not from possible values enumeration in property 'when' in entity Project."
 );
