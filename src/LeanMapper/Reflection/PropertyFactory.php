@@ -50,19 +50,19 @@ class PropertyFactory
         $matches = [];
         $matched = preg_match(
             '~
-			^(null\|)?
-			((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+)
-			(\[\])?
-			(\|null)?\s+
-			(\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
-			(?:\s+=\s*(?:
-				"((?:\\\\"|[^"])+)" |  # double quoted string
-				\'((?:\\\\\'|[^\'])+)\' |  # single quoted string
-				([^ ]*))  # unquoted value
-			)?
-			(?:\s*\(([^)]+)\))?
-			(?:\s+(.*)\s*)?
-		~xi',
+            ^(null\|)?
+            ((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+)
+            (\[\])?
+            (\|null)?\s+
+            (\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
+            (?:\s+=\s*(?:
+                "((?:\\\\"|[^"])+)" |  # double quoted string
+                \'((?:\\\\\'|[^\'])+)\' |  # single quoted string
+                ([^ ]*))  # unquoted value
+            )?
+            (?:\s*\(([^)]+)\))?
+            (?:\s+(.*)\s*)?
+        ~xi',
             $annotation,
             $matches
         );
@@ -212,12 +212,12 @@ class PropertyFactory
                         }
                         $matched = preg_match(
                             '~
-							^\s*(?:
-								"((?:\\\\"|[^"])+)" |      # double quoted string
-								\'((?:\\\\\'|[^\'])+)\' |  # single quoted string
-								([^ ]*)                    # unquoted value
-							)
-						~xi',
+                            ^\s*(?:
+                                "((?:\\\\"|[^"])+)" |      # double quoted string
+                                \'((?:\\\\\'|[^\'])+)\' |  # single quoted string
+                                ([^ ]*)                    # unquoted value
+                            )
+                        ~xi',
                             $flagArgument,
                             $matches
                         );

@@ -7,6 +7,7 @@ php:
 
 script:
     - vendor/bin/tester tests -j 1 -s -p php -c tests/php-unix.ini
+    - php temp/code-checker/src/code-checker.php
 
 after_failure:
     # Print *.actual content
@@ -14,6 +15,7 @@ after_failure:
 
 before_script:
     - travis_retry composer install --no-interaction
+    - travis_retry composer create-project nette/code-checker temp/code-checker ~2.5.0
 
 sudo: false
 

@@ -29,8 +29,8 @@ class DefaultMapper implements IMapper
 
 
 
-    /*
-     * @inheritdoc
+    /**
+     * {@inheritdoc}
      */
     public function getPrimaryKey($table)
     {
@@ -39,8 +39,8 @@ class DefaultMapper implements IMapper
 
 
 
-    /*
-     * @inheritdoc
+    /**
+     * {@inheritdoc}
      */
     public function getTable($entityClass)
     {
@@ -49,8 +49,8 @@ class DefaultMapper implements IMapper
 
 
 
-    /*
-     * @inheritdoc
+    /**
+     * {@inheritdoc}
      */
     public function getEntityClass($table, Row $row = null)
     {
@@ -59,8 +59,8 @@ class DefaultMapper implements IMapper
 
 
 
-    /*
-     * @inheritdoc
+    /**
+     * {@inheritdoc}
      */
     public function getColumn($entityClass, $field)
     {
@@ -69,8 +69,8 @@ class DefaultMapper implements IMapper
 
 
 
-    /*
-     * @inheritdoc
+    /**
+     * {@inheritdoc}
      */
     public function getEntityField($table, $column)
     {
@@ -79,8 +79,8 @@ class DefaultMapper implements IMapper
 
 
 
-    /*
-     * @inheritdoc
+    /**
+     * {@inheritdoc}
      */
     public function getRelationshipTable($sourceTable, $targetTable)
     {
@@ -89,8 +89,8 @@ class DefaultMapper implements IMapper
 
 
 
-    /*
-     * @inheritdoc
+    /**
+     * {@inheritdoc}
      */
     public function getRelationshipColumn($sourceTable, $targetTable)
     {
@@ -99,8 +99,8 @@ class DefaultMapper implements IMapper
 
 
 
-    /*
-     * @inheritdoc
+    /**
+     * {@inheritdoc}
      */
     public function getTableByRepositoryClass($repositoryClass)
     {
@@ -113,8 +113,8 @@ class DefaultMapper implements IMapper
 
 
 
-    /*
-     * @inheritdoc
+    /**
+     * {@inheritdoc}
      */
     public function getImplicitFilters($entityClass, Caller $caller = null)
     {
