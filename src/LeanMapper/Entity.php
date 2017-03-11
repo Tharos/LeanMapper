@@ -104,6 +104,7 @@ abstract class Entity
                 }
                 $this->assign($arg);
             }
+            $this->initAfterDefaults();
         }
     }
 
@@ -848,6 +849,12 @@ abstract class Entity
      * Allows initialize properties' default values
      */
     protected function initDefaults()
+    {
+    }
+
+
+
+    protected function initAfterDefaults()
     {
     }
 
