@@ -121,7 +121,7 @@ class PropertyFactory
 
         if (isset($matches[10])) {
             $flagMatches = [];
-            preg_match_all('~m:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*(?:\(([^)]*)\))?~', $matches[10], $flagMatches, PREG_SET_ORDER);
+            preg_match_all('~m:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff-]*)\s*(?:\(([^)]*)\))?~', $matches[10], $flagMatches, PREG_SET_ORDER);
             foreach ($flagMatches as $match) {
                 $flag = $match[1];
                 $flagArgument = (isset($match[2]) and $match[2] !== '') ? $match[2] : null;
