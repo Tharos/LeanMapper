@@ -14,7 +14,7 @@ require_once __DIR__ . '/../bootstrap.php';
  * @property string $pubDate (pubdate) = 'foo1'     # default WILL NOT work
  * @property string $myName(name) = 'foo2'          # default WILL NOT work
  * @property string $description = 'foo3' (description)
- * @property string|null $web m:default("foo4") m:column(website)
+ * @property string|null $web m:default("foo4") m:column(website) m:custom-flag(value)
  */
 class Book extends Entity
 {
@@ -53,3 +53,5 @@ Assert::false($entityReflection->getEntityProperty('pubDate')->hasDefaultValue()
 Assert::false($entityReflection->getEntityProperty('myName')->hasDefaultValue());
 Assert::equal('foo3', $entityReflection->getEntityProperty('description')->getDefaultValue());
 Assert::equal('foo4', $entityReflection->getEntityProperty('web')->getDefaultValue());
+Assert::true($entityReflection->getEntityProperty('web')->hasCustomFlag('custom-flag'));
+Assert::equal('value', $entityReflection->getEntityProperty('web')->getCustomFlagValue('custom-flag'));
