@@ -7,7 +7,7 @@ php:
     - 7.1
 
 script:
-    - vendor/bin/tester tests -j 1 -s -p php -c tests/php-unix.ini
+    - vendor/bin/tester tests -s -p php -c tests/php-unix.ini
     - php temp/code-checker/src/code-checker.php
 
 after_failure:
