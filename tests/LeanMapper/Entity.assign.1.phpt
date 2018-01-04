@@ -73,7 +73,5 @@ Assert::equal(
 $book = new Book;
 $book->author = $author;
 
-$result = $book->getModifiedRowData();
-list($key, $value) = each($result);
-
+Assert::equal(['author_customid' => 1], $book->getModifiedRowData());
 Assert::equal(['author_customid' => 1], $book->getRowData());
