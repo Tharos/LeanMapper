@@ -673,8 +673,7 @@ abstract class Entity
         if ($property->isBasicType()) {
             if ($pass !== null) {
                 $value = $this->$pass($value);
-            }
-            if ($value !== null) {
+            } elseif ($value !== null) {
                 settype($value, $property->getType());
             }
             if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
