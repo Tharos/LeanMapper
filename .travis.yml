@@ -9,7 +9,7 @@ php:
 
 script:
     - vendor/bin/tester tests -s -p php -c tests/php-unix.ini
-    - if [ "$TRAVIS_PHP_VERSION" != "7.2" ]; then php temp/code-checker/src/code-checker.php; fi
+    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then php temp/code-checker/src/code-checker.php; fi
 
 after_failure:
     # Print *.actual content
@@ -17,7 +17,10 @@ after_failure:
 
 before_script:
     - travis_retry composer install --no-interaction
-    - if [ "$TRAVIS_PHP_VERSION" != "7.2" ]; then travis_retry composer create-project nette/code-checker temp/code-checker ~2.5.0; fi
+    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then travis_retry composer create-project nette/code-checker temp/code-checker ~2; fi
+    # Modify code-checker tasks
+    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then sed -i -e 's/tabIndentationPhpChecker/yamlIndentationChecker/g' temp/code-checker/src/bootstrap.php; fi
+    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then sed -i -e 's/\*\.css,\*\.less,\*\.js,\*\.json,\*\.neon/\*\.css,\*\.less,\*\.js,\*\.json/g' temp/code-checker/src/bootstrap.php; fi
 
 sudo: false
 
