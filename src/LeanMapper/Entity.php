@@ -677,7 +677,7 @@ abstract class Entity
             if ($value !== null) {
                 settype($value, $property->getType());
             }
-            if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
+            if ($value !== null and $property->containsEnumeration() and !$property->isValueFromEnum($value)) {
                 throw new InvalidValueException(
                     "Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.'
                 );
