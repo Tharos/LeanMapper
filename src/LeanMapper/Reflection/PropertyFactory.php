@@ -231,6 +231,11 @@ class PropertyFactory
                         } elseif (isset($matches[3]) and $matches[3] !== '') {
                             $customDefault = $matches[3];
                         }
+
+                        if ($customDefault !== null) {
+                            $hasDefaultValue = true;
+                        }
+
                         break;
                     default:
                         if (array_key_exists($flag, $customFlags)) {

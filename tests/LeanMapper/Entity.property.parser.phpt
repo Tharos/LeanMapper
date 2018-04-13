@@ -52,6 +52,7 @@ $entityReflection = $book->getReflection($mapper);
 Assert::false($entityReflection->getEntityProperty('pubDate')->hasDefaultValue());
 Assert::false($entityReflection->getEntityProperty('myName')->hasDefaultValue());
 Assert::equal('foo3', $entityReflection->getEntityProperty('description')->getDefaultValue());
+Assert::true($entityReflection->getEntityProperty('web')->hasDefaultValue());
 Assert::equal('foo4', $entityReflection->getEntityProperty('web')->getDefaultValue());
 Assert::true($entityReflection->getEntityProperty('web')->hasCustomFlag('custom-flag'));
 Assert::equal('value', $entityReflection->getEntityProperty('web')->getCustomFlagValue('custom-flag'));
