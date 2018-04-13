@@ -111,4 +111,10 @@ class PostgreDummyDriver extends \Dibi\Drivers\PostgreDriver
         }
         throw new \RuntimeException("Missing data for query: $sql");
     }
+
+
+    public function escapeText($value)
+    {
+        return "'" . strtr($value, ["'" => "\\'"]) . "'";
+    }
 }
