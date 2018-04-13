@@ -988,6 +988,7 @@ class Result implements \Iterator
         if ($isAlias) {
             $viaColumn = $this->trimAlias($viaColumn);
         }
+        $statements = array();
         foreach ($ids as $id) {
             $statement = $this->createTableSelection($table, [$id]);
             if ($isAlias) {
@@ -998,22 +999,13 @@ class Result implements \Iterator
             if ($filtering !== null) {
                 $this->applyFiltering($statement, $filtering);
             }
-            if (isset($mainStatement)) {
-                $mainStatement->union($statement);
-            } else {
-                $mainStatement = $statement;
-            }
+            $statements[] = ltrim((string) $statement);
         }
-        $sql = (string)$mainStatement;
-
         $driver = $this->connection->getDriver();
-        // now we have to fix wrongly generated SQL by dibi...
         if ($driver instanceof DibiSqlite3Driver) {
-            $sql = preg_replace('#(?<=UNION )\((SELECT.*?)\)(?= UNION|$)#', '$1', $sql); // (...) UNION (...) to ... UNION ...
-        } else {
-            $sql = preg_replace('#^(SELECT.*?)(?= UNION)#', '($1)', $sql); // ... UNION (...) to (...) UNION (...)
+            return 'SELECT * FROM (' . implode(') UNION SELECT * FROM (', $statements) . ')';
         }
-        return $sql;
+        return '(' . implode(') UNION (', $statements) . ')';
     }
 
 
