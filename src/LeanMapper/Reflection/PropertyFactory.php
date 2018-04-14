@@ -93,18 +93,6 @@ class PropertyFactory
         } elseif (isset($matches[8]) and $matches[8] !== '') {
             $defaultValue = $matches[8];
         }
-        if ($defaultValue !== null) {
-            $hasDefaultValue = true;
-            try {
-                $defaultValue = self::fixDefaultValue($defaultValue, $propertyType, $isNullable);
-            } catch (InvalidAnnotationException $e) {
-                throw new InvalidAnnotationException(
-                    "Invalid property definition given: @$annotationType $annotation in entity {$entityReflection->getName()}, " . lcfirst(
-                        $e->getMessage()
-                    )
-                );
-            }
-        }
         $column = $mapper !== null ? $mapper->getColumn($entityReflection->getName(), $name) : $name;
         if (isset($matches[9]) and $matches[9] !== '') {
             $column = $matches[9];
@@ -117,14 +105,12 @@ class PropertyFactory
         $propertyValuesEnum = null;
         $customFlags = [];
         $customColumn = null;
-        $customDefault = null;
 
         if (isset($matches[10])) {
-            $flagMatches = [];
-            preg_match_all('~m:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff-]*)\s*(?:\(([^)]*)\))?~', $matches[10], $flagMatches, PREG_SET_ORDER);
+            preg_match_all('~m:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff-]*)\s*(\(((?>[^)(]+|(?2))*)\))?~', $matches[10], $flagMatches, PREG_SET_ORDER);
             foreach ($flagMatches as $match) {
                 $flag = $match[1];
-                $flagArgument = (isset($match[2]) and $match[2] !== '') ? $match[2] : null;
+                $flagArgument = (isset($match[3]) and $match[3] !== '') ? $match[3] : null;
 
                 switch ($flag) {
                     case 'hasOne':
@@ -200,7 +186,7 @@ class PropertyFactory
                         $customColumn = $flagArgument;
                         break;
                     case 'default':
-                        if ($customDefault !== null) {
+                        if ($defaultValue !== null) {
                             throw new InvalidAnnotationException(
                                 "Multiple default value settings found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
                             );
@@ -225,15 +211,11 @@ class PropertyFactory
                             throw new \Exception;
                         }
                         if (isset($matches[1]) and $matches[1] !== '') {
-                            $customDefault = str_replace('\"', '"', $matches[1]);
+                            $defaultValue = str_replace('\"', '"', $matches[1]);
                         } elseif (isset($matches[2]) and $matches[2] !== '') {
-                            $customDefault = str_replace("\\'", "'", $matches[2]);
+                            $defaultValue = str_replace("\\'", "'", $matches[2]);
                         } elseif (isset($matches[3]) and $matches[3] !== '') {
-                            $customDefault = $matches[3];
-                        }
-
-                        if ($customDefault !== null) {
-                            $hasDefaultValue = true;
+                            $defaultValue = $matches[3];
                         }
 
                         break;
@@ -248,8 +230,21 @@ class PropertyFactory
             }
         }
 
+        if ($defaultValue !== null) {
+            $hasDefaultValue = true;
+
+            try {
+                $defaultValue = self::fixDefaultValue($defaultValue, $propertyType, $isNullable);
+            } catch (InvalidAnnotationException $e) {
+                throw new InvalidAnnotationException(
+                    "Invalid property definition given: @$annotationType $annotation in entity {$entityReflection->getName()}, " . lcfirst(
+                        $e->getMessage()
+                    )
+                );
+            }
+        }
+
         $column = $customColumn ?: $column;
-        $defaultValue = $customDefault ?: $defaultValue;
 
         return new Property(
             $name,
