@@ -673,11 +673,10 @@ abstract class Entity
         if ($property->isBasicType()) {
             if ($pass !== null) {
                 $value = $this->$pass($value);
-            }
-            if ($value !== null) {
+            } elseif ($value !== null) {
                 settype($value, $property->getType());
             }
-            if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
+            if ($value !== null and $property->containsEnumeration() and !$property->isValueFromEnum($value)) {
                 throw new InvalidValueException(
                     "Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.'
                 );

@@ -250,6 +250,7 @@ abstract class Repository
     {
         $primaryKey = $this->mapper->getPrimaryKey($this->getTable());
         $idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
+        $driver = $this->connection->getDriver();
 
         foreach ($entity->getHasManyRowDifferences() as $key => $difference) {
             list($columnReferencingSourceTable, $relationshipTable, $columnReferencingTargetTable) = explode(':', $key);
@@ -263,15 +264,28 @@ abstract class Repository
                         ];
                     }
                 } else {
-                    $this->connection->query(
-                        'DELETE FROM %n WHERE %n = ? AND %n = ? %lmt',
-                        $relationshipTable,
-                        $columnReferencingSourceTable,
-                        $entity->$idField,
-                        $columnReferencingTargetTable,
-                        $value,
-                        -$count
-                    );
+                    if ($driver instanceof \Dibi\Drivers\PostgreDriver) {
+                        $this->connection->query(
+                            'DELETE FROM %n WHERE [ctid] IN (SELECT [ctid] FROM %n WHERE %n = ? AND %n = ? LIMIT %i)',
+                            $relationshipTable,
+                            $relationshipTable,
+                            $columnReferencingSourceTable,
+                            $entity->$idField,
+                            $columnReferencingTargetTable,
+                            $value,
+                            -$count
+                        );
+                    } else {
+                        $this->connection->query(
+                            'DELETE FROM %n WHERE %n = ? AND %n = ? %lmt',
+                            $relationshipTable,
+                            $columnReferencingSourceTable,
+                            $entity->$idField,
+                            $columnReferencingTargetTable,
+                            $value,
+                            -$count
+                        );
+                    }
                 }
             }
             if (!empty($multiInsert)) {

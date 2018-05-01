@@ -39,14 +39,15 @@ class PropertyValuesEnum
     {
         $matches = [];
         preg_match(
-            '#^((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+|self|static|parent)::([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+)\*$#',
+            '#^((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+|self|static|parent)::([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+)?\*$#',
             $definition,
             $matches
         );
         if (empty($matches)) {
             throw new InvalidAnnotationException("Invalid enumeration definition given: '$definition'.");
         }
-        list(, $class, $prefix) = $matches;
+        $class = $matches[1];
+        $prefix = array_key_exists(2, $matches) ? $matches[2] : '';
 
         if ($class === 'self' or $class === 'static') {
             $constants = $reflection->getConstants();

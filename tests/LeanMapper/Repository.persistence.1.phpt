@@ -42,13 +42,12 @@ $author = $authors[3];
 
 $author->detach();
 
-$errorMessage = PHP_VERSION_ID < 50500 ? 'PRIMARY KEY must be unique' : 'UNIQUE constraint failed: author.id';
 Assert::exception(
     function () use ($authorRepository, $author) {
         $authorRepository->persist($author);
     },
     '\Dibi\DriverException',
-    $errorMessage
+    'UNIQUE constraint failed: author.id'
 );
 
 //////////

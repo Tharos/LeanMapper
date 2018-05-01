@@ -179,6 +179,12 @@ class EntityReflection extends \ReflectionClass
                 foreach (AnnotationsParser::parseAnnotationValues($annotationType, $member->getDocComment()) as $definition) {
                     $property = PropertyFactory::createFromAnnotation($annotationType, $definition, $member, $this->mapper);
                     // collision check
+                    if (isset($this->properties[$property->getName()])) {
+                        throw new InvalidStateException(
+                            "Duplicated property '{$property->getName()}' in entity {$this->getName()}. Please fix property name."
+                        );
+                    }
+
                     $column = $property->getColumn();
                     if ($column !== null and $property->isWritable()) {
                         if (isset($columns[$column])) {
@@ -199,7 +205,7 @@ class EntityReflection extends \ReflectionClass
     private function initGettersAndSetters()
     {
         $this->getters = $this->setters = [];
-        foreach ($this->getMethods() as $method) {
+        foreach ($this->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             $name = $method->getName();
             if (strlen($name) > 3) {
                 $prefix = substr($name, 0, 3);

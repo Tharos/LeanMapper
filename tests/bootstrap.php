@@ -5,8 +5,8 @@ use LeanMapper\DefaultEntityFactory;
 use LeanMapper\DefaultMapper;
 
 if (@!include __DIR__ . '/../vendor/autoload.php') {
-	echo 'Install Nette Tester using `composer update --dev`';
-	exit(1);
+    echo 'Install Nette Tester using `composer update --dev`';
+    exit(1);
 }
 
 // configure environment
@@ -19,29 +19,29 @@ $_SERVER['REQUEST_TIME'] = 1234567890;
 $_ENV = $_GET = $_POST = array();
 
 if (extension_loaded('xdebug')) {
-	xdebug_disable();
-	Tester\CodeCoverage\Collector::start(__DIR__ . '/coverage.dat');
+    xdebug_disable();
+    Tester\CodeCoverage\Collector::start(__DIR__ . '/coverage.dat');
 }
 
-if (!copy(__DIR__ . '/db/library-ref.sq3', __DIR__ . '/db/library.sq3')) {
-	echo 'Failed to copy SQLite database';
-	exit(1);
-}
+define('TEMP_DIR', __DIR__ . '/tmp/' . getmypid());
+@mkdir(__DIR__ . '/tmp/', 0777);
+Tester\Helpers::purge(TEMP_DIR);
 
-define('TEMP_DIR', __DIR__ . '/tmp');
-@mkdir(TEMP_DIR, 0777);
-\Tester\Environment::lock('database', TEMP_DIR);
+if (!copy(__DIR__ . '/db/library-ref.sq3', TEMP_DIR . '/library.sq3')) {
+    echo 'Failed to copy SQLite database';
+    exit(1);
+}
 
 class TestMapper extends DefaultMapper
 {
 
-	protected $defaultEntityNamespace = null;
+    protected $defaultEntityNamespace = null;
 
 }
 
 $connection = new Connection(array(
-	'driver' => 'sqlite3',
-	'database' => __DIR__ . '/db/library.sq3',
+    'driver' => 'sqlite3',
+    'database' => TEMP_DIR . '/library.sq3',
 ));
 
 $mapper = new TestMapper;
