@@ -108,6 +108,14 @@ class PropertyFactory
 
         if (isset($matches[10])) {
             preg_match_all('~m:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff-]*)\s*(\(((?>[^)(]+|(?2))*)\))?~', $matches[10], $flagMatches, PREG_SET_ORDER);
+
+            foreach ($flagMatches as $match) {
+                if ($match[1] === 'belongsToOne' || $match[1] === 'belongsToMany') {
+                    $isWritable = FALSE;
+                    break;
+                }
+            }
+
             foreach ($flagMatches as $match) {
                 $flag = $match[1];
                 $flagArgument = (isset($match[3]) and $match[3] !== '') ? $match[3] : null;
