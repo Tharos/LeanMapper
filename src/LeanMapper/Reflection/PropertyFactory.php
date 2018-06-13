@@ -61,7 +61,7 @@ class PropertyFactory
                 ([^ ]*))  # unquoted value
             )?
             (?:\s*\(([^)]+)\))?
-            (?:\s+(.*)\s*)?
+            (?:\s+([\s\S]*)\s*)?
         ~xi',
             $annotation,
             $matches

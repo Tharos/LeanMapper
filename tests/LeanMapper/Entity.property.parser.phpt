@@ -56,3 +56,51 @@ Assert::true($entityReflection->getEntityProperty('web')->hasDefaultValue());
 Assert::equal('foo4', $entityReflection->getEntityProperty('web')->getDefaultValue());
 Assert::true($entityReflection->getEntityProperty('web')->hasCustomFlag('custom-flag'));
 Assert::equal('value', $entityReflection->getEntityProperty('web')->getCustomFlagValue('custom-flag'));
+
+//////////
+
+/**
+ * @property int $id
+ * @property string $name
+ * @property Book[] $books
+ *     m:belongsToMany
+ *     m:custom(custom value)
+ *
+ * @property string|null $website
+ */
+class Author extends Entity
+{
+}
+
+class AuthorRepository extends \LeanMapper\Repository
+{
+    public function find($id)
+    {
+        $row = $this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch();
+        if ($row === false) {
+            throw new \Exception('Entity was not found.');
+        }
+        return $this->createEntity($row);
+    }
+
+}
+
+$authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
+
+//////////
+
+/** @var Author $author */
+$author = $authorRepository->find(2);
+$books = $author->books;
+
+Assert::equal(2, $author->id);
+Assert::equal('Donald Knuth', $author->name);
+Assert::equal(null, $author->website);
+Assert::equal(1, count($books));
+
+$book = reset($books);
+Assert::equal(2, $book->id);
+
+$entityReflection = $author->getReflection($mapper);
+Assert::true($entityReflection->getEntityProperty('books')->hasCustomFlag('custom'));
+Assert::equal('custom value', $entityReflection->getEntityProperty('books')->getCustomFlagValue('custom'));
