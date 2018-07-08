@@ -1,7 +1,6 @@
 <?php
 
 use LeanMapper\Connection;
-use LeanMapper\DefaultEntityFactory;
 use LeanMapper\DefaultMapper;
 use LeanMapper\Entity;
 use LeanMapper\Repository;
@@ -143,7 +142,6 @@ $connection->onEvent[] = function ($event) use (&$queries) {
 };
 
 $mapper = new Mapper;
-$entityFactory = new DefaultEntityFactory;
 
 $authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);;
 $authorContractRepository = new AuthorContractRepository($connection, $mapper, $entityFactory);;
