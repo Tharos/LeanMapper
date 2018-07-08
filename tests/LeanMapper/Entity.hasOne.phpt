@@ -1,19 +1,11 @@
 <?php
 
-use LeanMapper\DefaultMapper;
 use LeanMapper\Entity;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
 ////////////////////
-
-class Mapper extends DefaultMapper
-{
-
-    protected $defaultEntityNamespace = null;
-
-}
 
 /**
  * @property int $id
