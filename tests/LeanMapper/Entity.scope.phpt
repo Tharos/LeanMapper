@@ -40,10 +40,6 @@ class Author extends Entity
 class AuthorRepository extends Repository
 {
 
-    protected $defaultEntityNamespace = null;
-
-
-
     public function find($id)
     {
         $row = $this->createFluent()->where('id = %i', $id)->fetch();

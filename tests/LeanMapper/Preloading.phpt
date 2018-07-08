@@ -1,6 +1,5 @@
 <?php
 
-use LeanMapper\DefaultMapper;
 use LeanMapper\Entity;
 use LeanMapper\Result;
 use Tester\Assert;
@@ -14,13 +13,6 @@ $connection->onEvent[] = function ($event) use (&$queries, &$i) {
 };
 
 //////////
-
-class Mapper extends DefaultMapper
-{
-
-    protected $defaultEntityNamespace = null;
-
-}
 
 /**
  * @property int $id
