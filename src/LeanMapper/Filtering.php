@@ -45,7 +45,7 @@ class Filtering
      * @param array|null $args
      * @param Entity|null $entity
      * @param Property|null $property
-     * @param array|null $targetedArgs
+     * @param array $targetedArgs
      * @throws InvalidArgumentException
      */
     public function __construct($filters, array $args = null, Entity $entity = null, Property $property = null, array $targetedArgs = [])

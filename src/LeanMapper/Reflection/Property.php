@@ -85,7 +85,7 @@ class Property
      * @param PropertyFilters|null $propertyFilters
      * @param PropertyPasses|null $propertyPasses
      * @param PropertyValuesEnum|null $propertyValuesEnum
-     * @param array|null $customFlags
+     * @param array $customFlags
      * @throws InvalidArgumentException
      */
     public function __construct(

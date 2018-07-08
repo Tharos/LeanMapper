@@ -23,7 +23,7 @@ use ReflectionMethod;
 class EntityReflection extends \ReflectionClass
 {
 
-    /** @var IMapper */
+    /** @var IMapper|null */
     private $mapper;
 
     /** @var Property[] */
@@ -35,7 +35,7 @@ class EntityReflection extends \ReflectionClass
     /** @var array */
     private $setters;
 
-    /** @var array */
+    /** @var Aliases|null */
     private $aliases;
 
     /** @var string */

@@ -365,7 +365,7 @@ class PropertyFactory
 
 
     /**
-     * @param  string
+     * @param  string $definition
      * @return array  (definition, flags)
      */
     private static function parseRelationshipFlags($definition)
