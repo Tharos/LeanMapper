@@ -42,10 +42,6 @@ class Book extends Entity
 class AuthorRepository extends \LeanMapper\Repository
 {
 
-    protected $defaultEntityNamespace = null;
-
-
-
     public function find($id)
     {
         $row = $this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch();

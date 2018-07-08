@@ -18,10 +18,6 @@ class Author extends LeanMapper\Entity
 class AuthorRepository extends LeanMapper\Repository
 {
 
-    protected $defaultEntityNamespace = null;
-
-
-
     public function find($id)
     {
         $entry = $this->connection->select('*')->from($this->getTable())->where('id = %i', $id)
