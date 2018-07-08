@@ -33,7 +33,7 @@ class Fluent extends \Dibi\Fluent
         'DELETE' => ['DELETE', 'FROM', 'USING', 'WHERE', 'ORDER BY', 'LIMIT'],
     ];
 
-    /** @var array */
+    /** @var array|null */
     private $relatedKeys;
 
 
@@ -73,7 +73,7 @@ class Fluent extends \Dibi\Fluent
      *
      * @param string|null $clause
      * @param array|null $args
-     * @return string
+     * @return array
      */
     public function _export($clause = null, $args = null)
     {

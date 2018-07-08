@@ -73,7 +73,7 @@ class AnnotationsParser
     public static function parseMultiLineAnnotationValues($annotation, $docComment)
     {
         $matches = [];
-        preg_match_all("#@$annotation\h+([^\n\r@]+(?:\s*\*\h{2,}+[^\n\r@]+)*)#", $docComment, $matches);
+        preg_match_all("#@$annotation\\h+([^\n\r@]+(?:\\s*\*\\h{2,}+[^\n\r@]+)*)#", $docComment, $matches);
         return $matches[1];
     }
 

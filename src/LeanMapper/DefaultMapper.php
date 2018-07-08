@@ -126,7 +126,7 @@ class DefaultMapper implements IMapper
     /**
      * Trims namespace part from fully qualified class name
      *
-     * @param $class
+     * @param string $class
      * @return string
      */
     protected function trimNamespace($class)
