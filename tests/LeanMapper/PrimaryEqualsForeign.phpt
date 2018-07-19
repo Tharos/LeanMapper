@@ -71,7 +71,7 @@ class Mapper extends DefaultMapper
 
 
 
-    public function getRelationshipColumn($sourceTable, $targetTable)
+    public function getRelationshipColumn($sourceTable, $targetTable/*, $relationshipName = null*/)
     {
         if ($sourceTable === 'authorcontract' and $targetTable === 'authordetail') {
             return 'author_id';
@@ -79,7 +79,8 @@ class Mapper extends DefaultMapper
         if ($sourceTable === 'authordetail' and $targetTable === 'author') {
             return 'author_id';
         }
-        return parent::getRelationshipColumn($sourceTable, $targetTable);
+        $relationshipName = (func_num_args() === 3) ? func_get_arg(2) : null;
+        return parent::getRelationshipColumn($sourceTable, $targetTable, $relationshipName);
     }
 
 

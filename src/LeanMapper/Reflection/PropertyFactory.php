@@ -132,6 +132,7 @@ class PropertyFactory
                         }
                         $relationship = self::createRelationship(
                             $entityReflection->getName(),
+                            $name,
                             $propertyType,
                             $flag,
                             $flagArgument,
@@ -278,6 +279,7 @@ class PropertyFactory
 
     /**
      * @param string $sourceClass
+     * @param string $propertyName
      * @param PropertyType $propertyType
      * @param string $relationshipType
      * @param string|null $definition
@@ -287,6 +289,7 @@ class PropertyFactory
      */
     private static function createRelationship(
         $sourceClass,
+        $propertyName,
         PropertyType $propertyType,
         $relationshipType,
         $definition = null,
@@ -318,7 +321,8 @@ class PropertyFactory
             case 'hasOne':
                 $relationshipColumn = ($mapper !== null ? $mapper->getRelationshipColumn(
                     $sourceTable,
-                    $targetTable
+                    $targetTable,
+                    $propertyName
                 ) : self::getSurrogateRelationshipColumn($propertyType));
                 return new Relationship\HasOne($pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable);
             case 'hasMany':

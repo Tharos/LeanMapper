@@ -27,4 +27,6 @@ Assert::equal('book_tag', $mapper->getRelationshipTable('book', 'tag'));
 
 Assert::equal('author_id', $mapper->getRelationshipColumn('book', 'author'));
 
+Assert::equal('reviewer_id', $mapper->getRelationshipColumn('book', 'author', 'reviewer'));
+
 Assert::equal('author', $mapper->getTableByRepositoryClass('Model\Repository\AuthorRepository'));
