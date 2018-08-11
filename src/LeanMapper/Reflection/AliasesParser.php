@@ -46,7 +46,7 @@ class AliasesParser
      *
      * @param string $source
      * @param string $namespace
-     * @return array
+     * @return Aliases
      */
     public static function parseSource($source, $namespace = '')
     {

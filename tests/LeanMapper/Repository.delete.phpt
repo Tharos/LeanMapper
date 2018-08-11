@@ -10,10 +10,6 @@ require_once __DIR__ . '/../bootstrap.php';
 class BookRepository extends LeanMapper\Repository
 {
 
-    protected $defaultEntityNamespace = null;
-
-
-
     public function find($id)
     {
         $row = $this->createFluent()->where('%n = %i', $this->mapper->getPrimaryKey($this->getTable()), $id)->fetch();

@@ -1044,8 +1044,8 @@ class Result implements \Iterator
 
     /**
      * @param Fluent $statement
-     * @param Filtering|null $filtering
-     * @return FilteringResult|null
+     * @param Filtering $filtering
+     * @return FilteringResultDecorator|null
      * @throws InvalidArgumentException
      */
     private function applyFiltering(Fluent $statement, Filtering $filtering)

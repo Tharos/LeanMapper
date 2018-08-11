@@ -5,33 +5,27 @@ use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
-//////////
+////////////////////
 
 /**
  * @property int $id
  * @property string $name
- * @property string|null $web
  */
 class Author extends Entity
 {
+}
 
-    public function getAuthorLabel()
-    {
-        return $this->name . ' (' . $this->getWebInfo() . ')';
-    }
-
-
-
-    protected function getWebInfo()
-    {
-        return isset($this->web) ? $this->web : 'none';
-    }
-
+/**
+ * @property int $id
+ * @property string $name
+ * @property Author $author m:hasOne
+ */
+class Book extends Entity
+{
 }
 
 class AuthorRepository extends \LeanMapper\Repository
 {
-
     public function find($id)
     {
         $row = $this->connection->select('*')->from($this->getTable())->where('id = %i', $id)->fetch();
@@ -40,23 +34,25 @@ class AuthorRepository extends \LeanMapper\Repository
         }
         return $this->createEntity($row);
     }
-
 }
 
 $authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
 
-//////////
+////////////////////
 
-$author = $authorRepository->find(3);
+$author = $authorRepository->find(1);
 
-$data = $author->getData();
+$book = new Book;
+$book->author = $author;
 
-Assert::equal(
-    [
-        'id' => 3,
-        'name' => 'Martin Fowler',
-        'web' => 'http://martinfowler.com',
-        'authorLabel' => 'Martin Fowler (http://martinfowler.com)',
-    ],
-    $data
-);
+Assert::same('Andrew Hunt', $book->author->name);
+
+////////////////////
+
+$author = new Author;
+$author->name = 'Fowler';
+$authorRepository->persist($author);
+
+$book = new Book;
+$book->author = $author;
+Assert::same('Fowler', $book->author->name);

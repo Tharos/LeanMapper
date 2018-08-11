@@ -39,16 +39,16 @@ abstract class Entity
     /** @var Row */
     protected $row;
 
-    /** @var IMapper */
+    /** @var IMapper|null */
     protected $mapper;
 
-    /** @var IEntityFactory */
+    /** @var IEntityFactory|null */
     protected $entityFactory;
 
     /** @var EntityReflection[] */
     protected static $reflections = [];
 
-    /** @var EntityReflection */
+    /** @var EntityReflection|null */
     private $currentReflection;
 
 
@@ -506,7 +506,7 @@ abstract class Entity
 
 
     /**
-     * @param $property
+     * @param Property|string $property
      * @param array $filterArgs
      * @throws InvalidValueException
      * @throws InvalidStateException
@@ -858,7 +858,7 @@ abstract class Entity
      * @param Relationship\HasOne $relationship micro-optimalization
      * @param Filtering|null $filtering
      * @throws InvalidValueException
-     * @return Entity
+     * @return Entity|null
      */
     private function getHasOneValue(Property $property, Relationship\HasOne $relationship, Filtering $filtering = null)
     {
@@ -924,7 +924,7 @@ abstract class Entity
      * @param Property $property
      * @param Relationship\BelongsToOne $relationship micro-optimalization
      * @param Filtering|null $filtering
-     * @return Entity
+     * @return Entity|null
      * @throws InvalidValueException
      */
     private function getBelongsToOneValue(Property $property, Relationship\BelongsToOne $relationship, Filtering $filtering = null)

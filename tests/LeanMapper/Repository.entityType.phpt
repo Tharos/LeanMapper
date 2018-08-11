@@ -9,9 +9,6 @@ require_once __DIR__ . '/../bootstrap.php';
 
 class Repository extends LeanMapper\Repository
 {
-
-    protected $defaultEntityNamespace = null;
-
 }
 
 class BookRepository extends Repository

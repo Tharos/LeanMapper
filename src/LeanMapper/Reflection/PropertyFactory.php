@@ -61,7 +61,7 @@ class PropertyFactory
                 ([^ ]*))  # unquoted value
             )?
             (?:\s*\(([^)]+)\))?
-            (?:\s+(.*)\s*)?
+            (?:\s+([\s\S]*)\s*)?
         ~xi',
             $annotation,
             $matches
@@ -108,6 +108,14 @@ class PropertyFactory
 
         if (isset($matches[10])) {
             preg_match_all('~m:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff-]*)\s*(\(((?>[^)(]+|(?2))*)\))?~', $matches[10], $flagMatches, PREG_SET_ORDER);
+
+            foreach ($flagMatches as $match) {
+                if ($match[1] === 'belongsToOne' || $match[1] === 'belongsToMany') {
+                    $isWritable = FALSE;
+                    break;
+                }
+            }
+
             foreach ($flagMatches as $match) {
                 $flag = $match[1];
                 $flagArgument = (isset($match[3]) and $match[3] !== '') ? $match[3] : null;
@@ -124,6 +132,7 @@ class PropertyFactory
                         }
                         $relationship = self::createRelationship(
                             $entityReflection->getName(),
+                            $name,
                             $propertyType,
                             $flag,
                             $flagArgument,
@@ -270,6 +279,7 @@ class PropertyFactory
 
     /**
      * @param string $sourceClass
+     * @param string $propertyName
      * @param PropertyType $propertyType
      * @param string $relationshipType
      * @param string|null $definition
@@ -279,16 +289,27 @@ class PropertyFactory
      */
     private static function createRelationship(
         $sourceClass,
+        $propertyName,
         PropertyType $propertyType,
         $relationshipType,
         $definition = null,
         IMapper $mapper = null
     ) {
+        $flags = null;
         if ($relationshipType !== 'hasOne') {
             $strategy = Result::STRATEGY_IN; // default strategy
-            if ($definition !== null and substr($definition, -6) === '#union') {
-                $strategy = Result::STRATEGY_UNION;
-                $definition = substr($definition, 0, -6);
+            if ($definition !== null) {
+                list($definition, $flags) = self::parseRelationshipFlags($definition);
+
+                if (isset($flags['union'])) {
+                    $strategy = Result::STRATEGY_UNION;
+                }
+
+                if (isset($flags['inversed']) && $relationshipType !== 'hasMany') {
+                    throw new InvalidAnnotationException(
+                        "It doesn't make sense to have #inversed in $relationshipType relationship in entity $sourceClass."
+                    );
+                }
             }
         }
         $pieces = array_replace(array_fill(0, 6, ''), $definition !== null ? explode(':', $definition) : []);
@@ -300,16 +321,34 @@ class PropertyFactory
             case 'hasOne':
                 $relationshipColumn = ($mapper !== null ? $mapper->getRelationshipColumn(
                     $sourceTable,
-                    $targetTable
+                    $targetTable,
+                    $propertyName
                 ) : self::getSurrogateRelationshipColumn($propertyType));
                 return new Relationship\HasOne($pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable);
             case 'hasMany':
+                $relationshipTable = null;
+
+                if ($pieces[1]) {
+                    if (isset($flags['inversed'])) {
+                        throw new InvalidAnnotationException(
+                            "It doesn't make sense to combine #inversed and hardcoded relationship table in entity $sourceClass."
+                        );
+                    }
+                    $relationshipTable = $pieces[1];
+                } elseif ($mapper !== null) {
+                    if (isset($flags['inversed'])) {
+                        $relationshipTable = $mapper->getRelationshipTable($targetTable, $sourceTable);
+                    } else {
+                        $relationshipTable = $mapper->getRelationshipTable($sourceTable, $targetTable);
+                    }
+                }
+
                 return new Relationship\HasMany(
                     $pieces[0] ?: ($mapper !== null ? $mapper->getRelationshipColumn(
                         $mapper->getRelationshipTable($sourceTable, $targetTable),
                         $sourceTable
                     ) : null),
-                    $pieces[1] ?: ($mapper !== null ? $mapper->getRelationshipTable($sourceTable, $targetTable) : null),
+                    $relationshipTable,
                     $pieces[2] ?: ($mapper !== null ? $mapper->getRelationshipColumn(
                         $mapper->getRelationshipTable($sourceTable, $targetTable),
                         $targetTable
@@ -325,6 +364,30 @@ class PropertyFactory
                 return new Relationship\BelongsToMany($pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable, $strategy);
         }
         return null;
+    }
+
+
+
+    /**
+     * @param  string $definition
+     * @return array  (definition, flags)
+     */
+    private static function parseRelationshipFlags($definition)
+    {
+        $flags = [];
+
+        while (($pos = strrpos($definition, '#')) !== false) {
+            $flag = substr($definition, $pos + 1);
+
+            if ($flag === 'union' || $flag === 'inversed') {
+                $flags[$flag] = true;
+                $definition = substr($definition, 0, $pos);
+            } else {
+                break;
+            }
+        }
+
+        return [$definition, $flags];
     }
 
 

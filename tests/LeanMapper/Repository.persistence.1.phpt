@@ -19,10 +19,6 @@ class Author extends LeanMapper\Entity
 class AuthorRepository extends Repository
 {
 
-    protected $defaultEntityNamespace = null;
-
-
-
     public function findAll()
     {
         return $this->createEntities(

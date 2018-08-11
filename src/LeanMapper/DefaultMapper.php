@@ -92,9 +92,10 @@ class DefaultMapper implements IMapper
     /**
      * {@inheritdoc}
      */
-    public function getRelationshipColumn($sourceTable, $targetTable)
+    public function getRelationshipColumn($sourceTable, $targetTable/*, $relationshipName = null*/)
     {
-        return $targetTable . '_' . $this->getPrimaryKey($targetTable);
+        $relationshipName = (func_num_args() === 3) ? func_get_arg(2) : null;
+        return (isset($relationshipName) ? $relationshipName : $targetTable) . '_' . $this->getPrimaryKey($targetTable);
     }
 
 
@@ -126,7 +127,7 @@ class DefaultMapper implements IMapper
     /**
      * Trims namespace part from fully qualified class name
      *
-     * @param $class
+     * @param string $class
      * @return string
      */
     protected function trimNamespace($class)

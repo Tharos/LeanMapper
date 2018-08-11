@@ -23,7 +23,7 @@ use ReflectionMethod;
 class EntityReflection extends \ReflectionClass
 {
 
-    /** @var IMapper */
+    /** @var IMapper|null */
     private $mapper;
 
     /** @var Property[] */
@@ -35,7 +35,7 @@ class EntityReflection extends \ReflectionClass
     /** @var array */
     private $setters;
 
-    /** @var array */
+    /** @var Aliases|null */
     private $aliases;
 
     /** @var string */
@@ -176,7 +176,7 @@ class EntityReflection extends \ReflectionClass
         $columns = [];
         foreach ($this->getFamilyLine() as $member) {
             foreach ($annotationTypes as $annotationType) {
-                foreach (AnnotationsParser::parseAnnotationValues($annotationType, $member->getDocComment()) as $definition) {
+                foreach (AnnotationsParser::parseMultiLineAnnotationValues($annotationType, $member->getDocComment()) as $definition) {
                     $property = PropertyFactory::createFromAnnotation($annotationType, $definition, $member, $this->mapper);
                     // collision check
                     if (isset($this->properties[$property->getName()])) {

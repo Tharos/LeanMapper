@@ -1,11 +1,19 @@
 <?php
 
+use LeanMapper\DefaultMapper;
 use LeanMapper\Entity;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
 ////////////////////
+
+class Mapper extends DefaultMapper
+{
+
+    protected $defaultEntityNamespace = null;
+
+}
 
 /**
  * @property int $id
@@ -18,7 +26,7 @@ class Author extends Entity
 /**
  * @property int $id
  * @property string $name
- * @property Author|null $revieverId m:hasOne(reviewer_id)
+ * @property Author|null $reviewer m:hasOne
  */
 class Book extends Entity
 {
@@ -44,15 +52,9 @@ class BookRepository extends \LeanMapper\Repository
 ////////////////////
 
 $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
-
-Assert::exception(
-    function () {
-        $book = new Book();
-        $book->revieverId;
-    },
-    'LeanMapper\Exception\InvalidStateException',
-    'Cannot get value of property \'revieverId\' in entity Book due to low-level failure: Cannot get referenced Result for detached Result.'
-);
+$book = $bookRepository->find(3);
+Assert::same(4, $book->reviewer->id);
+Assert::same('Kent Beck', $book->reviewer->name);
 
 $book = $bookRepository->find(1);
-Assert::true($book->revieverId === null);
+Assert::null($book->reviewer);
