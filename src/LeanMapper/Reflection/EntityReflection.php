@@ -27,7 +27,7 @@ class EntityReflection extends \ReflectionClass
     private $mapper;
 
     /** @var Property[] */
-    private $properties;
+    private $properties = null;
 
     /** @var array */
     private $getters;
@@ -54,7 +54,6 @@ class EntityReflection extends \ReflectionClass
     {
         parent::__construct($argument);
         $this->mapper = $mapper;
-        $this->parseProperties();
         $this->initGettersAndSetters();
     }
 
@@ -68,6 +67,9 @@ class EntityReflection extends \ReflectionClass
      */
     public function getEntityProperty($name)
     {
+        if ($this->properties === null) {
+            $this->parseProperties();
+        }
         return isset($this->properties[$name]) ? $this->properties[$name] : null;
     }
 
@@ -80,6 +82,9 @@ class EntityReflection extends \ReflectionClass
      */
     public function getEntityProperties()
     {
+        if ($this->properties === null) {
+            $this->parseProperties();
+        }
         return $this->properties;
     }
 
