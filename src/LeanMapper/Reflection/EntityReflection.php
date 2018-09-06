@@ -30,10 +30,10 @@ class EntityReflection extends \ReflectionClass
     private $properties = null;
 
     /** @var array */
-    private $getters;
+    private $getters = null;
 
     /** @var array */
-    private $setters;
+    private $setters = null;
 
     /** @var Aliases|null */
     private $aliases;
@@ -54,7 +54,6 @@ class EntityReflection extends \ReflectionClass
     {
         parent::__construct($argument);
         $this->mapper = $mapper;
-        $this->initGettersAndSetters();
     }
 
 
@@ -140,6 +139,9 @@ class EntityReflection extends \ReflectionClass
      */
     public function getGetter($name)
     {
+        if ($this->getters === null) {
+            $this->initGettersAndSetters();
+        }
         return isset($this->getters[$name]) ? $this->getters[$name] : null;
     }
 
@@ -152,6 +154,9 @@ class EntityReflection extends \ReflectionClass
      */
     public function getGetters()
     {
+        if ($this->getters === null) {
+            $this->initGettersAndSetters();
+        }
         return $this->getters;
     }
 
@@ -165,6 +170,9 @@ class EntityReflection extends \ReflectionClass
      */
     public function getSetter($name)
     {
+        if ($this->setters === null) {
+            $this->initGettersAndSetters();
+        }
         return isset($this->setters[$name]) ? $this->setters[$name] : null;
     }
 
