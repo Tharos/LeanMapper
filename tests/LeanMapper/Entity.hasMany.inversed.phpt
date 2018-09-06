@@ -77,8 +77,10 @@ Assert::equal([1, 3], fetchBooksId($tag->books));
 
 Assert::exception(function () use ($mapper) {
     $reflection = BrokenTag::getReflection($mapper);
+    $reflection->getEntityProperties();
 }, 'LeanMapper\Exception\InvalidAnnotationException', 'It doesn\'t make sense to combine #inversed and hardcoded relationship table in entity BrokenTag.');
 
 Assert::exception(function () use ($mapper) {
     $reflection = BrokenAuthor::getReflection($mapper);
+    $reflection->getEntityProperties();
 }, 'LeanMapper\Exception\InvalidAnnotationException', 'It doesn\'t make sense to have #inversed in belongsToMany relationship in entity BrokenAuthor.');
