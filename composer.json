@@ -26,6 +26,14 @@
 		"nette/bootstrap": "~2.2",
 		"nette/di": "~2.2",
 		"nette/robot-loader": "~2.2",
-		"nette/tester": "~1.0"
+		"nette/tester": "^2"
+	},
+	"scripts": {
+		"test": "tester tests -c tests/php-unix.ini",
+		"test-local": "tester tests -C"
+	},
+	"scripts-descriptions": {
+		"test": "Run all tests using UNIX configuration.",
+		"test-local": "Run all tests using local PHP configuration."
 	}
 }
