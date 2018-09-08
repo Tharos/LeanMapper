@@ -1,9 +1,10 @@
 <?php
 
-use PDO as DbLayer;
+use PdoMock as DbLayer;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
+require_once __DIR__ . '/../libs/PdoMock.php';
 
 //////////
 
@@ -93,4 +94,4 @@ Assert::equal(ExtraAuthor::TYPE_EXTRA, $author->type);
 
 $author->stateUse = DbLayer::ATTR_CASE; // usage of use statement
 
-Assert::equal(PDO::ATTR_CASE, $author->stateUse);
+Assert::equal(PdoMock::ATTR_CASE, $author->stateUse);
