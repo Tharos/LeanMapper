@@ -49,7 +49,7 @@ abstract class Entity
     protected static $reflections = [];
 
     /** @var EntityReflection|null */
-    private $currentReflection;
+    protected $currentReflection;
 
 
 
@@ -860,7 +860,7 @@ abstract class Entity
      * @throws InvalidValueException
      * @return Entity|null
      */
-    private function getHasOneValue(Property $property, Relationship\HasOne $relationship, Filtering $filtering = null)
+    protected function getHasOneValue(Property $property, Relationship\HasOne $relationship, Filtering $filtering = null)
     {
         $targetTable = $relationship->getTargetTable();
         $row = $this->row->referenced($targetTable, $relationship->getColumnReferencingTargetTable(), $filtering);
@@ -890,7 +890,7 @@ abstract class Entity
      * @return Entity[]
      * @throws InvalidValueException
      */
-    private function getHasManyValue(
+    protected function getHasManyValue(
         Property $property,
         Relationship\HasMany $relationship,
         Filtering $targetTableFiltering = null,
@@ -927,7 +927,7 @@ abstract class Entity
      * @return Entity|null
      * @throws InvalidValueException
      */
-    private function getBelongsToOneValue(Property $property, Relationship\BelongsToOne $relationship, Filtering $filtering = null)
+    protected function getBelongsToOneValue(Property $property, Relationship\BelongsToOne $relationship, Filtering $filtering = null)
     {
         $targetTable = $relationship->getTargetTable();
         $rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
@@ -961,7 +961,7 @@ abstract class Entity
      * @param Filtering|null $filtering
      * @return Entity[]
      */
-    private function getBelongsToManyValue(Property $property, Relationship\BelongsToMany $relationship, Filtering $filtering = null)
+    protected function getBelongsToManyValue(Property $property, Relationship\BelongsToMany $relationship, Filtering $filtering = null)
     {
         $targetTable = $relationship->getTargetTable();
         $rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
@@ -985,7 +985,7 @@ abstract class Entity
      * @throws InvalidMethodCallException
      * @throws InvalidStateException
      */
-    private function useMapper(IMapper $mapper)
+    protected function useMapper(IMapper $mapper)
     {
         if ($this->mapper === null) {
             $newProperties = $this->getReflection($mapper)->getEntityProperties();
@@ -1018,7 +1018,7 @@ abstract class Entity
      * @param IEntityFactory $entityFactory
      * @throws InvalidStateException
      */
-    private function setEntityFactory(IEntityFactory $entityFactory)
+    protected function setEntityFactory(IEntityFactory $entityFactory)
     {
         if ($this->entityFactory === null) {
             $this->entityFactory = $entityFactory;
@@ -1039,7 +1039,7 @@ abstract class Entity
      * @throws InvalidArgumentException
      * @throws InvalidValueException
      */
-    private function addToOrRemoveFrom($action, $name, $arg)
+    protected function addToOrRemoveFrom($action, $name, $arg)
     {
         if ($this->isDetached()) {
             throw new InvalidMethodCallException('Cannot add or remove related entity to detached entity.');
@@ -1108,7 +1108,7 @@ abstract class Entity
      * @param Entity $entity
      * @throws InvalidValueException
      */
-    private function checkConsistency(Property $property, $mapperClass, Entity $entity)
+    protected function checkConsistency(Property $property, $mapperClass, Entity $entity)
     {
         $type = $property->getType();
         if (!($entity instanceof $type)) {
@@ -1127,7 +1127,7 @@ abstract class Entity
      * @param string $methodName
      * @throws InvalidMethodCallException
      */
-    private function checkMethodArgumentsCount($expectedCount, array $arguments, $methodName)
+    protected function checkMethodArgumentsCount($expectedCount, array $arguments, $methodName)
     {
         if (count($arguments) !== $expectedCount) {
             if ($expectedCount === 0) {

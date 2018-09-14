@@ -287,7 +287,7 @@ class PropertyFactory
      * @return mixed
      * @throws InvalidAnnotationException
      */
-    private static function createRelationship(
+    protected static function createRelationship(
         $sourceClass,
         $propertyName,
         PropertyType $propertyType,
@@ -372,7 +372,7 @@ class PropertyFactory
      * @param  string $definition
      * @return array  (definition, flags)
      */
-    private static function parseRelationshipFlags($definition)
+    protected static function parseRelationshipFlags($definition)
     {
         $flags = [];
 
@@ -396,7 +396,7 @@ class PropertyFactory
      * @param PropertyType $propertyType
      * @return string
      */
-    private static function getSurrogateRelationshipColumn(PropertyType $propertyType)
+    protected static function getSurrogateRelationshipColumn(PropertyType $propertyType)
     {
         return strtolower(self::trimNamespace($propertyType->getType())) . '{hasOne:' . self::generateRandomString(10) . '}';
     }
@@ -407,7 +407,7 @@ class PropertyFactory
      * @param string $class
      * @return string
      */
-    private static function trimNamespace($class)
+    protected static function trimNamespace($class)
     {
         $class = explode('\\', $class);
         return end($class);
@@ -419,7 +419,7 @@ class PropertyFactory
      * @param int $length
      * @return string
      */
-    private static function generateRandomString($length)
+    protected static function generateRandomString($length)
     {
         return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length);
     }
@@ -433,7 +433,7 @@ class PropertyFactory
      * @return mixed
      * @throws InvalidAnnotationException
      */
-    private static function fixDefaultValue($value, PropertyType $propertyType, $isNullable)
+    protected static function fixDefaultValue($value, PropertyType $propertyType, $isNullable)
     {
         if ($isNullable and strtolower($value) === 'null') {
             return null;

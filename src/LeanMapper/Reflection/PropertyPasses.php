@@ -22,10 +22,10 @@ class PropertyPasses
 {
 
     /** @var string */
-    private $getterPass;
+    protected $getterPass;
 
     /** @var string */
-    private $setterPass;
+    protected $setterPass;
 
 
 

@@ -36,7 +36,7 @@ class Events
     const EVENT_AFTER_DELETE = 'afterDelete';
 
     /** @var array */
-    private $events = [
+    protected $events = [
         self::EVENT_BEFORE_PERSIST => [],
         self::EVENT_BEFORE_CREATE => [],
         self::EVENT_BEFORE_UPDATE => [],
@@ -99,7 +99,7 @@ class Events
      * @param string $event
      * @throws InvalidArgumentException
      */
-    private function checkEventType($event)
+    protected function checkEventType($event)
     {
         if (!isset($this->events[$event])) {
             throw new InvalidArgumentException("Unknown event type given: '$event'.");

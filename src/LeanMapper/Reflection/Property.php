@@ -24,49 +24,49 @@ class Property
 {
 
     /** @var string */
-    private $name;
+    protected $name;
 
     /** @var string|null */
-    private $column;
+    protected $column;
 
     /** @var EntityReflection */
-    private $entityReflection;
+    protected $entityReflection;
 
     /** @var PropertyType */
-    private $type;
+    protected $type;
 
     /** @var bool */
-    private $isWritable;
+    protected $isWritable;
 
     /** @var bool */
-    private $isNullable;
+    protected $isNullable;
 
     /** @var bool */
-    private $hasDefaultValue;
+    protected $hasDefaultValue;
 
     /** @var mixed|null */
-    private $defaultValue;
+    protected $defaultValue;
 
     /** @var bool */
-    private $containsCollection;
+    protected $containsCollection;
 
     /** @var Relationship\HasOne|Relationship\HasMany|Relationship\BelongsToOne|Relationship\BelongsToMany|null */
-    private $relationship;
+    protected $relationship;
 
     /** @var PropertyMethods|null */
-    private $propertyMethods;
+    protected $propertyMethods;
 
     /** @var PropertyFilters|null */
-    private $propertyFilters;
+    protected $propertyFilters;
 
     /** @var PropertyPasses|null */
-    private $propertyPasses;
+    protected $propertyPasses;
 
     /** @var PropertyValuesEnum|null */
-    private $propertyValuesEnum;
+    protected $propertyValuesEnum;
 
     /** @var array */
-    private $customFlags;
+    protected $customFlags;
 
 
 
@@ -438,7 +438,7 @@ class Property
     /**
      * @throws InvalidMethodCallException
      */
-    private function checkContainsEnumeration()
+    protected function checkContainsEnumeration()
     {
         if (!$this->containsEnumeration()) {
             throw new InvalidMethodCallException(

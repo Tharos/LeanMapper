@@ -22,10 +22,10 @@ class PropertyFilters
 {
 
     /** @var array */
-    private $filters = [];
+    protected $filters = [];
 
     /** @var array */
-    private $targetedArgs = [];
+    protected $targetedArgs = [];
 
 
 

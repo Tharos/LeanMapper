@@ -23,10 +23,10 @@ class PropertyValuesEnum
 {
 
     /** @var array */
-    private $values = [];
+    protected $values = [];
 
     /** @var array */
-    private $index = [];
+    protected $index = [];
 
 
 
