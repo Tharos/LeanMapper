@@ -538,6 +538,7 @@ abstract class Entity
                 }
                 $value = null;
             }
+            $value = $this->decodeRowValue($value, $property);
             if ($pass !== null) {
                 $value = $this->$pass($value);
             }
@@ -616,6 +617,7 @@ abstract class Entity
                 ) . ' due to low-level failure: ' . $e->getMessage(), $e->getCode(), $e
             );
         }
+        $value = $this->decodeRowValue($value, $property);
         if ($pass !== null) {
             $value = $this->$pass($value);
         }
@@ -681,7 +683,7 @@ abstract class Entity
                     "Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.'
                 );
             }
-            $this->row->$column = $value;
+            $this->row->$column = $this->encodeRowValue($value, $property);
             return;
         }
         // property doesn't contain basic type
@@ -714,7 +716,7 @@ abstract class Entity
                     ) . ", array of {$property->getType()} expected, $givenType given."
                 );
             }
-            $this->row->$column = ($pass !== null ? $this->$pass($value) : $value);
+            $this->row->$column = $this->encodeRowValue($pass !== null ? $this->$pass($value) : $value, $property);
             return;
         }
         if ($value !== null and !($value instanceof $type)) {
@@ -723,7 +725,7 @@ abstract class Entity
                 ) . ", {$property->getType()} expected, $givenType given."
             );
         }
-        $this->row->$column = ($pass !== null ? $this->$pass($value) : $value);
+        $this->row->$column = $this->encodeRowValue($pass !== null ? $this->$pass($value) : $value, $property);
     }
 
 
@@ -807,6 +809,30 @@ abstract class Entity
             $this->row->$column = null;
             $this->row->setReferencedRow(null, $column);
         }
+    }
+
+
+
+    /**
+     * Called after value is read from Row
+     * @param  mixed $value
+     * @return mixed
+     */
+    protected function decodeRowValue($value, Property $property)
+    {
+        return $value;
+    }
+
+
+
+    /**
+     * Called before value is passed to Row
+     * @param  mixed $value
+     * @return mixed
+     */
+    protected function encodeRowValue($value, Property $property)
+    {
+        return $value;
     }
 
 
