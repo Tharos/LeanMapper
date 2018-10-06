@@ -121,7 +121,7 @@ class Result implements \Iterator
                 }
             }
         }
-        return new self($dataArray, $table, $connection, $mapper);
+        return new static($dataArray, $table, $connection, $mapper);
     }
 
 
@@ -133,7 +133,7 @@ class Result implements \Iterator
      */
     public static function createDetachedInstance()
     {
-        return new self;
+        return new static;
     }
 
 
