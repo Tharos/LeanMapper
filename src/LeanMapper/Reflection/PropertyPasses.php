@@ -21,41 +21,22 @@ use LeanMapper\Exception\InvalidAnnotationException;
 class PropertyPasses
 {
 
-    /** @var string */
+    /** @var string|null */
     private $getterPass;
 
-    /** @var string */
+    /** @var string|null */
     private $setterPass;
 
 
 
     /**
-     * @param string $definition
-     * @throws InvalidAnnotationException
+     * @param  string|null
+     * @param  string|null
      */
-    public function __construct($definition)
+    public function __construct($getterPass, $setterPass)
     {
-        $counter = 0;
-        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $pass) {
-            $counter++;
-            if ($counter > 2) {
-                throw new InvalidAnnotationException('Property passes cannot have more than two parts.');
-            }
-            if ($pass === '') {
-                continue;
-            }
-            if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $pass)) {
-                throw new InvalidAnnotationException("Malformed method pass name given: '$pass'.");
-            }
-            if ($counter === 1) {
-                $this->getterPass = $pass;
-            } else { // $counter === 2
-                $this->setterPass = $pass;
-            }
-        }
-        if ($counter === 1) {
-            $this->setterPass = $this->getterPass;
-        }
+        $this->getterPass = $getterPass;
+        $this->setterPass = $setterPass;
     }
 
 
@@ -80,6 +61,41 @@ class PropertyPasses
     public function getSetterPass()
     {
         return $this->setterPass;
+    }
+
+
+    /**
+     * @param string $definition
+     * @return static
+     * @throws InvalidAnnotationException
+     */
+    public static function createFromDefinition($definition)
+    {
+        $counter = 0;
+        $getterPass = null;
+        $setterPass = null;
+        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $pass) {
+            $counter++;
+            if ($counter > 2) {
+                throw new InvalidAnnotationException('Property passes cannot have more than two parts.');
+            }
+            if ($pass === '') {
+                continue;
+            }
+            if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $pass)) {
+                throw new InvalidAnnotationException("Malformed method pass name given: '$pass'.");
+            }
+            if ($counter === 1) {
+                $getterPass = $pass;
+            } else { // $counter === 2
+                $setterPass = $pass;
+            }
+        }
+        if ($counter === 1) {
+            $setterPass = $getterPass;
+        }
+
+        return new static($getterPass, $setterPass);
     }
 
 }
