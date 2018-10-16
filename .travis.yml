@@ -8,6 +8,9 @@ php:
     - 7.2
     - 7.3
 
+install:
+    - travis_retry composer install --no-interaction
+
 script:
     - vendor/bin/tester tests -s -p php
     - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then php temp/code-checker/src/code-checker.php; fi
@@ -17,7 +20,6 @@ after_failure:
     - for i in $(find tests -name \*.actual); do echo "--- $i"; cat $i; echo; echo; done
 
 before_script:
-    - travis_retry composer install --no-interaction
     - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then travis_retry composer create-project nette/code-checker temp/code-checker ~2; fi
     # Modify code-checker tasks
     - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then sed -i -e 's/tabIndentationPhpChecker/yamlIndentationChecker/g' temp/code-checker/src/bootstrap.php; fi
