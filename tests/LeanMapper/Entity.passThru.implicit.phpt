@@ -82,7 +82,7 @@ class Book extends LeanMapper\Entity
     protected function convertToInteger($value)
     {
         if (is_string($value)) {
-            $res = array();
+            $res = [];
             $numbers = explode(',', $value);
 
             foreach ($numbers as $number) {
@@ -199,28 +199,28 @@ Assert::same('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', $book->uuid->getUuid());
 Assert::same('30.10.1999', $book->pubdate->format('d.m.Y'));
 Assert::same('12:55', $book->time->getTime());
 
-$values = array();
+$values = [];
 
 foreach ($book->numbers as $number) {
     $values[] = $number->getValue();
 }
 
-Assert::same(array(2, 4, 8, 16), $values);
+Assert::same([2, 4, 8, 16], $values);
 
 // set
 $book->name = 'My book';
 Assert::same('My book', $book->name);
 
 $book->time = new Time('8:44');
-$book->numbers = array(
+$book->numbers = [
     new Integer(2),
     new Integer(32),
-);
-Assert::same(array(
+];
+Assert::same([
     'id' => 1,
     'name' => 'My book',
     'pubdate' => '1999-10-30',
     'time' => '08:44',
     'uuid' => 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
     'numbers' => '2,32',
-), $book->getRowData());
+], $book->getRowData());

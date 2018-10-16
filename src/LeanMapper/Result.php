@@ -988,7 +988,7 @@ class Result implements \Iterator
         if ($isAlias) {
             $viaColumn = $this->trimAlias($viaColumn);
         }
-        $statements = array();
+        $statements = [];
         foreach ($ids as $id) {
             $statement = $this->createTableSelection($table, [$id]);
             if ($isAlias) {

@@ -56,15 +56,15 @@ $book = new Book($booksResult->getRow(1));
 $book->makeAlive($entityFactory, $connection, $mapper);
 
 // getter
-Assert::same(array(
+Assert::same([
     'rating' => 10,
-), $book->meta);
+], $book->meta);
 
 // setter
 $meta = $book->meta;
 $meta['signature'] = 'B';
 $book->meta = $meta;
-Assert::same(array(
+Assert::same([
     'id' => 1,
     'meta' => '{"rating":10,"signature":"B"}',
-), $book->getRowData());
+], $book->getRowData());

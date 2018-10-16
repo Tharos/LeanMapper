@@ -14,9 +14,9 @@ Tester\Environment::setup();
 class_alias('Tester\Assert', 'Assert');
 date_default_timezone_set('Europe/Prague');
 
-$_SERVER = array_intersect_key($_SERVER, array_flip(array('PHP_SELF', 'SCRIPT_NAME', 'SERVER_ADDR', 'SERVER_SOFTWARE', 'HTTP_HOST', 'DOCUMENT_ROOT', 'OS', 'argc', 'argv')));
+$_SERVER = array_intersect_key($_SERVER, array_flip(['PHP_SELF', 'SCRIPT_NAME', 'SERVER_ADDR', 'SERVER_SOFTWARE', 'HTTP_HOST', 'DOCUMENT_ROOT', 'OS', 'argc', 'argv']));
 $_SERVER['REQUEST_TIME'] = 1234567890;
-$_ENV = $_GET = $_POST = array();
+$_ENV = $_GET = $_POST = [];
 
 if (extension_loaded('xdebug')) {
     xdebug_disable();
@@ -39,10 +39,10 @@ class TestMapper extends DefaultMapper
 
 }
 
-$connection = new Connection(array(
+$connection = new Connection([
     'driver' => 'sqlite3',
     'database' => TEMP_DIR . '/library.sq3',
-));
+]);
 
 $mapper = new TestMapper;
 

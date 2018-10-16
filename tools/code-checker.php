@@ -33,6 +33,7 @@ $checker->addTask([$tasks, 'bomFixer']);
 $checker->addTask([$tasks, 'utf8Checker']);
 $checker->addTask([$tasks, 'phpSyntaxChecker'], '*.php,*.phpt');
 $checker->addTask([$tasks, 'invalidPhpDocChecker'], '*.php,*.phpt');
+$checker->addTask([$tasks, 'shortArraySyntaxFixer'], '*.php,*.phpt');
 
 $checker->addTask([$tasks, 'newlineNormalizer'], '!*.sh');
 
