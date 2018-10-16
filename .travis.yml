@@ -13,17 +13,23 @@ install:
 
 script:
     - vendor/bin/tester tests -s -p php
-    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then php temp/code-checker/src/code-checker.php; fi
 
 after_failure:
     # Print *.actual content
     - for i in $(find tests -name \*.actual); do echo "--- $i"; cat $i; echo; echo; done
 
-before_script:
-    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then travis_retry composer create-project nette/code-checker temp/code-checker ~2; fi
-    # Modify code-checker tasks
-    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then sed -i -e 's/tabIndentationPhpChecker/yamlIndentationChecker/g' temp/code-checker/src/bootstrap.php; fi
-    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then sed -i -e 's/\*\.css,\*\.less,\*\.js,\*\.json,\*\.neon/\*\.css,\*\.less,\*\.js,\*\.json/g' temp/code-checker/src/bootstrap.php; fi
+jobs:
+    include:
+        -   stage: Code Standard Checker
+            php: 7.2
+            install:
+                - travis_retry composer create-project nette/code-checker temp/code-checker ~2 --no-progress
+                # Modify code-checker tasks
+                - sed -i -e 's/tabIndentationPhpChecker/yamlIndentationChecker/g' temp/code-checker/src/bootstrap.php
+                - sed -i -e 's/\*\.css,\*\.less,\*\.js,\*\.json,\*\.neon/\*\.css,\*\.less,\*\.js,\*\.json/g' temp/code-checker/src/bootstrap.php
+
+            script:
+                - php temp/code-checker/src/code-checker.php
 
 sudo: false
 
