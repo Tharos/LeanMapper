@@ -64,9 +64,25 @@ abstract class Entity
         $class = get_called_class();
         $mapperClass = $mapper !== null ? get_class($mapper) : '';
         if (!isset(static::$reflections[$class][$mapperClass])) {
-            static::$reflections[$class][$mapperClass] = new EntityReflection($class, $mapper);
+            static::$reflections[$class][$mapperClass] = new EntityReflection($class, $mapper, static::getReflectionProvider());
         }
         return static::$reflections[$class][$mapperClass];
+    }
+
+
+
+    /**
+     * @return IEntityReflectionProvider
+     */
+    protected static function getReflectionProvider()
+    {
+        static $reflectionProvider = null;
+
+        if ($reflectionProvider === null) {
+            $reflectionProvider = new DefaultEntityReflectionProvider;
+        }
+
+        return $reflectionProvider;
     }
 
 

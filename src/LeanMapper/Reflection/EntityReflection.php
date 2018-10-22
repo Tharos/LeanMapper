@@ -12,6 +12,8 @@
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidStateException;
+use LeanMapper\DefaultEntityReflectionProvider;
+use LeanMapper\IEntityReflectionProvider;
 use LeanMapper\IMapper;
 use ReflectionMethod;
 
@@ -25,6 +27,9 @@ class EntityReflection extends \ReflectionClass
 
     /** @var IMapper|null */
     private $mapper;
+
+    /** @var IEntityReflectionProvider */
+    private $entityReflectionProvider;
 
     /** @var Property[] */
     private $properties = null;
@@ -41,19 +46,18 @@ class EntityReflection extends \ReflectionClass
     /** @var string */
     private $docComment;
 
-    /** @var array */
-    private $internalGetters = ['getData', 'getRowData', 'getModifiedRowData', 'getCurrentReflection', 'getReflection', 'getHasManyRowDifferences', 'getEntityClass'];
-
 
 
     /**
      * @param mixed $argument
      * @param IMapper|null $mapper
+     * @param IEntityReflectionProvider|null $entityReflectionProvider
      */
-    public function __construct($argument, IMapper $mapper = null)
+    public function __construct($argument, IMapper $mapper = null, IEntityReflectionProvider $entityReflectionProvider = null)
     {
         parent::__construct($argument);
         $this->mapper = $mapper;
+        $this->entityReflectionProvider = $entityReflectionProvider !== null ? $entityReflectionProvider : new DefaultEntityReflectionProvider;
     }
 
 
@@ -67,7 +71,7 @@ class EntityReflection extends \ReflectionClass
     public function getEntityProperty($name)
     {
         if ($this->properties === null) {
-            $this->parseProperties();
+            $this->createProperties();
         }
         return isset($this->properties[$name]) ? $this->properties[$name] : null;
     }
@@ -82,7 +86,7 @@ class EntityReflection extends \ReflectionClass
     public function getEntityProperties()
     {
         if ($this->properties === null) {
-            $this->parseProperties();
+            $this->createProperties();
         }
         return $this->properties;
     }
@@ -111,7 +115,7 @@ class EntityReflection extends \ReflectionClass
      */
     public function getParentClass()
     {
-        return ($reflection = parent::getParentClass()) ? new self($reflection->getName()) : null;
+        return ($reflection = parent::getParentClass()) ? new self($reflection->getName(), $this->mapper, $this->entityReflectionProvider) : null;
     }
 
 
@@ -140,7 +144,7 @@ class EntityReflection extends \ReflectionClass
     public function getGetter($name)
     {
         if ($this->getters === null) {
-            $this->initGettersAndSetters();
+            $this->createGetters();
         }
         return isset($this->getters[$name]) ? $this->getters[$name] : null;
     }
@@ -155,7 +159,7 @@ class EntityReflection extends \ReflectionClass
     public function getGetters()
     {
         if ($this->getters === null) {
-            $this->initGettersAndSetters();
+            $this->createGetters();
         }
         return $this->getters;
     }
@@ -171,7 +175,7 @@ class EntityReflection extends \ReflectionClass
     public function getSetter($name)
     {
         if ($this->setters === null) {
-            $this->initGettersAndSetters();
+            $this->createSetters();
         }
         return isset($this->setters[$name]) ? $this->setters[$name] : null;
     }
@@ -182,71 +186,68 @@ class EntityReflection extends \ReflectionClass
     /**
      * @throws InvalidStateException
      */
-    private function parseProperties()
+    private function createGetters()
     {
-        $this->properties = [];
-        $annotationTypes = ['property', 'property-read'];
-        $columns = [];
-        foreach ($this->getFamilyLine() as $member) {
-            foreach ($annotationTypes as $annotationType) {
-                foreach (AnnotationsParser::parseMultiLineAnnotationValues($annotationType, $member->getDocComment()) as $definition) {
-                    $property = PropertyFactory::createFromAnnotation($annotationType, $definition, $member, $this->mapper);
-                    // collision check
-                    if (isset($this->properties[$property->getName()])) {
-                        throw new InvalidStateException(
-                            "Duplicated property '{$property->getName()}' in entity {$this->getName()}. Please fix property name."
-                        );
-                    }
+        $this->getters = [];
+        $getters = $this->entityReflectionProvider->getGetters($this);
 
-                    $column = $property->getColumn();
-                    if ($column !== null and $property->isWritable()) {
-                        if (isset($columns[$column])) {
-                            throw new InvalidStateException(
-                                "Mapping collision in property '{$property->getName()}' (column '$column') in entity {$this->getName()}. Please fix mapping or make chosen properties read only (using property-read)."
-                            );
-                        }
-                        $columns[$column] = true;
-                    }
-                    $this->properties[$property->getName()] = $property;
-                }
+        foreach ($getters as $getter) {
+            $name = $getter->getName();
+            // collision check
+            if (isset($this->getters[$name])) {
+                throw new InvalidStateException("Duplicated getter '{$name}' for entity {$this->getName()}.");
             }
+            $this->getters[$name] = $getter;
         }
     }
-
-
-
-    private function initGettersAndSetters()
-    {
-        $this->getters = $this->setters = [];
-        foreach ($this->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            $name = $method->getName();
-            if (strlen($name) > 3) {
-                $prefix = substr($name, 0, 3);
-                if ($prefix === 'get') {
-                    $this->getters[$name] = $method;
-                } elseif ($prefix === 'set') {
-                    $this->setters[$name] = $method;
-                }
-            }
-        }
-        $this->getters = array_diff_key($this->getters, array_flip($this->internalGetters));
-    }
-
 
 
     /**
-     * @return self[]
+     * @throws InvalidStateException
      */
-    private function getFamilyLine()
+    private function createSetters()
     {
-        $line = [$member = $this];
-        while ($member = $member->getParentClass()) {
-            if ($member->name === 'LeanMapper\Entity') {
-                break;
+        $this->setters = [];
+        $setters = $this->entityReflectionProvider->getSetters($this);
+
+        foreach ($setters as $setter) {
+            $name = $setter->getName();
+            // collision check
+            if (isset($this->setters[$name])) {
+                throw new InvalidStateException("Duplicated setter '{$name}' for entity {$this->getName()}.");
             }
-            $line[] = $member;
+            $this->setters[$name] = $setter;
         }
-        return array_reverse($line);
+    }
+
+
+    /**
+     * @throws InvalidStateException
+     */
+    private function createProperties()
+    {
+        $this->properties = [];
+        $properties = $this->entityReflectionProvider->getProperties($this, $this->mapper);
+        $columns = [];
+        foreach ($properties as $property) {
+            // collision check
+            if (isset($this->properties[$property->getName()])) {
+                throw new InvalidStateException(
+                    "Duplicated property '{$property->getName()}' in entity {$this->getName()}. Please fix property name."
+                );
+            }
+
+            $column = $property->getColumn();
+            if ($column !== null and $property->isWritable()) {
+                if (isset($columns[$column])) {
+                    throw new InvalidStateException(
+                        "Mapping collision in property '{$property->getName()}' (column '$column') in entity {$this->getName()}. Please fix mapping or make chosen properties read only (using property-read)."
+                    );
+                }
+                $columns[$column] = true;
+            }
+            $this->properties[$property->getName()] = $property;
+        }
     }
 
 }
