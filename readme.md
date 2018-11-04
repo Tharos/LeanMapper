@@ -1,5 +1,3 @@
-*Warning! This library is no longer actively developed. It is provided "as is" with no guarantee of future development or support.*
-
 Lean Mapper
 ===========
 
