@@ -24,6 +24,17 @@ class PropertyFactory
 {
 
     /**
+     * Allows to define custom classes or class factories.
+     *
+     * Note that each custom class must inherit from the original class
+     * and each custom factory must return an instance of the original or its descendant.
+     *
+     * @var array in format [ original_class_name => extended_class_name_or_factory, ... ]
+     */
+    public static $customClassFactoryMap = [];
+
+
+    /**
      * @throws UtilityClassException
      */
     public function __construct()
@@ -73,7 +84,7 @@ class PropertyFactory
             );
         }
 
-        $propertyType = new PropertyType($matches[2], $aliases);
+        $propertyType = self::createClass('LeanMapper\Reflection\PropertyType', $matches[2], $aliases);
         $isWritable = $annotationType === 'property';
         $containsCollection = $matches[3] !== '';
         if ($propertyType->isBasicType() and $containsCollection) {
@@ -150,7 +161,7 @@ class PropertyFactory
                                 "Multiple m:useMethods flags found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
                             );
                         }
-                        $propertyMethods = new PropertyMethods($name, $isWritable, $flagArgument);
+                        $propertyMethods = self::createClass('LeanMapper\Reflection\PropertyMethods', $name, $isWritable, $flagArgument);
                         break;
                     case 'filter':
                         if ($propertyFilters !== null) {
@@ -158,7 +169,7 @@ class PropertyFactory
                                 "Multiple m:filter flags found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
                             );
                         }
-                        $propertyFilters = new PropertyFilters($flagArgument);
+                        $propertyFilters = self::createClass('LeanMapper\Reflection\PropertyFilters', $flagArgument);
                         break;
                     case 'passThru':
                         if ($propertyPasses !== null) {
@@ -166,7 +177,7 @@ class PropertyFactory
                                 "Multiple m:passThru flags found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
                             );
                         }
-                        $propertyPasses = new PropertyPasses($flagArgument);
+                        $propertyPasses = self::createClass('LeanMapper\Reflection\PropertyPasses', $flagArgument);
                         break;
                     case 'enum':
                         if ($propertyValuesEnum !== null) {
@@ -179,7 +190,7 @@ class PropertyFactory
                                 "Parameter of m:enum flag was not found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
                             );
                         }
-                        $propertyValuesEnum = new PropertyValuesEnum($flagArgument, $entityReflection);
+                        $propertyValuesEnum = self::createClass('LeanMapper\Reflection\PropertyValuesEnum', $flagArgument, $entityReflection);
                         break;
                     case 'column':
                         if ($customColumn !== null) {
@@ -255,7 +266,7 @@ class PropertyFactory
 
         $column = $customColumn ?: $column;
 
-        return new Property(
+        return self::createClass('LeanMapper\Reflection\Property',
             $name,
             $entityReflection,
             $column,
@@ -287,7 +298,7 @@ class PropertyFactory
      * @return mixed
      * @throws InvalidAnnotationException
      */
-    private static function createRelationship(
+    protected static function createRelationship(
         $sourceClass,
         $propertyName,
         PropertyType $propertyType,
@@ -324,7 +335,7 @@ class PropertyFactory
                     $targetTable,
                     $propertyName
                 ) : self::getSurrogateRelationshipColumn($propertyType));
-                return new Relationship\HasOne($pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable);
+                return self::createClass('LeanMapper\Relationship\HasOne', $pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable);
             case 'hasMany':
                 $relationshipTable = null;
 
@@ -343,7 +354,7 @@ class PropertyFactory
                     }
                 }
 
-                return new Relationship\HasMany(
+                return self::createClass('LeanMapper\Relationship\HasMany',
                     $pieces[0] ?: ($mapper !== null ? $mapper->getRelationshipColumn(
                         $mapper->getRelationshipTable($sourceTable, $targetTable),
                         $sourceTable
@@ -358,10 +369,10 @@ class PropertyFactory
                 );
             case 'belongsToOne':
                 $relationshipColumn = ($mapper !== null ? $mapper->getRelationshipColumn($targetTable, $sourceTable) : $sourceTable);
-                return new Relationship\BelongsToOne($pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable, $strategy);
+                return self::createClass('LeanMapper\Relationship\BelongsToOne', $pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable, $strategy);
             case 'belongsToMany':
                 $relationshipColumn = ($mapper !== null ? $mapper->getRelationshipColumn($targetTable, $sourceTable) : $sourceTable);
-                return new Relationship\BelongsToMany($pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable, $strategy);
+                return self::createClass('LeanMapper\Relationship\BelongsToMany', $pieces[0] ?: $relationshipColumn, $pieces[1] ?: $targetTable, $strategy);
         }
         return null;
     }
@@ -372,7 +383,7 @@ class PropertyFactory
      * @param  string $definition
      * @return array  (definition, flags)
      */
-    private static function parseRelationshipFlags($definition)
+    protected static function parseRelationshipFlags($definition)
     {
         $flags = [];
 
@@ -396,7 +407,7 @@ class PropertyFactory
      * @param PropertyType $propertyType
      * @return string
      */
-    private static function getSurrogateRelationshipColumn(PropertyType $propertyType)
+    protected static function getSurrogateRelationshipColumn(PropertyType $propertyType)
     {
         return strtolower(self::trimNamespace($propertyType->getType())) . '{hasOne:' . self::generateRandomString(10) . '}';
     }
@@ -407,7 +418,7 @@ class PropertyFactory
      * @param string $class
      * @return string
      */
-    private static function trimNamespace($class)
+    protected static function trimNamespace($class)
     {
         $class = explode('\\', $class);
         return end($class);
@@ -419,7 +430,7 @@ class PropertyFactory
      * @param int $length
      * @return string
      */
-    private static function generateRandomString($length)
+    protected static function generateRandomString($length)
     {
         return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length);
     }
@@ -433,7 +444,7 @@ class PropertyFactory
      * @return mixed
      * @throws InvalidAnnotationException
      */
-    private static function fixDefaultValue($value, PropertyType $propertyType, $isNullable)
+    protected static function fixDefaultValue($value, PropertyType $propertyType, $isNullable)
     {
         if ($isNullable and strtolower($value) === 'null') {
             return null;
@@ -470,6 +481,32 @@ class PropertyFactory
             default:
                 return $value;
         }
+    }
+
+
+    /**
+     * Create a class of given name.
+     *
+     * Note: this is a variadic function.
+     * @todo: once support drops to PHP 5.6 and above, rewrite the method to proper variadic function without the need for reflection class
+     *
+     * @param string $className
+     * @param ...$args
+     * @return mixed
+     */
+    protected static function createClass($className /* , ...$args */)
+    {
+        $args = array_slice(func_get_args(), 1);
+        if (isset(static::$customClassFactoryMap[$className])) {
+            $customClass = static::$customClassFactoryMap[$className];
+            if (is_string($customClass) && class_exists($customClass)) {
+                $className = $customClass;
+            } else {
+                return call_user_func_array($customClass, $args);
+            }
+        }
+        $reflect = new \ReflectionClass($className);
+        return $reflect->newInstanceArgs($args);
     }
 
 }

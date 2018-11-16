@@ -22,10 +22,10 @@ class PropertyMethods
 {
 
     /** @var string */
-    private $getter;
+    protected $getter;
 
     /** @var string */
-    private $setter;
+    protected $setter;
 
 
 

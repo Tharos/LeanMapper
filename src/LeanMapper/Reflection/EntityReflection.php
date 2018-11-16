@@ -24,25 +24,25 @@ class EntityReflection extends \ReflectionClass
 {
 
     /** @var IMapper|null */
-    private $mapper;
+    protected $mapper;
 
     /** @var Property[] */
-    private $properties = null;
+    protected $properties = null;
 
     /** @var array */
-    private $getters = null;
+    protected $getters = null;
 
     /** @var array */
-    private $setters = null;
+    protected $setters = null;
 
     /** @var Aliases|null */
-    private $aliases;
+    protected $aliases;
 
     /** @var string */
-    private $docComment;
+    protected $docComment;
 
     /** @var array */
-    private $internalGetters = ['getData', 'getRowData', 'getModifiedRowData', 'getCurrentReflection', 'getReflection', 'getHasManyRowDifferences', 'getEntityClass'];
+    protected $internalGetters = ['getData', 'getRowData', 'getModifiedRowData', 'getCurrentReflection', 'getReflection', 'getHasManyRowDifferences', 'getEntityClass'];
 
 
 
@@ -182,7 +182,7 @@ class EntityReflection extends \ReflectionClass
     /**
      * @throws InvalidStateException
      */
-    private function parseProperties()
+    protected function parseProperties()
     {
         $this->properties = [];
         $annotationTypes = ['property', 'property-read'];
@@ -215,7 +215,7 @@ class EntityReflection extends \ReflectionClass
 
 
 
-    private function initGettersAndSetters()
+    protected function initGettersAndSetters()
     {
         $this->getters = $this->setters = [];
         foreach ($this->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -237,7 +237,7 @@ class EntityReflection extends \ReflectionClass
     /**
      * @return self[]
      */
-    private function getFamilyLine()
+    protected function getFamilyLine()
     {
         $line = [$member = $this];
         while ($member = $member->getParentClass()) {

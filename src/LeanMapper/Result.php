@@ -43,43 +43,43 @@ class Result implements \Iterator
     private static $storedConnection;
 
     /** @var bool */
-    private $isDetached;
+    protected $isDetached;
 
     /** @var array */
-    private $data;
+    protected $data;
 
     /** @var array */
-    private $modified = [];
+    protected $modified = [];
 
     /** @var array */
-    private $added = [];
+    protected $added = [];
 
     /** @var array */
-    private $removed = [];
+    protected $removed = [];
 
     /** @var string */
-    private $table;
+    protected $table;
 
     /** @var Connection */
-    private $connection;
+    protected $connection;
 
     /** @var IMapper */
     protected $mapper;
 
     /** @var array */
-    private $keys;
+    protected $keys;
 
     /** @var self[] */
-    private $referenced = [];
+    protected $referenced = [];
 
     /** @var self[] */
-    private $referencing = [];
+    protected $referencing = [];
 
     /** @var array */
-    private $index = [];
+    protected $index = [];
 
     /** @var ResultProxy */
-    private $proxy;
+    protected $proxy;
 
 
 
@@ -751,7 +751,7 @@ class Result implements \Iterator
      * @param Connection|null $connection
      * @param IMapper|null $mapper
      */
-    private function __construct(array $data = null, $table = null, Connection $connection = null, IMapper $mapper = null)
+    protected function __construct(array $data = null, $table = null, Connection $connection = null, IMapper $mapper = null)
     {
         $this->data = $data !== null ? $data : [self::DETACHED_ROW_ID => []];
         $this->table = $table;
@@ -770,7 +770,7 @@ class Result implements \Iterator
      * @throws InvalidStateException
      * @return self
      */
-    private function getReferencedResult($table, $viaColumn, Filtering $filtering = null)
+    protected function getReferencedResult($table, $viaColumn, Filtering $filtering = null)
     {
         if ($this->isDetached) {
             throw new InvalidStateException('Cannot get referenced Result for detached Result.');
@@ -843,7 +843,7 @@ class Result implements \Iterator
      * @throws InvalidStateException
      * @return self
      */
-    private function getReferencingResult($table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
+    protected function getReferencingResult($table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
     {
         $strategy = $this->translateStrategy($strategy);
         if ($this->isDetached) {
@@ -958,7 +958,7 @@ class Result implements \Iterator
      * @param string $column
      * @return array
      */
-    private function extractIds($column)
+    protected function extractIds($column)
     {
         if ($this->isAlias($column)) {
             $column = $this->trimAlias($column);
@@ -982,7 +982,7 @@ class Result implements \Iterator
      * @param Filtering|null $filtering
      * @return mixed
      */
-    private function buildUnionStrategySql(array $ids, $table, $viaColumn, Filtering $filtering = null)
+    protected function buildUnionStrategySql(array $ids, $table, $viaColumn, Filtering $filtering = null)
     {
         $isAlias = $this->isAlias($viaColumn);
         if ($isAlias) {
@@ -1015,7 +1015,7 @@ class Result implements \Iterator
      * @param array $relatedKeys
      * @return Fluent
      */
-    private function createTableSelection($table, $relatedKeys = null)
+    protected function createTableSelection($table, $relatedKeys = null)
     {
         $selection = $this->connection->select('%n.*', $table)->from('%n', $table);
         return $relatedKeys !== null ? $selection->setRelatedKeys($relatedKeys) : $selection;
@@ -1028,7 +1028,7 @@ class Result implements \Iterator
      * @throws InvalidArgumentException
      * @return string
      */
-    private function translateStrategy($strategy)
+    protected function translateStrategy($strategy)
     {
         if ($strategy === null) {
             $strategy = self::STRATEGY_IN;
@@ -1048,7 +1048,7 @@ class Result implements \Iterator
      * @return FilteringResultDecorator|null
      * @throws InvalidArgumentException
      */
-    private function applyFiltering(Fluent $statement, Filtering $filtering)
+    protected function applyFiltering(Fluent $statement, Filtering $filtering)
     {
         $targetedArgs = $filtering->getTargetedArgs();
         foreach ($filtering->getFilters() as $filter) {
@@ -1078,7 +1078,7 @@ class Result implements \Iterator
      * @param array $arguments
      * @return string
      */
-    private function calculateArgumentsHash(array $arguments)
+    protected function calculateArgumentsHash(array $arguments)
     {
         return md5(serialize($arguments));
     }
@@ -1089,7 +1089,7 @@ class Result implements \Iterator
      * @param string $column
      * @return bool
      */
-    private function isAlias($column)
+    protected function isAlias($column)
     {
         return strncmp($column, '*', 1) === 0;
     }
@@ -1100,7 +1100,7 @@ class Result implements \Iterator
      * @param string $column
      * @return string
      */
-    private function trimAlias($column)
+    protected function trimAlias($column)
     {
         return substr($column, 1);
     }
