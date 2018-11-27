@@ -560,6 +560,13 @@ class Result implements \Iterator
     public function addToReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
     {
         $result = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
+
+        foreach ($result as $key => $entry) {
+            if (array_diff_assoc($values, $entry) === []) {
+                return;
+            }
+        }
+
         $result->addDataEntry($values);
         unset($this->index[spl_object_hash($result)]);
     }
