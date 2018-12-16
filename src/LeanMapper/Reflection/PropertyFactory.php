@@ -40,10 +40,11 @@ class PropertyFactory
      * @param string $annotation
      * @param EntityReflection $entityReflection
      * @param IMapper|null $mapper
+     * @param callable|null $factory
      * @return Property
      * @throws InvalidAnnotationException
      */
-    public static function createFromAnnotation($annotationType, $annotation, EntityReflection $entityReflection, IMapper $mapper = null)
+    public static function createFromAnnotation($annotationType, $annotation, EntityReflection $entityReflection, IMapper $mapper = null, callable $factory = null)
     {
         $aliases = $entityReflection->getAliases();
 
@@ -254,6 +255,27 @@ class PropertyFactory
         }
 
         $column = $customColumn ?: $column;
+
+        if ($factory !== null) {
+            return call_user_func(
+                $factory,
+                $name,
+                $entityReflection,
+                $column,
+                $propertyType,
+                $isWritable,
+                $isNullable,
+                $containsCollection,
+                $hasDefaultValue,
+                $defaultValue,
+                $relationship,
+                $propertyMethods,
+                $propertyFilters,
+                $propertyPasses,
+                $propertyValuesEnum,
+                $customFlags
+            );
+        }
 
         return new Property(
             $name,
