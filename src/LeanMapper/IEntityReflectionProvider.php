@@ -11,8 +11,8 @@
 
 namespace LeanMapper;
 
+use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
-use ReflectionClass;
 use ReflectionMethod;
 
 interface IEntityReflectionProvider
@@ -21,20 +21,20 @@ interface IEntityReflectionProvider
     /**
      * @return Property[]
      */
-    function getProperties(ReflectionClass $entityClass, IMapper $mapper = null);
+    function getProperties(EntityReflection $entityClass, IMapper $mapper = null);
 
 
 
     /**
      * @return ReflectionMethod[]
      */
-    function getGetters(ReflectionClass $entityClass);
+    function getGetters(EntityReflection $entityClass);
 
 
 
     /**
      * @return ReflectionMethod[]
      */
-    function getSetters(ReflectionClass $entityClass);
+    function getSetters(EntityReflection $entityClass);
 
 }

@@ -1,5 +1,6 @@
 <?php
 
+use LeanMapper\Reflection\EntityReflection;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
@@ -27,7 +28,7 @@ class CustomReflectionProvider extends LeanMapper\DefaultEntityReflectionProvide
     public $propertyParsing = 0;
 
 
-    public function getProperties(\ReflectionClass $entityClass, LeanMapper\IMapper $mapper = null)
+    public function getProperties(EntityReflection $entityClass, LeanMapper\IMapper $mapper = null)
     {
         $this->propertyParsing++;
         return parent::getProperties($entityClass, $mapper);

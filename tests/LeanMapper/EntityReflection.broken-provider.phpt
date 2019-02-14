@@ -1,5 +1,6 @@
 <?php
 
+use LeanMapper\Reflection\EntityReflection;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
@@ -27,19 +28,19 @@ class BaseEntity extends LeanMapper\Entity
  */
 class BrokenReflectionProvider extends LeanMapper\DefaultEntityReflectionProvider
 {
-    public function getProperties(\ReflectionClass $entityClass, LeanMapper\IMapper $mapper = null)
+    public function getProperties(EntityReflection $entityClass, LeanMapper\IMapper $mapper = null)
     {
         return $entityClass->getEntityProperties();
     }
 
 
-    public function getGetters(\ReflectionClass $entityClass)
+    public function getGetters(EntityReflection $entityClass)
     {
         return $entityClass->getGetters();
     }
 
 
-    public function getSetters(\ReflectionClass $entityClass)
+    public function getSetters(EntityReflection $entityClass)
     {
         return (array) $entityClass->getSetter('foo');
     }

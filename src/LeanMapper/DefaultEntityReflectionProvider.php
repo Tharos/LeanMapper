@@ -12,9 +12,9 @@
 namespace LeanMapper;
 
 use LeanMapper\Reflection\AnnotationsParser;
+use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
 use LeanMapper\Reflection\PropertyFactory;
-use ReflectionClass;
 use ReflectionMethod;
 
 class DefaultEntityReflectionProvider implements IEntityReflectionProvider
@@ -28,7 +28,7 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     /**
      * @return Property[]
      */
-    public function getProperties(ReflectionClass $entityClass, IMapper $mapper = null)
+    public function getProperties(EntityReflection $entityClass, IMapper $mapper = null)
     {
         $properties = [];
         $annotationTypes = ['property', 'property-read'];
@@ -47,7 +47,7 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     /**
      * @return ReflectionMethod[]
      */
-    public function getGetters(ReflectionClass $entityClass)
+    public function getGetters(EntityReflection $entityClass)
     {
         $getters = [];
         foreach ($entityClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -64,7 +64,7 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     /**
      * @return ReflectionMethod[]
      */
-    public function getSetters(ReflectionClass $entityClass)
+    public function getSetters(EntityReflection $entityClass)
     {
         $setters = [];
         foreach ($entityClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -79,9 +79,9 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
 
 
     /**
-     * @return ReflectionClass[]
+     * @return EntityReflection[]
      */
-    protected function getFamilyLine(ReflectionClass $member)
+    protected function getFamilyLine(EntityReflection $member)
     {
         $line = [$member];
         while ($member = $member->getParentClass()) {

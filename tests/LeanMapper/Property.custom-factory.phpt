@@ -1,6 +1,7 @@
 <?php
 
 use LeanMapper\Reflection\AnnotationsParser;
+use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
 use LeanMapper\Reflection\PropertyFactory;
 use LeanMapper\Reflection\PropertyFilters;
@@ -16,7 +17,7 @@ class CustomReflectionProvider extends LeanMapper\DefaultEntityReflectionProvide
     public static $customFilters;
 
 
-    public function getProperties(\ReflectionClass $entityClass, LeanMapper\IMapper $mapper = null)
+    public function getProperties(EntityReflection $entityClass, LeanMapper\IMapper $mapper = null)
     {
         $properties = [];
         $annotationTypes = ['property', 'property-read'];
