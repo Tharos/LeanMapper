@@ -1,0 +1,13 @@
+extensions:
+  LeanMapper: LeanMapper\Bridges\Nette\DI\LeanMapperExtension
+
+LeanMapper:
+  db:
+    host: 127.0.0.1
+    username: travis
+    password:
+    driver: sqlite3
+    database: testing
+    lazy: TRUE
+
+  logFile: db.log
