@@ -275,6 +275,17 @@ abstract class Repository
                             $value,
                             -$count
                         );
+                    } elseif ($driver instanceof \Dibi\Drivers\Sqlite3Driver) {
+                        $this->connection->query(
+                            'DELETE FROM %n WHERE [rowid] IN (SELECT [rowid] FROM %n WHERE %n = ? AND %n = ? LIMIT %i)',
+                            $relationshipTable,
+                            $relationshipTable,
+                            $columnReferencingSourceTable,
+                            $entity->$idField,
+                            $columnReferencingTargetTable,
+                            $value,
+                            -$count
+                        );
                     } else {
                         $this->connection->query(
                             'DELETE FROM %n WHERE %n = ? AND %n = ? %lmt',

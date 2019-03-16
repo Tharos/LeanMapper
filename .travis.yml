@@ -6,21 +6,27 @@ php:
     - 7.0
     - 7.1
     - 7.2
+    - 7.3
+
+install:
+    - travis_retry composer install --no-interaction
 
 script:
     - vendor/bin/tester tests -s -p php
-    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then php temp/code-checker/src/code-checker.php; fi
 
 after_failure:
     # Print *.actual content
     - for i in $(find tests -name \*.actual); do echo "--- $i"; cat $i; echo; echo; done
 
-before_script:
-    - travis_retry composer install --no-interaction
-    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then travis_retry composer create-project nette/code-checker temp/code-checker ~2; fi
-    # Modify code-checker tasks
-    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then sed -i -e 's/tabIndentationPhpChecker/yamlIndentationChecker/g' temp/code-checker/src/bootstrap.php; fi
-    - if [ "$TRAVIS_PHP_VERSION" = "7.2" ]; then sed -i -e 's/\*\.css,\*\.less,\*\.js,\*\.json,\*\.neon/\*\.css,\*\.less,\*\.js,\*\.json/g' temp/code-checker/src/bootstrap.php; fi
+jobs:
+    include:
+        -   stage: Code Standard Checker
+            php: 7.2
+            install:
+                - travis_retry composer create-project nette/code-checker temp/code-checker ^3 --no-progress
+
+            script:
+                - php tools/code-checker.php
 
 sudo: false
 

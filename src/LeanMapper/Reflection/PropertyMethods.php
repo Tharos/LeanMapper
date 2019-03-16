@@ -24,45 +24,19 @@ class PropertyMethods
     /** @var string */
     private $getter;
 
-    /** @var string */
+    /** @var string|NULL */
     private $setter;
 
 
 
     /**
-     * @param string $propertyName
-     * @param bool $isWritable
-     * @param string $definition
-     * @throws InvalidAnnotationException
+     * @param  string
+     * @param  string|NULL
      */
-    public function __construct($propertyName, $isWritable, $definition)
+    public function __construct($getter, $setter)
     {
-        $ucName = ucfirst($propertyName);
-        $this->getter = 'get' . $ucName;
-        if ($isWritable) {
-            $this->setter = 'set' . $ucName;
-        }
-        $counter = 0;
-        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $method) {
-            $counter++;
-            if ($counter > 2) {
-                throw new InvalidAnnotationException('Property methods cannot have more than two parts.');
-            }
-            if ($method === '') {
-                continue;
-            }
-            if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $method)) {
-                throw new InvalidAnnotationException("Malformed access method name given: '$method'.");
-            }
-            if ($counter === 1) {
-                $this->getter = $method;
-            } else { // $counter === 2
-                if (!$isWritable) {
-                    throw new InvalidAnnotationException('Property methods can have one part only in read-only properties.');
-                }
-                $this->setter = $method;
-            }
-        }
+        $this->getter = $getter;
+        $this->setter = $setter;
     }
 
 
@@ -87,6 +61,48 @@ class PropertyMethods
     public function getSetter()
     {
         return $this->setter;
+    }
+
+
+
+    /**
+     * @param string $propertyName
+     * @param bool $isWritable
+     * @param string $definition
+     * @return static
+     * @throws InvalidAnnotationException
+     */
+    public static function createFromDefinition($propertyName, $isWritable, $definition)
+    {
+        $ucName = ucfirst($propertyName);
+        $getter = 'get' . $ucName;
+        $setter = NULL;
+        if ($isWritable) {
+            $setter = 'set' . $ucName;
+        }
+        $counter = 0;
+        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $method) {
+            $counter++;
+            if ($counter > 2) {
+                throw new InvalidAnnotationException('Property methods cannot have more than two parts.');
+            }
+            if ($method === '') {
+                continue;
+            }
+            if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $method)) {
+                throw new InvalidAnnotationException("Malformed access method name given: '$method'.");
+            }
+            if ($counter === 1) {
+                $getter = $method;
+            } else { // $counter === 2
+                if (!$isWritable) {
+                    throw new InvalidAnnotationException('Property methods can have one part only in read-only properties.');
+                }
+                $setter = $method;
+            }
+        }
+
+        return new static($getter, $setter);
     }
 
 }

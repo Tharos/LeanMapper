@@ -40,10 +40,11 @@ class PropertyFactory
      * @param string $annotation
      * @param EntityReflection $entityReflection
      * @param IMapper|null $mapper
+     * @param callable|null $factory
      * @return Property
      * @throws InvalidAnnotationException
      */
-    public static function createFromAnnotation($annotationType, $annotation, EntityReflection $entityReflection, IMapper $mapper = null)
+    public static function createFromAnnotation($annotationType, $annotation, EntityReflection $entityReflection, IMapper $mapper = null, callable $factory = null)
     {
         $aliases = $entityReflection->getAliases();
 
@@ -150,7 +151,7 @@ class PropertyFactory
                                 "Multiple m:useMethods flags found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
                             );
                         }
-                        $propertyMethods = new PropertyMethods($name, $isWritable, $flagArgument);
+                        $propertyMethods = PropertyMethods::createFromDefinition($name, $isWritable, $flagArgument);
                         break;
                     case 'filter':
                         if ($propertyFilters !== null) {
@@ -158,7 +159,7 @@ class PropertyFactory
                                 "Multiple m:filter flags found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
                             );
                         }
-                        $propertyFilters = new PropertyFilters($flagArgument);
+                        $propertyFilters = PropertyFilters::createFromDefinition($flagArgument);
                         break;
                     case 'passThru':
                         if ($propertyPasses !== null) {
@@ -166,7 +167,7 @@ class PropertyFactory
                                 "Multiple m:passThru flags found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
                             );
                         }
-                        $propertyPasses = new PropertyPasses($flagArgument);
+                        $propertyPasses = PropertyPasses::createFromDefinition($flagArgument);
                         break;
                     case 'enum':
                         if ($propertyValuesEnum !== null) {
@@ -179,7 +180,7 @@ class PropertyFactory
                                 "Parameter of m:enum flag was not found in property definition: @$annotationType $annotation in entity {$entityReflection->getName()}."
                             );
                         }
-                        $propertyValuesEnum = new PropertyValuesEnum($flagArgument, $entityReflection);
+                        $propertyValuesEnum = PropertyValuesEnum::createFromDefinition($flagArgument, $entityReflection);
                         break;
                     case 'column':
                         if ($customColumn !== null) {
@@ -254,6 +255,27 @@ class PropertyFactory
         }
 
         $column = $customColumn ?: $column;
+
+        if ($factory !== null) {
+            return call_user_func(
+                $factory,
+                $name,
+                $entityReflection,
+                $column,
+                $propertyType,
+                $isWritable,
+                $isNullable,
+                $containsCollection,
+                $hasDefaultValue,
+                $defaultValue,
+                $relationship,
+                $propertyMethods,
+                $propertyFilters,
+                $propertyPasses,
+                $propertyValuesEnum,
+                $customFlags
+            );
+        }
 
         return new Property(
             $name,

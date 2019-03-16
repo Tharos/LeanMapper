@@ -8,9 +8,9 @@ require_once __DIR__ . '/../bootstrap.php';
 require_once __DIR__ . '/../libs/DummyDrivers.php';
 
 $driver = new PostgreDummyDriver;
-$connection = new Connection(array(
+$connection = new Connection([
     'driver' => $driver,
-));
+]);
 
 ////////////////////
 
@@ -84,7 +84,7 @@ $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 
 $book = $bookRepository->find(2);
 
-$sqls = array();
+$sqls = [];
 $connection->onEvent[] = function ($event) use (&$sqls) {
     $sqls[] = $event->sql;
 };

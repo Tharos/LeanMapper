@@ -44,3 +44,23 @@ $mapper = $container->getService('LeanMapper.mapper');
 \Tester\Assert::true($mapper instanceof LeanMapper\DefaultMapper);
 $mapper = $container->getService('LeanMapper.mapper');
 \Tester\Assert::true($mapper instanceof MyMapper);
+
+
+/// debug mode + FileLogger
+$configurator = new Configurator;
+$configurator->setTempDirectory(TEMP_DIR);
+$configurator->setDebugMode(TRUE);
+$configurator->addParameters([
+    'container' => ['class' => 'SystemContainer_' . Random::generate()],
+]);
+$configurator->addConfig(__DIR__ . '/DI.extension.3.neon');
+
+/** @var \Nette\DI\Container $container */
+$container = $configurator->createContainer();
+\Tester\Assert::true($container instanceof \Nette\DI\Container);
+
+$connection = $container->getService('LeanMapper.connection');
+\Tester\Assert::same([
+    [$container->getService('LeanMapper.panel'), 'logEvent'],
+    [$container->getService('LeanMapper.fileLogger'), 'logEvent'],
+], $connection->onEvent);

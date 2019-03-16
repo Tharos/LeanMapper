@@ -29,36 +29,10 @@ class PropertyFilters
 
 
 
-    /**
-     * @param string $definition
-     * @throws InvalidAnnotationException
-     */
-    public function __construct($definition)
+    public function __construct(array $filters, array $targetedArgs)
     {
-        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $set) {
-            if ($set === '') {
-                $this->filters[] = $this->targetedArgs[] = [];
-                continue;
-            }
-            $filters = $targetedArgs = [];
-            foreach (preg_split('#\s*,\s*#', $set) as $filter) {
-                $matches = [];
-                preg_match('~^([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(?:#(.*))?$~', $filter, $matches);
-                if (empty($matches)) {
-                    throw new InvalidAnnotationException("Malformed filter name given: '$filter'.");
-                }
-                $filterName = $matches[1];
-                if (isset($filters[$filterName])) {
-                    unset($filters[$filterName], $targetedArgs[$filterName]);
-                }
-                $filters[$filterName] = $filterName;
-                if (isset($matches[2])) {
-                    $targetedArgs[$filterName] = [$matches[2]];
-                }
-            }
-            $this->filters[] = $filters;
-            $this->targetedArgs[] = $targetedArgs;
-        }
+        $this->filters = $filters;
+        $this->targetedArgs = $targetedArgs;
     }
 
 
@@ -91,6 +65,45 @@ class PropertyFilters
             return [];
         }
         return $this->targetedArgs[$index];
+    }
+
+
+
+    /**
+     * @param string $definition
+     * @return static
+     * @throws InvalidAnnotationException
+     */
+    public static function createFromDefinition($definition)
+    {
+        $propertyFilters = [];
+        $propertyTargetedArgs = [];
+        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $set) {
+            if ($set === '') {
+                $propertyFilters[] = $propertyTargetedArgs[] = [];
+                continue;
+            }
+            $filters = $targetedArgs = [];
+            foreach (preg_split('#\s*,\s*#', $set) as $filter) {
+                $matches = [];
+                preg_match('~^([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(?:#(.*))?$~', $filter, $matches);
+                if (empty($matches)) {
+                    throw new InvalidAnnotationException("Malformed filter name given: '$filter'.");
+                }
+                $filterName = $matches[1];
+                if (isset($filters[$filterName])) {
+                    unset($filters[$filterName], $targetedArgs[$filterName]);
+                }
+                $filters[$filterName] = $filterName;
+                if (isset($matches[2])) {
+                    $targetedArgs[$filterName] = [$matches[2]];
+                }
+            }
+            $propertyFilters[] = $filters;
+            $propertyTargetedArgs[] = $targetedArgs;
+        }
+
+        return new static($propertyFilters, $propertyTargetedArgs);
     }
 
 }

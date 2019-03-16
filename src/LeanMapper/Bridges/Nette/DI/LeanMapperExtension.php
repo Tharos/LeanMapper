@@ -62,8 +62,11 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
             $panel = $container->addDefinition($this->prefix('panel'))->setClass('Dibi\Bridges\Tracy\Panel');
             $connection->addSetup([$panel, 'register'], [$connection]);
             if ($config['logFile']) {
-                $fileLogger = $container->addDefinition($this->prefix('fileLogger'))->setClass('SavingFunds\LeanMapper\FileLogger');
-                $connection->addSetup([$fileLogger, 'register'], [$connection, $config['logFile']]);
+                $fileLogger = $container->addDefinition($this->prefix('fileLogger'))
+                    ->setClass('Dibi\Loggers\FileLogger', [$config['logFile']]);
+                $connection->addSetup('$service->onEvent[] = ?', [
+                    [$fileLogger, 'logEvent'],
+                ]);
             }
         }
     }

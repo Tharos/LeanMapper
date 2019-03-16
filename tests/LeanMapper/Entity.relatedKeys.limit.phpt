@@ -68,13 +68,13 @@ $author->oldestBook;
 Assert::equal(
     [
         'SELECT [author].* FROM [author]',
-        'SELECT * FROM (' . implode(') UNION SELECT * FROM (', array(
+        'SELECT * FROM (' . implode(') UNION SELECT * FROM (', [
             'SELECT [book].* FROM [book] WHERE [book].[author_id] = 1 ORDER BY [pubdate] LIMIT 1',
             'SELECT [book].* FROM [book] WHERE [book].[author_id] = 2 ORDER BY [pubdate] LIMIT 1',
             'SELECT [book].* FROM [book] WHERE [book].[author_id] = 3 ORDER BY [pubdate] LIMIT 1',
             'SELECT [book].* FROM [book] WHERE [book].[author_id] = 4 ORDER BY [pubdate] LIMIT 1',
             'SELECT [book].* FROM [book] WHERE [book].[author_id] = 5 ORDER BY [pubdate] LIMIT 1',
-        )) . ')'
+        ]) . ')'
     ],
     $queries
 );

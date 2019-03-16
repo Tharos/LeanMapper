@@ -121,7 +121,7 @@ class Result implements \Iterator
                 }
             }
         }
-        return new self($dataArray, $table, $connection, $mapper);
+        return new static($dataArray, $table, $connection, $mapper);
     }
 
 
@@ -133,7 +133,7 @@ class Result implements \Iterator
      */
     public static function createDetachedInstance()
     {
-        return new self;
+        return new static;
     }
 
 
@@ -560,6 +560,13 @@ class Result implements \Iterator
     public function addToReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = self::STRATEGY_IN)
     {
         $result = $this->getReferencingResult($table, $viaColumn, $filtering, $strategy);
+
+        foreach ($result as $key => $entry) {
+            if (array_diff_assoc($values, $entry) === []) {
+                return;
+            }
+        }
+
         $result->addDataEntry($values);
         unset($this->index[spl_object_hash($result)]);
     }
@@ -988,7 +995,7 @@ class Result implements \Iterator
         if ($isAlias) {
             $viaColumn = $this->trimAlias($viaColumn);
         }
-        $statements = array();
+        $statements = [];
         foreach ($ids as $id) {
             $statement = $this->createTableSelection($table, [$id]);
             if ($isAlias) {
