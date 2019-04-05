@@ -25,8 +25,8 @@ set_time_limit(0);
 $checker = new Nette\CodeChecker\Checker;
 $tasks = Nette\CodeChecker\Tasks::class;
 
-$checker->readOnly = TRUE;
-$checker->showProgress = FALSE;
+$checker->readOnly = true;
+$checker->showProgress = false;
 
 $checker->addTask([$tasks, 'controlCharactersChecker']);
 $checker->addTask([$tasks, 'bomFixer']);

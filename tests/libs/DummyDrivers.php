@@ -34,12 +34,12 @@ class ResultDummyDriver implements \Dibi\ResultDriver
 
     public function fetch($assoc)
     {
-        $raw = array_slice($this->data, $this->position, 1, TRUE);
+        $raw = array_slice($this->data, $this->position, 1, true);
         $data = reset($raw);
         $this->position++;
 
         if (!is_array($raw)) {
-            return FALSE;
+            return false;
         }
 
         if ($assoc) {
