@@ -13,7 +13,7 @@ require_once __DIR__ . '/../bootstrap.php';
 
 class CustomReflectionProvider extends LeanMapper\DefaultEntityReflectionProvider
 {
-    /** @var PropertyFilters|NULL */
+    /** @var PropertyFilters|null */
     public static $customFilters;
 
 
@@ -50,7 +50,7 @@ class CustomReflectionProvider extends LeanMapper\DefaultEntityReflectionProvide
         $customFlags
     )
     {
-        if ($propertyFilters !== NULL) {
+        if ($propertyFilters !== null) {
             $propertyFilters = self::$customFilters;
         }
         return new Property(

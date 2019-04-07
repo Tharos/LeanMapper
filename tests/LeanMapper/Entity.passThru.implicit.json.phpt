@@ -36,7 +36,7 @@ class Book extends LeanMapper\Entity
     protected function convertJson($value)
     {
         if (is_string($value)) {
-            return (array) json_decode($value, TRUE);
+            return (array) json_decode($value, true);
         }
 
         return json_encode((array) $value);

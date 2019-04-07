@@ -49,7 +49,7 @@ $mapper = $container->getService('LeanMapper.mapper');
 /// debug mode + FileLogger
 $configurator = new Configurator;
 $configurator->setTempDirectory(TEMP_DIR);
-$configurator->setDebugMode(TRUE);
+$configurator->setDebugMode(true);
 $configurator->addParameters([
     'container' => ['class' => 'SystemContainer_' . Random::generate()],
 ]);

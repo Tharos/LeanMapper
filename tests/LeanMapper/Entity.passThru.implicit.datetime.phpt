@@ -15,7 +15,7 @@ class Book extends LeanMapper\Entity
 {
     protected function decodeRowValue($value, Property $property)
     {
-        if (is_a($property->getType(), 'DateTime', TRUE)) {
+        if (is_a($property->getType(), 'DateTime', true)) {
             if ($value instanceof DateTime) {
                 return clone $value;
             }
@@ -28,7 +28,7 @@ class Book extends LeanMapper\Entity
 
     protected function encodeRowValue($value, Property $property)
     {
-        if (is_a($property->getType(), 'DateTime', TRUE)) {
+        if (is_a($property->getType(), 'DateTime', true)) {
             if ($value instanceof DateTime) {
                 return $value->format('Y-m-d');
             }

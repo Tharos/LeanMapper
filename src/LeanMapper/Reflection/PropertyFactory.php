@@ -112,7 +112,7 @@ class PropertyFactory
 
             foreach ($flagMatches as $match) {
                 if ($match[1] === 'belongsToOne' || $match[1] === 'belongsToMany') {
-                    $isWritable = FALSE;
+                    $isWritable = false;
                     break;
                 }
             }
