@@ -353,7 +353,7 @@ abstract class Repository
         }
         $entities = [];
         $collection = Result::createInstance($rows, $table, $this->connection, $this->mapper);
-        $primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+        $primaryKey = $this->mapper->getPrimaryKey($table);
         if ($entityClass !== null) {
             foreach ($rows as $dibiRow) {
                 $entity = $this->entityFactory->createEntity(
