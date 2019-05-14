@@ -24,14 +24,14 @@ class PropertyMethods
     /** @var string */
     private $getter;
 
-    /** @var string|NULL */
+    /** @var string|null */
     private $setter;
 
 
 
     /**
      * @param  string
-     * @param  string|NULL
+     * @param  string|null
      */
     public function __construct($getter, $setter)
     {
@@ -76,7 +76,7 @@ class PropertyMethods
     {
         $ucName = ucfirst($propertyName);
         $getter = 'get' . $ucName;
-        $setter = NULL;
+        $setter = null;
         if ($isWritable) {
             $setter = 'set' . $ucName;
         }

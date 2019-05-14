@@ -93,22 +93,22 @@ $oldAuthor = $book->author;
 $book->name = $oldName;
 $book->author = $oldAuthor;
 
-Assert::same(FALSE, $book->isModified());
+Assert::same(false, $book->isModified());
 
 //////////
 
 $book->name = 'new book name';
 $book->author = $authorRepository->find(1);
 
-Assert::same(TRUE, $book->isModified());
+Assert::same(true, $book->isModified());
 
 //////////
 
 $newBook = new Book;
 
-Assert::same(FALSE, $newBook->isModified());
+Assert::same(false, $newBook->isModified());
 
 $newBook->name = 'new book name #2';
 $newBook->author = $authorRepository->find(1);
 
-Assert::same(TRUE, $newBook->isModified());
+Assert::same(true, $newBook->isModified());

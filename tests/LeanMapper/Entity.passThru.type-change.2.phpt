@@ -15,13 +15,13 @@ class Foo extends LeanMapper\Entity
 {
     protected function jsonEncodeData($data)
     {
-        return !empty($data) ? json_encode($data) : NULL;
+        return !empty($data) ? json_encode($data) : null;
     }
 
 
     protected function jsonDecodeData($data)
     {
-        return !empty($data) ? json_decode($data, TRUE) : [];
+        return !empty($data) ? json_decode($data, true) : [];
     }
 }
 

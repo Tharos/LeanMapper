@@ -353,7 +353,7 @@ abstract class Repository
         }
         $entities = [];
         $collection = Result::createInstance($rows, $table, $this->connection, $this->mapper);
-        $primaryKey = $this->mapper->getPrimaryKey($this->getTable());
+        $primaryKey = $this->mapper->getPrimaryKey($table);
         if ($entityClass !== null) {
             foreach ($rows as $dibiRow) {
                 $entity = $this->entityFactory->createEntity(
@@ -366,7 +366,7 @@ abstract class Repository
         } else {
             foreach ($rows as $dibiRow) {
                 $row = $collection->getRow($dibiRow->$primaryKey);
-                $entityClass = $this->mapper->getEntityClass($this->getTable(), $row);
+                $entityClass = $this->mapper->getEntityClass($table, $row);
                 $entity = $this->entityFactory->createEntity($entityClass, $row);
                 $entity->makeAlive($this->entityFactory);
                 $entities[$dibiRow->$primaryKey] = $entity;
