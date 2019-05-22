@@ -8,7 +8,7 @@ require_once __DIR__ . '/../bootstrap.php';
 //////////
 
 /**
- * @property DateTime $published
+ * @property DateTimeImmutable $published
  */
 class Book extends LeanMapper\Entity
 {
@@ -27,7 +27,7 @@ Assert::exception(
         $book->published = new ArrayObject;
     },
     'LeanMapper\Exception\InvalidValueException',
-    "Unexpected value type given in property 'published' in entity Book, DateTime expected, instance of ArrayObject given."
+    "Unexpected value type given in property 'published' in entity Book, DateTimeImmutable expected, instance of ArrayObject given."
 );
 
 //////////
@@ -45,7 +45,7 @@ Assert::exception(
         $book->published;
     },
     'LeanMapper\Exception\InvalidValueException',
-    "Property 'published' in entity Book is expected to contain an instance of DateTime, instance of ArrayObject given."
+    "Property 'published' in entity Book is expected to contain an instance of DateTimeImmutable, instance of ArrayObject given."
 );
 
 //////////
@@ -59,4 +59,4 @@ $dibiRow = new \Dibi\Row(
 $book = new Book(Result::createInstance($dibiRow, 'book', $connection, $mapper)->getRow(Result::DETACHED_ROW_ID));
 
 Assert::type('\Dibi\DateTime', $book->published);
-Assert::type('DateTime', $book->published);
+Assert::type('DateTimeImmutable', $book->published);

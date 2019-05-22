@@ -107,7 +107,7 @@ class Connection extends \Dibi\Connection
      *
      * @return Fluent
      */
-    public function command()
+    public function command(): \Dibi\Fluent
     {
         return new Fluent($this);
     }

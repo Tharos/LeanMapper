@@ -72,10 +72,9 @@ class Fluent extends \Dibi\Fluent
      * Exports current state
      *
      * @param string|null $clause
-     * @param array|null $args
      * @return array
      */
-    public function _export($clause = null, $args = null)
+    public function _export(string $clause = null, array $args = []): array
     {
         $args = func_get_args();
 
