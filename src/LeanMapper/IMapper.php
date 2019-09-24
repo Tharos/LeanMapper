@@ -91,7 +91,7 @@ interface IMapper
      * @param string|null $relationshipName
      * @return string
      */
-    public function getRelationshipColumn($sourceTable, $targetTable/*, $relationshipName = null*/);
+    public function getRelationshipColumn($sourceTable, $targetTable, $relationshipName = null);
 
 
 
