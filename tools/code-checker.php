@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $autoload = __DIR__ . '/../temp/code-checker/vendor/autoload.php';
 
 if (@!include $autoload) {
@@ -35,6 +37,7 @@ $checker->addTask([$tasks, 'phpSyntaxChecker'], '*.php,*.phpt');
 $checker->addTask([$tasks, 'invalidPhpDocChecker'], '*.php,*.phpt');
 $checker->addTask([$tasks, 'shortArraySyntaxFixer'], '*.php,*.phpt');
 
+$checker->addTask([$tasks, 'strictTypesDeclarationChecker'], '*.php,*.phpt');
 $checker->addTask([$tasks, 'newlineNormalizer'], '!*.sh');
 
 $checker->addTask([$tasks, 'invalidDoubleQuotedStringChecker'], '*.php,*.phpt');

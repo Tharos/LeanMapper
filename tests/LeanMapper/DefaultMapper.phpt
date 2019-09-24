@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\DefaultMapper;
 use Tester\Assert;
 

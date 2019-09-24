@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Test: LeanMapperQuery\Query limit and offset.
  * @author Michal Bohuslávek

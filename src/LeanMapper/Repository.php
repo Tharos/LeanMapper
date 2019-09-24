@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use Dibi\Row as DibiRow;
@@ -428,7 +430,7 @@ abstract class Repository
     {
         if ($this->docComment === null) {
             $reflection = new ReflectionClass(get_called_class());
-            $this->docComment = $reflection->getDocComment();
+            $this->docComment = (string) $reflection->getDocComment();
         }
         return $this->docComment;
     }

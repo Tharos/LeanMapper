@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Reflection\Property;
 use Tester\Assert;
 
@@ -149,7 +151,7 @@ class Time
 
     public function getTime()
     {
-        return str_pad($this->hour, 2, '0', STR_PAD_LEFT) . ':' . str_pad($this->minute, 2, '0', STR_PAD_LEFT);
+        return str_pad((string) $this->hour, 2, '0', STR_PAD_LEFT) . ':' . str_pad((string) $this->minute, 2, '0', STR_PAD_LEFT);
     }
 }
 

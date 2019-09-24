@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Reflection\AnnotationsParser;
 use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;

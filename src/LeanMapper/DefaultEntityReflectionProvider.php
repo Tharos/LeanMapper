@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use LeanMapper\Reflection\AnnotationsParser;
@@ -34,7 +36,7 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
         $annotationTypes = ['property', 'property-read'];
         foreach ($this->getFamilyLine($entityClass) as $member) {
             foreach ($annotationTypes as $annotationType) {
-                foreach (AnnotationsParser::parseMultiLineAnnotationValues($annotationType, $member->getDocComment()) as $definition) {
+                foreach (AnnotationsParser::parseMultiLineAnnotationValues($annotationType, (string) $member->getDocComment()) as $definition) {
                     $properties[] = PropertyFactory::createFromAnnotation($annotationType, $definition, $member, $mapper);
                 }
             }

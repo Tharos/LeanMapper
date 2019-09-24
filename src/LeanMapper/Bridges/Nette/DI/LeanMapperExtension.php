@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LeanMapper\Bridges\Nette\DI;
 
 use Nette;
