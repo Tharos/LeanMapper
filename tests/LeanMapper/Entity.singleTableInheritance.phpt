@@ -10,7 +10,10 @@ require_once __DIR__ . '/../bootstrap.php';
 class Mapper extends LeanMapper\DefaultMapper
 {
 
-    protected $defaultEntityNamespace = null;
+    public function __construct()
+    {
+        $this->defaultEntityNamespace = null;
+    }
 
 
 

@@ -44,7 +44,10 @@ class AuthorContract extends Entity
 class Mapper extends DefaultMapper
 {
 
-    protected $defaultEntityNamespace = null;
+    public function __construct()
+    {
+        $this->defaultEntityNamespace = null;
+    }
 
 
 

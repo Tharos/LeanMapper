@@ -32,18 +32,11 @@ if (!copy(__DIR__ . '/db/library-ref.sq3', TEMP_DIR . '/library.sq3')) {
     exit(1);
 }
 
-class TestMapper extends DefaultMapper
-{
-
-    protected $defaultEntityNamespace = null;
-
-}
-
 $connection = new Connection([
     'driver' => 'sqlite3',
     'database' => TEMP_DIR . '/library.sq3',
 ]);
 
-$mapper = new TestMapper;
+$mapper = new DefaultMapper(null);
 
 $entityFactory = new DefaultEntityFactory;

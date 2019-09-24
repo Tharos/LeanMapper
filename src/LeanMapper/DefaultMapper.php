@@ -21,11 +21,21 @@ use LeanMapper\Exception\InvalidStateException;
 class DefaultMapper implements IMapper
 {
 
-    /** @var string */
-    protected $defaultEntityNamespace = 'Model\Entity';
+    /** @var string|null */
+    protected $defaultEntityNamespace;
 
     /** @var string */
     protected $relationshipTableGlue = '_';
+
+
+
+    /**
+     * @param  string|null
+     */
+    public function __construct($defaultEntityNamespace = 'Model\Entity')
+    {
+        $this->defaultEntityNamespace = $defaultEntityNamespace;
+    }
 
 
 
