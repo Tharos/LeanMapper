@@ -37,7 +37,7 @@ class Book extends LeanMapper\Entity
             return $value;
         }
 
-        return parent::decodeRowValue($value, $property);
+        return parent::encodeRowValue($value, $property);
     }
 }
 
