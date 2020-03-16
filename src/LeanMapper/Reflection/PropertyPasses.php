@@ -31,11 +31,7 @@ class PropertyPasses
 
 
 
-    /**
-     * @param  string|null $getterPass
-     * @param  string|null $setterPass
-     */
-    public function __construct($getterPass, $setterPass)
+    public function __construct(?string $getterPass, ?string $setterPass)
     {
         $this->getterPass = $getterPass;
         $this->setterPass = $setterPass;
@@ -45,10 +41,8 @@ class PropertyPasses
 
     /**
      * Gets getter pass
-     *
-     * @return string|null
      */
-    public function getGetterPass()
+    public function getGetterPass(): ?string
     {
         return $this->getterPass;
     }
@@ -57,21 +51,17 @@ class PropertyPasses
 
     /**
      * Gets setter pass
-     *
-     * @return string|null
      */
-    public function getSetterPass()
+    public function getSetterPass(): ?string
     {
         return $this->setterPass;
     }
 
 
     /**
-     * @param string $definition
-     * @return static
      * @throws InvalidAnnotationException
      */
-    public static function createFromDefinition($definition)
+    public static function createFromDefinition(string $definition): self
     {
         $counter = 0;
         $getterPass = null;

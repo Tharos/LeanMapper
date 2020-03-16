@@ -17,7 +17,7 @@ require_once __DIR__ . '/../bootstrap.php';
 class Book extends Entity
 {
 
-    protected function initDefaults()
+    protected function initDefaults(): void
     {
         $this->assign(
             [
@@ -34,7 +34,7 @@ class Book extends Entity
  */
 class Role extends LeanMapper\Entity
 {
-    protected function initDefaults()
+    protected function initDefaults(): void
     {
         $this->assign(
             [
@@ -50,7 +50,7 @@ class Role extends LeanMapper\Entity
  */
 class User extends LeanMapper\Entity
 {
-    protected function initDefaults()
+    protected function initDefaults(): void
     {
         $this->firstname = null;
     }

@@ -50,7 +50,7 @@ class AliasesParser
      * @param string $namespace
      * @return Aliases
      */
-    public static function parseSource($source, $namespace = '')
+    public static function parseSource(string $source, string $namespace = ''): Aliases
     {
         $matches = [];
         preg_match_all('#use[^;()]+?;#im', $source, $matches);

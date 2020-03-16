@@ -29,11 +29,7 @@ class PropertyType
 
 
 
-    /**
-     * @param string $type
-     * @param Aliases $aliases
-     */
-    public function __construct($type, Aliases $aliases)
+    public function __construct(string $type, Aliases $aliases)
     {
         if (preg_match('#^(boolean|bool|integer|int|float|string|array)$#', $type)) {
             if ($type === 'bool') {
@@ -58,10 +54,8 @@ class PropertyType
 
     /**
      * Gets type
-     *
-     * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
@@ -70,10 +64,8 @@ class PropertyType
 
     /**
      * Tells whether current type is basic type (boolean|integer|float|string|array)
-     *
-     * @return bool
      */
-    public function isBasicType()
+    public function isBasicType(): bool
     {
         return $this->isBasicType;
     }

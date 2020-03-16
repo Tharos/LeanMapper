@@ -8,7 +8,7 @@ require_once __DIR__ . '/../bootstrap.php';
 
 class BaseEntity extends LeanMapper\Entity
 {
-    public static function getReflectionProvider()
+    public static function getReflectionProvider(): LeanMapper\IEntityReflectionProvider
     {
         return parent::getReflectionProvider();
     }
@@ -46,7 +46,7 @@ class FooCustom extends BaseEntity
     private static $reflectionProvider = null;
 
 
-    public static function getReflectionProvider()
+    public static function getReflectionProvider(): LeanMapper\IEntityReflectionProvider
     {
         if (self::$reflectionProvider === null) {
             self::$reflectionProvider = new CustomReflectionProvider;

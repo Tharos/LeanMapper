@@ -44,9 +44,8 @@ class PropertyValuesEnum
      * Tells wheter given value is from enumeration
      *
      * @param mixed $value
-     * @return bool
      */
-    public function isValueFromEnum($value)
+    public function isValueFromEnum($value): bool
     {
         return isset($this->index[$value]);
     }
@@ -55,22 +54,17 @@ class PropertyValuesEnum
 
     /**
      * Gets possible enumeration values
-     *
-     * @return array
      */
-    public function getValues()
+    public function getValues(): array
     {
         return $this->values;
     }
 
 
     /**
-     * @param string $definition
-     * @param EntityReflection $reflection
-     * @return static
      * @throws InvalidAnnotationException
      */
-    public static function createFromDefinition($definition, EntityReflection $reflection)
+    public static function createFromDefinition(string $definition, EntityReflection $reflection): self
     {
         $matches = [];
         preg_match(

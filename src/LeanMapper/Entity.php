@@ -57,11 +57,8 @@ abstract class Entity
 
     /**
      * Gets reflection of current entity
-     *
-     * @param IMapper|null $mapper
-     * @return EntityReflection
      */
-    public static function getReflection(IMapper $mapper = null)
+    public static function getReflection(?IMapper $mapper = null): EntityReflection
     {
         $class = get_called_class();
         $mapperClass = $mapper !== null ? get_class($mapper) : '';
@@ -73,10 +70,7 @@ abstract class Entity
 
 
 
-    /**
-     * @return IEntityReflectionProvider
-     */
-    protected static function getReflectionProvider()
+    protected static function getReflectionProvider(): IEntityReflectionProvider
     {
         static $reflectionProvider = null;
 
@@ -128,12 +122,11 @@ abstract class Entity
 
 
     /**
-     * @param string $name
      * @return mixed
      * @throws InvalidMethodCallException
      * @throws MemberAccessException
      */
-    public function __get($name)
+    public function __get(string $name)
     {
         $reflection = $this->getCurrentReflection();
         $nativeGetter = $reflection->getGetter('get' . ucfirst($name));
@@ -161,12 +154,11 @@ abstract class Entity
 
 
     /**
-     * @param string $name
      * @param mixed $value
      * @throws InvalidMethodCallException
      * @throws MemberAccessException
      */
-    public function __set($name, $value)
+    public function __set(string $name, $value): void
     {
         $reflection = $this->getCurrentReflection();
         $nativeSetter = $reflection->getSetter('set' . ucfirst($name));
@@ -201,11 +193,9 @@ abstract class Entity
     /**
      * Tells whether given property exists and is not null
      *
-     * @param string $name
      * @throws LeanMapperException
-     * @return bool
      */
-    public function __isset($name)
+    public function __isset(string $name): bool
     {
         try {
             return $this->$name !== null;
@@ -222,13 +212,11 @@ abstract class Entity
 
 
     /**
-     * @param string $name
-     * @param array $arguments
      * @return mixed|void
      * @throws InvalidMethodCallException
      * @throws InvalidArgumentException
      */
-    public function __call($name, array $arguments)
+    public function __call(string $name, array $arguments)
     {
         $e = new InvalidMethodCallException("Method $name in entity " . get_called_class() . ' is not callable.');
         if (strlen($name) < 4) {
@@ -292,20 +280,12 @@ abstract class Entity
     /**
      * Performs mass value assignment (using setters)
      *
-     * @param array|Traversable $values
-     * @param array|null $whitelist
      * @throws InvalidArgumentException
      */
-    public function assign($values, array $whitelist = null)
+    public function assign(iterable $values, ?array $whitelist = null): void
     {
         if ($whitelist !== null) {
             $whitelist = array_flip($whitelist);
-        }
-        if (!is_array($values) and !($values instanceof Traversable)) {
-            $givenType = Helpers::getType($values);
-            throw new InvalidArgumentException(
-                "Argument \$values in " . get_called_class() . "::assign must contain either array or instance of " . Traversable::class . ", $givenType given."
-            );
         }
         foreach ($values as $property => $value) {
             if ($whitelist === null or isset($whitelist[$property])) {
@@ -318,11 +298,8 @@ abstract class Entity
 
     /**
      * Gets high-level values of properties
-     *
-     * @param array|null $whitelist
-     * @return array
      */
-    public function getData(array $whitelist = null)
+    public function getData(?array $whitelist = null): array
     {
         $data = [];
         if ($whitelist !== null) {
@@ -360,10 +337,8 @@ abstract class Entity
 
     /**
      * Gets low-level values of underlying Row columns
-     *
-     * @return array
      */
-    public function getRowData()
+    public function getRowData(): array
     {
         return $this->row->getData();
     }
@@ -372,10 +347,8 @@ abstract class Entity
 
     /**
      * Gets low-level values of underlying Row columns that were modified
-     *
-     * @return array
      */
-    public function getModifiedRowData()
+    public function getModifiedRowData(): array
     {
         return $this->row->getModifiedData();
     }
@@ -384,15 +357,16 @@ abstract class Entity
 
     /**
      * Gets current M:N differences
-     *
-     * @return array
      */
-    public function getHasManyRowDifferences()
+    public function getHasManyRowDifferences(): array
     {
         $differences = [];
         foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
             if ($property->hasRelationship() and ($property->getRelationship() instanceof Relationship\HasMany)) {
                 $relationship = $property->getRelationship();
+                if (!$relationship->hasRelationshipTable()) {
+                    throw new InvalidStateException('Cannot get hasMany differences from detached entity.');
+                }
                 $difference = $this->row->createReferencingDataDifference(
                     $relationship->getRelationshipTable(),
                     $relationship->getColumnReferencingSourceTable(),
@@ -414,10 +388,8 @@ abstract class Entity
 
     /**
      * Tells whether entity was modified
-     *
-     * @return bool
      */
-    public function isModified()
+    public function isModified(): bool
     {
         return $this->row->isModified();
     }
@@ -427,7 +399,7 @@ abstract class Entity
     /**
      * Marks entity as non-modified (isModified returns false right after this method call)
      */
-    public function markAsUpdated()
+    public function markAsUpdated(): void
     {
         $this->row->markAsUpdated();
         foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
@@ -448,7 +420,7 @@ abstract class Entity
     /**
      * Detaches entity
      */
-    public function detach()
+    public function detach(): void
     {
         $this->row->detach();
         $this->entityFactory = null;
@@ -460,10 +432,10 @@ abstract class Entity
     /**
      * Attaches entity
      *
-     * @param int $id
+     * @param  int|string $id
      * @throws InvalidStateException
      */
-    public function attach($id)
+    public function attach($id): void
     {
         if ($this->mapper === null) {
             throw new InvalidStateException('Missing mapper in ' . get_called_class() . '.');
@@ -475,10 +447,8 @@ abstract class Entity
 
     /**
      * Tells whether entity is in detached state (like newly created entity)
-     *
-     * @return bool
      */
-    public function isDetached()
+    public function isDetached(): bool
     {
         return $this->row->isDetached();
     }
@@ -488,13 +458,10 @@ abstract class Entity
     /**
      * Provides dependencies
      *
-     * @param IEntityFactory|null $entityFactory
-     * @param Connection|null $connection
-     * @param IMapper|null $mapper
      * @throws InvalidArgumentException
      * @throws InvalidStateException
      */
-    public function makeAlive(IEntityFactory $entityFactory = null, Connection $connection = null, IMapper $mapper = null)
+    public function makeAlive(?IEntityFactory $entityFactory = null, ?Connection $connection = null, ?IMapper $mapper = null): void
     {
         $entityFactory === null or $this->setEntityFactory($entityFactory);
         $mapper === null or $this->useMapper($mapper);
@@ -525,7 +492,6 @@ abstract class Entity
 
     /**
      * @param Property|string $property
-     * @param array $filterArgs
      * @throws InvalidValueException
      * @throws InvalidStateException
      * @throws MemberAccessException
@@ -672,7 +638,7 @@ abstract class Entity
      * @throws InvalidValueException
      * @throws MemberAccessException
      */
-    protected function set($property, $value)
+    protected function set($property, $value): void
     {
         if ($property instanceof Property) {
             $name = $property->getName();
@@ -749,10 +715,8 @@ abstract class Entity
 
     /**
      * Gets current entity's reflection (cached in memory)
-     *
-     * @return EntityReflection
      */
-    protected function getCurrentReflection()
+    protected function getCurrentReflection(): EntityReflection
     {
         if ($this->currentReflection === null) {
             $this->currentReflection = $this->getReflection($this->mapper);
@@ -793,11 +757,10 @@ abstract class Entity
 
 
     /**
-     * @param Entity|null $entity
      * @param Property|string $property micro-optimalization
      * @throws InvalidMethodCallException
      */
-    protected function assignEntityToProperty(Entity $entity = null, $property)
+    protected function assignEntityToProperty(?Entity $entity = null, $property):void
     {
         if ($entity !== null) {
             $this->useMapper($entity->mapper);
@@ -854,12 +817,7 @@ abstract class Entity
 
 
 
-    /**
-     * @param string $entityClass
-     * @param Caller $caller
-     * @return ImplicitFilters
-     */
-    protected function createImplicitFilters($entityClass, Caller $caller = null)
+    protected function createImplicitFilters(string $entityClass, ?Caller $caller = null): ImplicitFilters
     {
         $implicitFilters = $this->mapper->getImplicitFilters($entityClass, $caller);
         return ($implicitFilters instanceof ImplicitFilters) ? $implicitFilters : new ImplicitFilters($implicitFilters);
@@ -867,12 +825,7 @@ abstract class Entity
 
 
 
-    /**
-     * @param array $filters1
-     * @param array $filters2
-     * @return array
-     */
-    protected function mergeFilters(array $filters1, array $filters2)
+    protected function mergeFilters(array $filters1, array $filters2): array
     {
         if (!empty($filters2)) {
             foreach (array_reverse($filters2) as $filter) {
@@ -889,7 +842,7 @@ abstract class Entity
     /**
      * Allows initialize properties' default values
      */
-    protected function initDefaults()
+    protected function initDefaults(): void
     {
     }
 
@@ -897,14 +850,13 @@ abstract class Entity
     ////////////////////
 
     /**
-     * @param Property $property
-     * @param Relationship\HasOne $relationship micro-optimalization
-     * @param Filtering|null $filtering
      * @throws InvalidValueException
-     * @return Entity|null
      */
-    private function getHasOneValue(Property $property, Relationship\HasOne $relationship, Filtering $filtering = null)
+    private function getHasOneValue(Property $property, Relationship\HasOne $relationship, ?Filtering $filtering = null): ?Entity
     {
+        if (!$relationship->hasTargetTable()) {
+            throw new InvalidStateException('Cannot get referenced Entity for detached Entity.');
+        }
         $targetTable = $relationship->getTargetTable();
         $row = $this->row->referenced($targetTable, $relationship->getColumnReferencingTargetTable(), $filtering);
         if ($row === null) {
@@ -926,19 +878,18 @@ abstract class Entity
 
 
     /**
-     * @param Property $property
-     * * @param Relationship\HasMany $relationship micro-optimalization
-     * @param Filtering|null $targetTableFiltering
-     * @param Filtering|null $relTableFiltering
      * @return Entity[]
      * @throws InvalidValueException
      */
     private function getHasManyValue(
         Property $property,
         Relationship\HasMany $relationship,
-        Filtering $targetTableFiltering = null,
-        Filtering $relTableFiltering = null
+        ?Filtering $targetTableFiltering = null,
+        ?Filtering $relTableFiltering = null
     ) {
+        if (!$relationship->hasRelationshipTable()) {
+            throw new InvalidStateException('Cannot get related Entities for detached Entity.');
+        }
         $targetTable = $relationship->getTargetTable();
         $columnReferencingTargetTable = $relationship->getColumnReferencingTargetTable();
         $rows = $this->row->referencing(
@@ -964,14 +915,13 @@ abstract class Entity
 
 
     /**
-     * @param Property $property
-     * @param Relationship\BelongsToOne $relationship micro-optimalization
-     * @param Filtering|null $filtering
-     * @return Entity|null
      * @throws InvalidValueException
      */
-    private function getBelongsToOneValue(Property $property, Relationship\BelongsToOne $relationship, Filtering $filtering = null)
+    private function getBelongsToOneValue(Property $property, Relationship\BelongsToOne $relationship, ?Filtering $filtering = null): ?Entity
     {
+        if (!$relationship->hasTargetTable()) {
+            throw new InvalidStateException('Cannot get referenced Entity for detached Entity.');
+        }
         $targetTable = $relationship->getTargetTable();
         $rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
         $count = count($rows);
@@ -999,13 +949,13 @@ abstract class Entity
 
 
     /**
-     * @param Property $property
-     * @param Relationship\BelongsToMany $relationship micro-optimalization
-     * @param Filtering|null $filtering
      * @return Entity[]
      */
-    private function getBelongsToManyValue(Property $property, Relationship\BelongsToMany $relationship, Filtering $filtering = null)
+    private function getBelongsToManyValue(Property $property, Relationship\BelongsToMany $relationship, ?Filtering $filtering = null)
     {
+        if (!$relationship->hasTargetTable()) {
+            throw new InvalidStateException('Cannot get related Entities for detached Entity.');
+        }
         $targetTable = $relationship->getTargetTable();
         $rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
         $value = [];
@@ -1024,11 +974,10 @@ abstract class Entity
     /**
      * Provides an mapper for entity
      *
-     * @param IMapper $mapper
      * @throws InvalidMethodCallException
      * @throws InvalidStateException
      */
-    private function useMapper(IMapper $mapper)
+    private function useMapper(IMapper $mapper): void
     {
         if ($this->mapper === null) {
             $newProperties = $this->getReflection($mapper)->getEntityProperties();
@@ -1058,10 +1007,9 @@ abstract class Entity
 
 
     /**
-     * @param IEntityFactory $entityFactory
      * @throws InvalidStateException
      */
-    private function setEntityFactory(IEntityFactory $entityFactory)
+    private function setEntityFactory(IEntityFactory $entityFactory): void
     {
         if ($this->entityFactory === null) {
             $this->entityFactory = $entityFactory;
@@ -1075,14 +1023,12 @@ abstract class Entity
 
 
     /**
-     * @param string $action
-     * @param string $name
      * @param mixed $arg
      * @throws InvalidMethodCallException
      * @throws InvalidArgumentException
      * @throws InvalidValueException
      */
-    private function addToOrRemoveFrom($action, $name, $arg)
+    private function addToOrRemoveFrom(string $action, string $name, $arg): void
     {
         if ($this->isDetached()) {
             throw new InvalidMethodCallException('Cannot add or remove related entity to detached entity.');
@@ -1146,12 +1092,9 @@ abstract class Entity
 
 
     /**
-     * @param Property $property
-     * @param string $mapperClass
-     * @param Entity $entity
      * @throws InvalidValueException
      */
-    private function checkConsistency(Property $property, $mapperClass, Entity $entity)
+    private function checkConsistency(Property $property, string $mapperClass, Entity $entity): void
     {
         $type = $property->getType();
         if (!($entity instanceof $type)) {
@@ -1165,12 +1108,9 @@ abstract class Entity
 
 
     /**
-     * @param int $expectedCount
-     * @param array $arguments
-     * @param string $methodName
      * @throws InvalidMethodCallException
      */
-    private function checkMethodArgumentsCount($expectedCount, array $arguments, $methodName)
+    private function checkMethodArgumentsCount(int $expectedCount, array $arguments, string $methodName): void
     {
         if (count($arguments) !== $expectedCount) {
             if ($expectedCount === 0) {

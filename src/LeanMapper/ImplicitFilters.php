@@ -34,7 +34,6 @@ class ImplicitFilters
 
     /**
      * @param array|string|Closure $filters
-     * @param array $targetedArgs
      * @throws InvalidArgumentException
      */
     public function __construct($filters, array $targetedArgs = [])
@@ -53,20 +52,14 @@ class ImplicitFilters
 
 
 
-    /**
-     * @return array
-     */
-    public function getFilters()
+    public function getFilters(): array
     {
         return $this->filters;
     }
 
 
 
-    /**
-     * @return array
-     */
-    public function getTargetedArgs()
+    public function getTargetedArgs(): array
     {
         return $this->targetedArgs;
     }

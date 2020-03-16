@@ -60,8 +60,8 @@ class Helpers
 
 
     /**
-     * @param  array<array>|DibiRow[] $rows
-     * @return array<array>
+     * @param  array<array<string, mixed>|DibiRow<string, mixed>> $rows
+     * @return array<array<string, mixed>>
      */
     public static function convertDbRows(string $table, array $rows, IMapper $mapper): array
     {
@@ -75,6 +75,10 @@ class Helpers
     }
 
 
+    /**
+     * @param  array<string, mixed> $rowData
+     * @return array<string, mixed>
+     */
     public static function convertRowData(string $table, array $rowData, IMapper $mapper): array
     {
         return $mapper->convertFromRowData($table, $rowData);

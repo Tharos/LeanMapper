@@ -53,7 +53,7 @@ Assert::exception(
         $book->revieverId;
     },
     LeanMapper\Exception\InvalidStateException::class,
-    'Cannot get value of property \'revieverId\' in entity Book due to low-level failure: Cannot get referenced Result for detached Result.'
+    'Cannot get value of property \'revieverId\' in entity Book due to low-level failure: Cannot get referenced Entity for detached Entity.'
 );
 
 $book = $bookRepository->find(1);

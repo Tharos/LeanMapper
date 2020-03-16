@@ -13,7 +13,7 @@ require_once __DIR__ . '/../bootstrap.php';
 class Mapper extends DefaultMapper
 {
 
-    public function getPrimaryKey($table)
+    public function getPrimaryKey(string $table): string
     {
         if ($table === 'author') {
             return 'customid';
@@ -23,7 +23,7 @@ class Mapper extends DefaultMapper
 
 
 
-    public function getEntityField($table, $column)
+    public function getEntityField(string $table, string $column): string
     {
         if ($table === 'author' and $column === $this->getPrimaryKey($table)) {
             return 'customid';

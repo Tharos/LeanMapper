@@ -31,11 +31,7 @@ class PropertyMethods
 
 
 
-    /**
-     * @param  string $getter
-     * @param  string|null $setter
-     */
-    public function __construct($getter, $setter)
+    public function __construct(string $getter, ?string $setter)
     {
         $this->getter = $getter;
         $this->setter = $setter;
@@ -45,10 +41,8 @@ class PropertyMethods
 
     /**
      * Gets getter method
-     *
-     * @return string|null
      */
-    public function getGetter()
+    public function getGetter(): string
     {
         return $this->getter;
     }
@@ -57,10 +51,8 @@ class PropertyMethods
 
     /**
      * Gets setter method
-     *
-     * @return string|null
      */
-    public function getSetter()
+    public function getSetter(): ?string
     {
         return $this->setter;
     }
@@ -68,13 +60,9 @@ class PropertyMethods
 
 
     /**
-     * @param string $propertyName
-     * @param bool $isWritable
-     * @param string $definition
-     * @return static
      * @throws InvalidAnnotationException
      */
-    public static function createFromDefinition($propertyName, $isWritable, $definition)
+    public static function createFromDefinition(string $propertyName, bool $isWritable, string $definition): self
     {
         $ucName = ucfirst($propertyName);
         $getter = 'get' . $ucName;

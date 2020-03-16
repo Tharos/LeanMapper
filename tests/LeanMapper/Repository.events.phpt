@@ -33,7 +33,7 @@ class CustomRepository extends Repository
 
 
 
-    protected function initEvents()
+    protected function initEvents(): void
     {
         $this->onAfterPersist[] = function ($author) {
             $this->log->append('after persist: ' . $author->name);

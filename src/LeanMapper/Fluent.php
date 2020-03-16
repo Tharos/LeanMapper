@@ -46,7 +46,7 @@ use LeanMapper\Exception\InvalidArgumentException;
 class Fluent extends \Dibi\Fluent
 {
 
-    /** @var array|null */
+    /** @var array<int|string>|null */
     private $relatedKeys;
 
 
@@ -77,11 +77,7 @@ class Fluent extends \Dibi\Fluent
 
 
 
-    /**
-     * @param array|null $args
-     * @return self
-     */
-    public function createSelect($args = null)
+    public function createSelect(?array $args = null): self
     {
         return call_user_func_array([$this->getConnection(), 'select'], func_get_args());
     }
@@ -90,11 +86,8 @@ class Fluent extends \Dibi\Fluent
 
     /**
      * Exports current state
-     *
-     * @param string|null $clause
-     * @return array
      */
-    public function _export(string $clause = null, array $args = []): array
+    public function _export(?string $clause = null, array $args = []): array
     {
         return parent::_export($clause, $args);
     }
@@ -102,9 +95,9 @@ class Fluent extends \Dibi\Fluent
 
 
     /**
-     * @return array|null
+     * @return array<int|string>|null
      */
-    public function getRelatedKeys()
+    public function getRelatedKeys(): ?array
     {
         return $this->relatedKeys;
     }
@@ -112,11 +105,10 @@ class Fluent extends \Dibi\Fluent
 
 
     /**
-     * @param array|null $keys
-     * @return self
+     * @param array<int|string>|null $keys
      * @throws InvalidArgumentException
      */
-    public function setRelatedKeys($keys)
+    public function setRelatedKeys(?array $keys): self
     {
         if (!is_array($keys) and $keys !== null) {
             throw new InvalidArgumentException('Invalid related keys given. Expected array or null, ' . Helpers::getType($keys) . ' given.');

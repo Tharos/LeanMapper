@@ -78,17 +78,21 @@ Assert::equal(true, $args[2][5]);
 
 //////////
 
-$connection->registerFilter('third', 'exit', Connection::WIRE_ENTITY);
+function lmFilter()
+{
+}
+
+$connection->registerFilter('third', 'lmFilter', Connection::WIRE_ENTITY);
 Assert::equal('e', $connection->getWiringSchema('third'));
 
-$connection->registerFilter('fourth', 'exit', Connection::WIRE_PROPERTY);
+$connection->registerFilter('fourth', 'lmFilter', Connection::WIRE_PROPERTY);
 Assert::equal('p', $connection->getWiringSchema('fourth'));
 
-$connection->registerFilter('fifth', 'exit', Connection::WIRE_ENTITY | Connection::WIRE_PROPERTY);
+$connection->registerFilter('fifth', 'lmFilter', Connection::WIRE_ENTITY | Connection::WIRE_PROPERTY);
 Assert::equal('ep', $connection->getWiringSchema('fifth'));
 
-$connection->registerFilter('sixth', 'exit', Connection::WIRE_ENTITY_AND_PROPERTY);
+$connection->registerFilter('sixth', 'lmFilter', Connection::WIRE_ENTITY_AND_PROPERTY);
 Assert::equal('ep', $connection->getWiringSchema('sixth'));
 
-$connection->registerFilter('seventh', 'exit');
+$connection->registerFilter('seventh', 'lmFilter');
 Assert::equal('', $connection->getWiringSchema('seventh'));

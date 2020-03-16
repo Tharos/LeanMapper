@@ -33,7 +33,7 @@ class AliasesBuilder
     /**
      * Sets current definition to empty string
      */
-    public function resetCurrent()
+    public function resetCurrent(): void
     {
         $this->current = $this->lastPart = '';
     }
@@ -42,10 +42,8 @@ class AliasesBuilder
 
     /**
      * Appends name to current definition
-     *
-     * @param string $name
      */
-    public function appendToCurrent($name)
+    public function appendToCurrent(string $name): void
     {
         if ($this->current !== '') {
             $this->current .= '\\';
@@ -57,10 +55,8 @@ class AliasesBuilder
 
     /**
      * Appends last part to current definition
-     *
-     * @param string $name
      */
-    public function setLast($name)
+    public function setLast(string $name): void
     {
         $this->lastPart = $name;
     }
@@ -70,7 +66,7 @@ class AliasesBuilder
     /**
      * Finishes building of current definition and begins to build new one
      */
-    public function finishCurrent()
+    public function finishCurrent(): void
     {
         $this->aliases[$this->lastPart] = $this->current;
         $this->resetCurrent();
@@ -80,11 +76,8 @@ class AliasesBuilder
 
     /**
      * Creates new Aliases instance
-     *
-     * @param string $namespace
-     * @return Aliases
      */
-    public function getAliases($namespace = '')
+    public function getAliases(string $namespace = ''): Aliases
     {
         return new Aliases($this->aliases, $namespace);
     }

@@ -41,12 +41,10 @@ class Connection extends \Dibi\Connection
     /**
      * Registers new filter
      *
-     * @param string $name
-     * @param mixed $callback
      * @param string|int|null $wiringSchema
      * @throws InvalidArgumentException
      */
-    public function registerFilter($name, $callback, $wiringSchema = null)
+    public function registerFilter(string $name, callable $callback, $wiringSchema = null): void
     {
         if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $name)) {
             throw new InvalidArgumentException(
@@ -64,11 +62,7 @@ class Connection extends \Dibi\Connection
 
 
 
-    /**
-     * @param string $name
-     * @return bool
-     */
-    public function hasFilter($name)
+    public function hasFilter(string $name): bool
     {
         try {
             $this->checkFilterExistence($name);
@@ -82,11 +76,8 @@ class Connection extends \Dibi\Connection
 
     /**
      * Gets callable filter's callback
-     *
-     * @param string $name
-     * @return callable
      */
-    public function getFilterCallback($name)
+    public function getFilterCallback(string $name): callable
     {
         $this->checkFilterExistence($name);
         return $this->filters[$name][0];
@@ -96,11 +87,8 @@ class Connection extends \Dibi\Connection
 
     /**
      * Gets wiring schema
-     *
-     * @param string $filterName
-     * @return string
      */
-    public function getWiringSchema($filterName)
+    public function getWiringSchema(string $filterName): string
     {
         $this->checkFilterExistence($filterName);
         return $this->filters[$filterName][1];
@@ -122,10 +110,9 @@ class Connection extends \Dibi\Connection
     ////////////////////
 
     /**
-     * @param string $name
      * @throws InvalidArgumentException
      */
-    private function checkFilterExistence($name)
+    private function checkFilterExistence(string $name): void
     {
         if (!isset($this->filters[$name])) {
             throw new InvalidArgumentException("Filter with name '$name' was not found.");
@@ -136,10 +123,9 @@ class Connection extends \Dibi\Connection
 
     /**
      * @param string|int|null $wiringSchema
-     * @return string
      * @throws InvalidArgumentException
      */
-    private function translateWiringSchema($wiringSchema)
+    private function translateWiringSchema($wiringSchema): string
     {
         if ($wiringSchema === null) {
             return '';

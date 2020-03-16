@@ -12,13 +12,13 @@ class BaseEntity extends LeanMapper\Entity
     protected static $reflectionProvider;
 
 
-    public static function setReflectionProvider(LeanMapper\IEntityReflectionProvider $reflectionProvider)
+    public static function setReflectionProvider(LeanMapper\IEntityReflectionProvider $reflectionProvider): void
     {
         self::$reflectionProvider = $reflectionProvider;
     }
 
 
-    public static function getReflectionProvider()
+    public static function getReflectionProvider(): LeanMapper\IEntityReflectionProvider
     {
         return self::$reflectionProvider;
     }
@@ -30,7 +30,7 @@ class CustomReflectionProvider extends LeanMapper\DefaultEntityReflectionProvide
     public $propertyParsing = 0;
 
 
-    public function getProperties(EntityReflection $entityClass, LeanMapper\IMapper $mapper = null)
+    public function getProperties(EntityReflection $entityClass, ?LeanMapper\IMapper $mapper = null): array
     {
         $this->propertyParsing++;
         return parent::getProperties($entityClass, $mapper);

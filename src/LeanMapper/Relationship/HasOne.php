@@ -29,11 +29,7 @@ class HasOne
 
 
 
-    /**
-     * @param string|null $columnReferencingTargetTable
-     * @param string|null $targetTable
-     */
-    public function __construct($columnReferencingTargetTable, $targetTable)
+    public function __construct(?string $columnReferencingTargetTable, ?string $targetTable)
     {
         $this->columnReferencingTargetTable = $columnReferencingTargetTable;
         $this->targetTable = $targetTable;
@@ -43,10 +39,8 @@ class HasOne
 
     /**
      * Gets name of column referencing target table
-     *
-     * @return string|null
      */
-    public function getColumnReferencingTargetTable()
+    public function getColumnReferencingTargetTable(): ?string
     {
         return $this->columnReferencingTargetTable;
     }
@@ -55,12 +49,17 @@ class HasOne
 
     /**
      * Gets name of target table
-     *
-     * @return string|null
      */
-    public function getTargetTable()
+    public function getTargetTable(): ?string
     {
         return $this->targetTable;
+    }
+
+
+
+    public function hasTargetTable(): bool
+    {
+        return $this->targetTable !== NULL;
     }
 
 }

@@ -19,7 +19,7 @@ class Mapper extends LeanMapper\DefaultMapper
 
 
 
-    public function getEntityClass($table, Row $row = null)
+    public function getEntityClass(string $table, Row $row = null): string
     {
         if ($table === 'author' and $row !== null) {
             if ($row->web !== null) {

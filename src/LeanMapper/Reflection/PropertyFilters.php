@@ -41,11 +41,8 @@ class PropertyFilters
 
     /**
      * Gets array of entity's filters (array of filter names)
-     *
-     * @param int $index
-     * @return array
      */
-    public function getFilters($index = 0)
+    public function getFilters(int $index = 0): array
     {
         if (!isset($this->filters[$index])) {
             return [];
@@ -57,11 +54,8 @@ class PropertyFilters
 
     /**
      * Gets filters arguments hard-coded in annotation
-     *
-     * @param int $index
-     * @return array
      */
-    public function getFiltersTargetedArgs($index = 0)
+    public function getFiltersTargetedArgs(int $index = 0): array
     {
         if (!isset($this->targetedArgs[$index])) {
             return [];
@@ -72,11 +66,9 @@ class PropertyFilters
 
 
     /**
-     * @param string $definition
-     * @return static
      * @throws InvalidAnnotationException
      */
-    public static function createFromDefinition($definition)
+    public static function createFromDefinition(string $definition): self
     {
         $propertyFilters = [];
         $propertyTargetedArgs = [];

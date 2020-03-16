@@ -23,20 +23,20 @@ interface IEntityReflectionProvider
     /**
      * @return Property[]
      */
-    function getProperties(EntityReflection $entityClass, IMapper $mapper = null);
+    function getProperties(EntityReflection $entityClass, IMapper $mapper = null): array;
 
 
 
     /**
      * @return ReflectionMethod[]
      */
-    function getGetters(EntityReflection $entityClass);
+    function getGetters(EntityReflection $entityClass): array;
 
 
 
     /**
      * @return ReflectionMethod[]
      */
-    function getSetters(EntityReflection $entityClass);
+    function getSetters(EntityReflection $entityClass): array;
 
 }

@@ -30,7 +30,7 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     /**
      * @return Property[]
      */
-    public function getProperties(EntityReflection $entityClass, IMapper $mapper = null)
+    public function getProperties(EntityReflection $entityClass, ?IMapper $mapper = null): array
     {
         $properties = [];
         $annotationTypes = ['property', 'property-read'];
@@ -49,7 +49,7 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     /**
      * @return ReflectionMethod[]
      */
-    public function getGetters(EntityReflection $entityClass)
+    public function getGetters(EntityReflection $entityClass): array
     {
         $getters = [];
         foreach ($entityClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -66,7 +66,7 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     /**
      * @return ReflectionMethod[]
      */
-    public function getSetters(EntityReflection $entityClass)
+    public function getSetters(EntityReflection $entityClass): array
     {
         $setters = [];
         foreach ($entityClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -83,7 +83,7 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     /**
      * @return EntityReflection[]
      */
-    protected function getFamilyLine(EntityReflection $member)
+    protected function getFamilyLine(EntityReflection $member): array
     {
         $line = [$member];
         while ($member = $member->getParentClass()) {

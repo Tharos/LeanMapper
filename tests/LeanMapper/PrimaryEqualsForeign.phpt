@@ -53,7 +53,7 @@ class Mapper extends DefaultMapper
 
 
 
-    public function getPrimaryKey($table)
+    public function getPrimaryKey(string $table): string
     {
         if ($table === 'authordetail' or $table === 'authorcontract') {
             return 'author_id';
@@ -63,7 +63,7 @@ class Mapper extends DefaultMapper
 
 
 
-    public function getColumn($entityClass, $field)
+    public function getColumn(string $entityClass, string $field): string
     {
         if ($entityClass === AuthorDetail::class and $field === 'author') {
             return 'author_id';
@@ -76,7 +76,7 @@ class Mapper extends DefaultMapper
 
 
 
-    public function getRelationshipColumn($sourceTable, $targetTable, $relationshipName = null)
+    public function getRelationshipColumn(string $sourceTable, string $targetTable, ?string $relationshipName = null): string
     {
         if ($sourceTable === 'authorcontract' and $targetTable === 'authordetail') {
             return 'author_id';
@@ -89,7 +89,7 @@ class Mapper extends DefaultMapper
 
 
 
-    public function getEntityField($table, $column)
+    public function getEntityField(string $table, string $column): string
     {
         if ($table === 'authordetail' and $column === 'author_id') {
             return 'author';

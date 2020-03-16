@@ -45,10 +45,8 @@ class DataDifference
 
     /**
      * Performs quick lookup whether current instance may have any differences
-     *
-     * @return bool
      */
-    public function mayHaveAny()
+    public function mayHaveAny(): bool
     {
         return !empty($this->added) or !empty($this->removed);
     }
@@ -59,10 +57,9 @@ class DataDifference
      * Gets differences by given pivot
      *
      * @param mixed $pivot
-     * @return array
      * @throws InvalidArgumentException
      */
-    public function getByPivot($pivot)
+    public function getByPivot($pivot): array
     {
         $result = [];
         foreach ($this->added as $entry) {

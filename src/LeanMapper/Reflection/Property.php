@@ -74,38 +74,25 @@ class Property
 
 
     /**
-     * @param string $name
-     * @param EntityReflection $entityReflection
-     * @param string|null $column
-     * @param PropertyType $type
-     * @param bool $isWritable
-     * @param bool $isNullable
-     * @param bool $containsCollection
-     * @param bool $hasDefaultValue
      * @param mixed|null $defaultValue
      * @param Relationship\HasOne|Relationship\HasMany|Relationship\BelongsToOne|Relationship\BelongsToMany|null $relationship
-     * @param PropertyMethods|null $propertyMethods
-     * @param PropertyFilters|null $propertyFilters
-     * @param PropertyPasses|null $propertyPasses
-     * @param PropertyValuesEnum|null $propertyValuesEnum
-     * @param array $customFlags
      * @throws InvalidArgumentException
      */
     public function __construct(
-        $name,
+        string $name,
         EntityReflection $entityReflection,
-        $column,
+        ?string $column,
         PropertyType $type,
-        $isWritable,
-        $isNullable,
-        $containsCollection,
-        $hasDefaultValue,
+        bool $isWritable,
+        bool $isNullable,
+        bool $containsCollection,
+        bool $hasDefaultValue,
         $defaultValue = null,
         $relationship = null,
-        PropertyMethods $propertyMethods = null,
-        PropertyFilters $propertyFilters = null,
-        PropertyPasses $propertyPasses = null,
-        PropertyValuesEnum $propertyValuesEnum = null,
+        ?PropertyMethods $propertyMethods = null,
+        ?PropertyFilters $propertyFilters = null,
+        ?PropertyPasses $propertyPasses = null,
+        ?PropertyValuesEnum $propertyValuesEnum = null,
         array $customFlags = []
     ) {
         if ($relationship !== null) {
@@ -162,10 +149,8 @@ class Property
 
     /**
      * Gets property name
-     *
-     * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -174,10 +159,8 @@ class Property
 
     /**
      * Gets name of column holding low-level value
-     *
-     * @return string|null
      */
-    public function getColumn()
+    public function getColumn(): ?string
     {
         return $this->column;
     }
@@ -186,10 +169,8 @@ class Property
 
     /**
      * Tells whether property is assumed to contain collection
-     *
-     * @return bool
      */
-    public function containsCollection()
+    public function containsCollection(): bool
     {
         return $this->containsCollection;
     }
@@ -198,10 +179,8 @@ class Property
 
     /**
      * Tells whether property has default value (defined in annotation)
-     *
-     * @return bool
      */
-    public function hasDefaultValue()
+    public function hasDefaultValue(): bool
     {
         return $this->hasDefaultValue;
     }
@@ -222,10 +201,8 @@ class Property
 
     /**
      * Gets property type
-     *
-     * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type->getType();
     }
@@ -234,10 +211,8 @@ class Property
 
     /**
      * Tells whether property type is basic type (boolean|integer|float|string|array)
-     *
-     * @return bool
      */
-    public function isBasicType()
+    public function isBasicType(): bool
     {
         return $this->type->isBasicType();
     }
@@ -246,10 +221,8 @@ class Property
 
     /**
      * Tells whether property is writable
-     *
-     * @return bool
      */
-    public function isWritable()
+    public function isWritable(): bool
     {
         return $this->isWritable;
     }
@@ -258,10 +231,8 @@ class Property
 
     /**
      * Tells whether property can be null
-     *
-     * @return bool
      */
-    public function isNullable()
+    public function isNullable(): bool
     {
         return $this->isNullable;
     }
@@ -270,10 +241,8 @@ class Property
 
     /**
      * Tells whether property represents relationship
-     *
-     * @return bool
      */
-    public function hasRelationship()
+    public function hasRelationship(): bool
     {
         return $this->relationship !== null;
     }
@@ -294,10 +263,8 @@ class Property
 
     /**
      * Gets getter method
-     *
-     * @return string|null
      */
-    public function getGetter()
+    public function getGetter(): ?string
     {
         return $this->propertyMethods !== null ? $this->propertyMethods->getGetter() : null;
     }
@@ -306,10 +273,8 @@ class Property
 
     /**
      * Gets setter method
-     *
-     * @return string|null
      */
-    public function getSetter()
+    public function getSetter(): ?string
     {
         return $this->propertyMethods !== null ? $this->propertyMethods->getSetter() : null;
     }
@@ -318,11 +283,8 @@ class Property
 
     /**
      * Gets property filters
-     *
-     * @param int $index
-     * @return array|null
      */
-    public function getFilters($index = 0)
+    public function getFilters(int $index = 0): ?array
     {
         return $this->propertyFilters !== null ? $this->propertyFilters->getFilters($index) : null;
     }
@@ -331,11 +293,8 @@ class Property
 
     /**
      * Gets filters arguments hard-coded in annotation
-     *
-     * @param int $index
-     * @return array|null
      */
-    public function getFiltersTargetedArgs($index = 0)
+    public function getFiltersTargetedArgs(int $index = 0): ?array
     {
         return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersTargetedArgs($index) : null;
     }
@@ -344,10 +303,8 @@ class Property
 
     /**
      * Gets getter pass
-     *
-     * @return string|null
      */
-    public function getGetterPass()
+    public function getGetterPass(): ?string
     {
         return $this->propertyPasses !== null ? $this->propertyPasses->getGetterPass() : null;
     }
@@ -356,10 +313,8 @@ class Property
 
     /**
      * Gets setter pass
-     *
-     * @return string|null
      */
-    public function getSetterPass()
+    public function getSetterPass(): ?string
     {
         return $this->propertyPasses !== null ? $this->propertyPasses->getSetterPass() : null;
     }
@@ -368,10 +323,8 @@ class Property
 
     /**
      * Tells whether property contains enumeration
-     *
-     * @return bool
      */
-    public function containsEnumeration()
+    public function containsEnumeration(): bool
     {
         return $this->propertyValuesEnum !== null;
     }
@@ -382,10 +335,9 @@ class Property
      * Tells wheter given value is from enumeration
      *
      * @param mixed $value
-     * @return bool
      * @throws InvalidMethodCallException
      */
-    public function isValueFromEnum($value)
+    public function isValueFromEnum($value): bool
     {
         $this->checkContainsEnumeration();
         return $this->propertyValuesEnum->isValueFromEnum($value);
@@ -398,7 +350,7 @@ class Property
      *
      * @return array
      */
-    public function getEnumValues()
+    public function getEnumValues(): array
     {
         $this->checkContainsEnumeration();
         return $this->propertyValuesEnum->getValues();
@@ -408,11 +360,8 @@ class Property
 
     /**
      * Tells whether property has custom flag
-     *
-     * @param string $name
-     * @return bool
      */
-    public function hasCustomFlag($name)
+    public function hasCustomFlag(string $name): bool
     {
         return array_key_exists($name, $this->customFlags);
     }
@@ -421,12 +370,9 @@ class Property
 
     /**
      * Gets value of requested custom flag
-     *
-     * @param string $name
-     * @return string
      * @throws InvalidArgumentException
      */
-    public function getCustomFlagValue($name)
+    public function getCustomFlagValue(string $name): string
     {
         if (!$this->hasCustomFlag($name)) {
             throw new InvalidArgumentException(
@@ -441,7 +387,7 @@ class Property
     /**
      * @throws InvalidMethodCallException
      */
-    private function checkContainsEnumeration()
+    private function checkContainsEnumeration(): void
     {
         if (!$this->containsEnumeration()) {
             throw new InvalidMethodCallException(

@@ -8,7 +8,7 @@ require_once __DIR__ . '/../bootstrap.php';
 
 class CustomResult extends LeanMapper\Result
 {
-    public function setDataEntry($id, $key, $value)
+    public function setDataEntry($id, string $key, $value): void
     {
         if (!$this->hasDataEntry($id, $key) || $this->getDataEntry($id, $key) !== $value) {
             parent::setDataEntry($id, $key, $value);
@@ -29,7 +29,7 @@ class CustomRepository extends LeanMapper\Repository
     }
 
 
-    protected function createEntity(Dibi\Row $dibiRow, $entityClass = null, $table = null)
+    protected function createEntity(Dibi\Row $dibiRow, ?string $entityClass = null, ?string $table = null): LeanMapper\Entity
     {
         if ($table === null) {
             $table = $this->getTable();

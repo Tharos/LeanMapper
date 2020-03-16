@@ -35,7 +35,7 @@ class Foo extends BaseEntity
 
 class Mapper extends LeanMapper\DefaultMapper
 {
-    public function getColumn($entityClass, $field)
+    public function getColumn(string $entityClass, string $field): string
     {
         return 'test_' . $field;
     }
