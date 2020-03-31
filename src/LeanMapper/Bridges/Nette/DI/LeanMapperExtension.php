@@ -81,7 +81,12 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
 
         if ($config['scanDirs']) {
             $robot = new RobotLoader;
-            $robot->setCacheStorage(new Nette\Caching\Storages\DevNullStorage);
+
+            // back compatibility to robot loader of version  < 3.0
+            if (method_exists($robot, 'setCacheStorage')) {
+                $robot->setCacheStorage(new Nette\Caching\Storages\DevNullStorage);
+            }
+
             $robot->addDirectory($config['scanDirs']);
             $robot->acceptFiles = '*.php';
             $robot->rebuild();
