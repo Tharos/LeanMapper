@@ -20,7 +20,7 @@ jobs:
         -   stage: Code Standard Checker
             php: 7.2
             install:
-                - travis_retry composer create-project nette/code-checker temp/code-checker ^3 --no-progress
+                - travis_retry composer create-project nette/code-checker temp/code-checker ^3.2 --no-progress
 
             script:
                 - php tools/code-checker.php

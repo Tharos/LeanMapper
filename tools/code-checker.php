@@ -6,7 +6,7 @@ $autoload = __DIR__ . '/../temp/code-checker/vendor/autoload.php';
 
 if (@!include $autoload) {
     echo "Install nette/code-checker using Composer into directory ../temp/code-checker, use\n";
-    echo "composer create-project nette/code-checker temp/code-checker ^3\n";
+    echo "composer create-project nette/code-checker temp/code-checker ^3.2\n";
     exit(1);
 }
 
@@ -50,6 +50,6 @@ $checker->addTask([$tasks, 'tabIndentationChecker'], '*.json');
 $checker->addTask([$tasks, 'yamlIndentationChecker'], '*.php,*.phpt');
 $checker->addTask([$tasks, 'unexpectedTabsChecker'], '*.yml');
 
-$ok = $checker->run(__DIR__ . '/../');
+$ok = $checker->run([__DIR__ . '/../']);
 
 exit($ok ? 0 : 1);
