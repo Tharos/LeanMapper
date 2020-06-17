@@ -78,13 +78,7 @@ class Fluent extends \Dibi\Fluent
      */
     public function _export(string $clause = null, array $args = []): array
     {
-        $args = func_get_args();
-
-        $reflector = new \ReflectionClass(get_class($this));
-        $parent = $reflector->getParentClass();
-        $method = $parent->getMethod('_export');
-        $method->setAccessible(true);
-        return $method->invokeArgs($this, $args);
+        return parent::_export($clause, $args);
     }
 
 
