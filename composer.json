@@ -11,6 +11,10 @@
 		{
 			"name": "Miroslav Paulík",
 			"role": "Maintainer"
+		},
+		{
+			"name": "Jan Pecha",
+			"role": "Maintainer"
 		}
 	],
 	"autoload": {
