@@ -19,6 +19,10 @@ use LeanMapper\Exception\InvalidArgumentException;
  * \Dibi\Connection with filter support
  *
  * @author Vojtěch Kohout
+ * @method Fluent select(...$args)
+ * @method Fluent update($table, iterable $args)
+ * @method Fluent insert(string $table, iterable $args)
+ * @method Fluent delete(string $table)
  */
 class Connection extends \Dibi\Connection
 {

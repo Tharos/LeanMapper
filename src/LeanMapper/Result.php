@@ -1082,6 +1082,7 @@ class Result implements \Iterator
                 return new FilteringResultDecorator($result, $baseArgs);
             }
         }
+        return null;
     }
 
 

@@ -32,7 +32,7 @@ class DefaultMapper implements IMapper
 
 
     /**
-     * @param  string|null
+     * @param  string|null $defaultEntityNamespace
      */
     public function __construct($defaultEntityNamespace = 'Model\Entity')
     {

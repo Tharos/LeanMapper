@@ -32,8 +32,8 @@ class PropertyMethods
 
 
     /**
-     * @param  string
-     * @param  string|null
+     * @param  string $getter
+     * @param  string|null $setter
      */
     public function __construct($getter, $setter)
     {

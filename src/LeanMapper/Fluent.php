@@ -20,6 +20,28 @@ use LeanMapper\Exception\InvalidArgumentException;
  * \Dibi\Fluent with filter support
  *
  * @author Vojtěch Kohout
+ * @method Connection getConnection()
+ * @method Fluent select(...$field)
+ * @method Fluent distinct()
+ * @method Fluent from($table, ...$args = null)
+ * @method Fluent where(...$cond)
+ * @method Fluent groupBy(...$field)
+ * @method Fluent having(...$cond)
+ * @method Fluent orderBy(...$field)
+ * @method Fluent limit(int $limit)
+ * @method Fluent offset(int $offset)
+ * @method Fluent join(...$table)
+ * @method Fluent leftJoin(...$table)
+ * @method Fluent innerJoin(...$table)
+ * @method Fluent rightJoin(...$table)
+ * @method Fluent outerJoin(...$table)
+ * @method Fluent as(...$field)
+ * @method Fluent on(...$cond)
+ * @method Fluent and(...$cond)
+ * @method Fluent or(...$cond)
+ * @method Fluent using(...$cond)
+ * @method Fluent asc()
+ * @method Fluent desc()
  */
 class Fluent extends \Dibi\Fluent
 {
@@ -37,6 +59,13 @@ class Fluent extends \Dibi\Fluent
 
     /** @var array|null */
     private $relatedKeys;
+
+
+
+    public function __construct(Connection $connection)
+    {
+        parent::__construct($connection);
+    }
 
 
 

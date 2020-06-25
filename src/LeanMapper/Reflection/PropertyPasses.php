@@ -32,8 +32,8 @@ class PropertyPasses
 
 
     /**
-     * @param  string|null
-     * @param  string|null
+     * @param  string|null $getterPass
+     * @param  string|null $setterPass
      */
     public function __construct($getterPass, $setterPass)
     {

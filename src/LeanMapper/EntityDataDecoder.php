@@ -9,8 +9,10 @@ class EntityDataDecoder
 
     public static function process(Entity $entity, $maxDepth = 10)
     {
-
         if ($maxDepth <= 0) {
+            if (!method_exists($entity, '_getMapper')) {
+                throw new \LeanMapper\Exception\Exception('Entity must have method _getMapper().');
+            }
             $mapper = $entity->_getMapper();
             $primaryKey = $mapper->getPrimaryKey($mapper->getTable(get_class($entity)));
             return (isset($primaryKey) && isset($entity->$primaryKey)) ? $entity->$primaryKey : null;
