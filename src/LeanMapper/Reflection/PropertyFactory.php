@@ -320,6 +320,7 @@ class PropertyFactory
         IMapper $mapper = null
     ) {
         $flags = null;
+        $strategy = null;
         if ($relationshipType !== 'hasOne') {
             $strategy = Result::STRATEGY_IN; // default strategy
             if ($definition !== null) {

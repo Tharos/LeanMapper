@@ -28,10 +28,15 @@
 	},
 	"require-dev": {
 		"nette/bootstrap": "~2.2 || ^3.0",
+		"nette/caching": "~2.2 || ^3.0",
 		"nette/di": "~2.2 || ^3.0",
 		"nette/robot-loader": "~2.2 || ^3.0",
 		"tracy/tracy": "~2.2 || ^3.0",
-		"nette/tester": "~2.0"
+		"nette/tester": "~2.0",
+		"phpstan/phpstan": "^0.12"
+	},
+	"scripts": {
+		"phpstan": "phpstan analyse --configuration tests/phpstan.neon"
 	},
 	"extra": {
 		"branch-alias": {

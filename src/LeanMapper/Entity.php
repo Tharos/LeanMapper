@@ -582,6 +582,7 @@ abstract class Entity
             if ($this->entityFactory) {
                 $implicitFilters = $this->createImplicitFilters($property->getType(), new Caller($this, $property));
                 $firstFilters = $property->getFilters(0) ?: [];
+                $secondFilters = [];
 
                 $relationship = $property->getRelationship();
                 if ($relationship instanceof Relationship\HasMany) {

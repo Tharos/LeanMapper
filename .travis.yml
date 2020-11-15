@@ -25,6 +25,10 @@ jobs:
             script:
                 - php tools/code-checker.php
 
+        -   stage: Static Analysis
+            php: 7.4
+            script:
+                - composer phpstan -- --no-progress
 
 cache:
     directories:

@@ -785,6 +785,8 @@ class Result implements \Iterator
             throw new InvalidStateException('Cannot get referenced Result for detached Result.');
         }
         $key = "$table($viaColumn)";
+        $primaryKey = null;
+        $ids = null;
         if (isset($this->referenced[$forcedKey = $key . '#' . self::KEY_FORCED])) {
             $ids = $this->extractIds($viaColumn);
             $primaryKey = $this->mapper->getPrimaryKey($table);
@@ -862,6 +864,7 @@ class Result implements \Iterator
             $viaColumn = $this->mapper->getRelationshipColumn($table, $this->table);
         }
         $key = "$table($viaColumn)$strategy";
+        $ids = null;
         if (isset($this->referencing[$forcedKey = $key . '#' . self::KEY_FORCED])) {
             $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
             foreach ($this->referencing[$forcedKey] as $filteringResult) {

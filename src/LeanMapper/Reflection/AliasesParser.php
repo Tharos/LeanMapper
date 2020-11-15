@@ -93,7 +93,7 @@ class AliasesParser
                 }
                 return AliasesParser::STATE_IN_AS_PART;
             },
-            self::STATE_JUST_FINISHED => function ($token) use ($builder) {
+            self::STATE_JUST_FINISHED => function ($token) {
                 if ($token === ';') {
                     return AliasesParser::STATE_WAITING_FOR_USE;
                 }
