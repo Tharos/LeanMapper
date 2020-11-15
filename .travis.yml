@@ -25,7 +25,6 @@ jobs:
             script:
                 - php tools/code-checker.php
 
-sudo: false
 
 cache:
     directories:
