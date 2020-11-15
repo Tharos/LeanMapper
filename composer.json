@@ -32,5 +32,10 @@
 		"nette/robot-loader": "~2.2 || ^3.0",
 		"tracy/tracy": "~2.2 || ^3.0",
 		"nette/tester": "~2.0"
+	},
+	"extra": {
+		"branch-alias": {
+			"dev-develop": "4.0-dev"
+		}
 	}
 }
