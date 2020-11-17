@@ -114,7 +114,7 @@ abstract class Entity
             $this->initDefaults();
             if ($arg !== null) {
                 if (!is_array($arg) and !($arg instanceof Traversable)) {
-                    $type = gettype($arg) !== 'object' ? gettype($arg) : 'instance of ' . get_class($arg);
+                    $type = Helpers::getType($arg);
                     throw new InvalidArgumentException(
                         "Argument \$arg in " . get_called_class(
                         ) . "::__construct must contain either null, array, instance of LeanMapper\\Row or instance of Traversable, $type given."
@@ -302,7 +302,7 @@ abstract class Entity
             $whitelist = array_flip($whitelist);
         }
         if (!is_array($values) and !($values instanceof Traversable)) {
-            $givenType = gettype($values) !== 'object' ? gettype($values) : 'instance of ' . get_class($values);
+            $givenType = Helpers::getType($values);
             throw new InvalidArgumentException(
                 "Argument \$values in " . get_called_class() . "::assign must contain either array or instance of Traversable, $givenType given."
             );
@@ -650,9 +650,7 @@ abstract class Entity
             $type = $property->getType();
             if (!($value instanceof $type)) {
                 throw new InvalidValueException(
-                    "Property '$name' in entity " . get_called_class() . " is expected to contain an instance of $type, " . (is_object(
-                        $value
-                    ) ? 'instance of ' . get_class($value) : gettype($value)) . " given."
+                    "Property '$name' in entity " . get_called_class() . " is expected to contain an instance of $type, " . Helpers::getType($value) . " given."
                 );
             }
             return $value;
@@ -707,7 +705,7 @@ abstract class Entity
         }
         // property doesn't contain basic type
         $type = $property->getType();
-        $givenType = gettype($value) !== 'object' ? gettype($value) : 'instance of ' . get_class($value);
+        $givenType = Helpers::getType($value);
 
         if ($property->hasRelationship()) {
             if ($value !== null) {
@@ -1120,7 +1118,7 @@ abstract class Entity
                 }
                 $type = $property->getType();
                 if (!($arg instanceof $type)) {
-                    $type = gettype($arg) !== 'object' ? gettype($arg) : 'instance of ' . get_class($arg);
+                    $type = Helpers::getType($arg);
                     throw new InvalidValueException(
                         "Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class(
                         ) . ", {$property->getType()} expected, $type given."
