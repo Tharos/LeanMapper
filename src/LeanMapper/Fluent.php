@@ -46,17 +46,6 @@ use LeanMapper\Exception\InvalidArgumentException;
 class Fluent extends \Dibi\Fluent
 {
 
-    /** @var array */
-    public static $masks = [ // fixes missing UNION in dibi
-        'SELECT' => [
-            'SELECT', 'DISTINCT', 'FROM', 'WHERE', 'GROUP BY',
-            'HAVING', 'ORDER BY', 'LIMIT', 'OFFSET', 'UNION',
-        ],
-        'UPDATE' => ['UPDATE', 'SET', 'WHERE', 'ORDER BY', 'LIMIT'],
-        'INSERT' => ['INSERT', 'INTO', 'VALUES', 'SELECT'],
-        'DELETE' => ['DELETE', 'FROM', 'USING', 'WHERE', 'ORDER BY', 'LIMIT'],
-    ];
-
     /** @var array|null */
     private $relatedKeys;
 
