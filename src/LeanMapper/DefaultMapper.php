@@ -18,7 +18,7 @@ use LeanMapper\Exception\InvalidStateException;
  *
  * @author Vojtěch Kohout
  */
-class DefaultMapper implements IMapper
+class DefaultMapper implements IRowMapper
 {
 
     /** @var string */
@@ -120,6 +120,18 @@ class DefaultMapper implements IMapper
     public function getImplicitFilters($entityClass, Caller $caller = null)
     {
         return [];
+    }
+
+
+    public function convertToRowData($table, array $values)
+    {
+        return $values;
+    }
+
+
+    public function convertFromRowData($table, array $data)
+    {
+        return $data;
     }
 
 

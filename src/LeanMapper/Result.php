@@ -808,7 +808,7 @@ class Result implements \Iterator
                         ->where('%n.%n IN %in', $table, $primaryKey, $ids)
                         ->execute()->setRowClass(null)->fetchAll();
                 }
-                $this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
+                $this->referenced[$key] = self::createInstance(Helpers::convertDbRows($table, $data, $this->mapper), $table, $this->connection, $this->mapper);
             }
             return $this->referenced[$key];
         }
@@ -834,7 +834,7 @@ class Result implements \Iterator
 
         if (!isset($this->referenced[$key])) {
             $data = $this->connection->query($args)->setRowClass(null)->fetchAll();
-            $this->referenced[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
+            $this->referenced[$key] = self::createInstance(Helpers::convertDbRows($table, $data, $this->mapper), $table, $this->connection, $this->mapper);
         }
         return $this->referenced[$key];
     }
@@ -882,7 +882,7 @@ class Result implements \Iterator
                         $statement->where('%n.%n IN %in', $table, $viaColumn, $ids);
                     }
                     $data = $statement->execute()->setRowClass(null)->fetchAll();
-                    $this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
+                    $this->referencing[$key] = self::createInstance(Helpers::convertDbRows($table, $data, $this->mapper), $table, $this->connection, $this->mapper);
                 }
             } else {
                 isset($ids) or $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
@@ -906,7 +906,7 @@ class Result implements \Iterator
 
                 if (!isset($this->referencing[$key])) {
                     $data = $this->connection->query($args)->setRowClass(null)->fetchAll();
-                    $this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
+                    $this->referencing[$key] = self::createInstance(Helpers::convertDbRows($table, $data, $this->mapper), $table, $this->connection, $this->mapper);
                 }
             }
             return $this->referencing[$key];
@@ -923,7 +923,7 @@ class Result implements \Iterator
                         $this->buildUnionStrategySql($ids, $table, $viaColumn)
                     )->setRowClass(null)->fetchAll();
                 }
-                $this->referencing[$key] = self::createInstance($data, $table, $this->connection, $this->mapper);
+                $this->referencing[$key] = self::createInstance(Helpers::convertDbRows($table, $data, $this->mapper), $table, $this->connection, $this->mapper);
             }
         } else {
             isset($ids) or $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
@@ -951,7 +951,7 @@ class Result implements \Iterator
                 if (!isset($this->referencing[$key])) {
                     $sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
                     $data = $this->connection->query($sql)->setRowClass(null)->fetchAll();
-                    $result = self::createInstance($data, $table, $this->connection, $this->mapper);
+                    $result = self::createInstance(Helpers::convertDbRows($table, $data, $this->mapper), $table, $this->connection, $this->mapper);
                     $this->referencing[$key] = $result;
                 }
             }

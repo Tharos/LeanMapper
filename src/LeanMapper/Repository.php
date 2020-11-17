@@ -191,7 +191,7 @@ abstract class Repository
         $this->connection->query(
             'INSERT INTO %n %v',
             $this->getTable(),
-            $values
+            Helpers::convertRowData($this->getTable(), $values, $this->mapper)
         );
         return isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
     }
@@ -211,7 +211,7 @@ abstract class Repository
         return $this->connection->query(
             'UPDATE %n SET %a WHERE %n = ?',
             $this->getTable(),
-            $values,
+            Helpers::convertRowData($this->getTable(), $values, $this->mapper),
             $primaryKey,
             $this->getIdValue($entity)
         );
@@ -324,7 +324,7 @@ abstract class Repository
         if ($table === null) {
             $table = $this->getTable();
         }
-        $result = Result::createInstance($dibiRow, $table, $this->connection, $this->mapper);
+        $result = Result::createInstance(new DibiRow(Helpers::convertDbRow($table, $dibiRow, $this->mapper)), $table, $this->connection, $this->mapper);
         $primaryKey = $this->mapper->getPrimaryKey($table);
 
         $row = $result->getRow($dibiRow->$primaryKey);
@@ -352,7 +352,7 @@ abstract class Repository
             $table = $this->getTable();
         }
         $entities = [];
-        $collection = Result::createInstance($rows, $table, $this->connection, $this->mapper);
+        $collection = Result::createInstance(Helpers::convertDbRows($table, $rows, $this->mapper), $table, $this->connection, $this->mapper);
         $primaryKey = $this->mapper->getPrimaryKey($table);
         if ($entityClass !== null) {
             foreach ($rows as $dibiRow) {
