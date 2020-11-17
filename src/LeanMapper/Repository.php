@@ -78,7 +78,8 @@ abstract class Repository
         if (preg_match('#^on[A-Z]#', $name)) {
             return $this->events->getCallbacksReference(lcfirst(substr($name, 2)));
         }
-        return null;
+
+        throw new Exception\MemberAccessException("Undefined property '$name' in repository " . get_called_class() . '.');
     }
 
 

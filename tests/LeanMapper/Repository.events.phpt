@@ -78,3 +78,15 @@ Assert::equal(
     ],
     $log->getArrayCopy()
 );
+
+
+Assert::exception(function () use ($repository) {
+    $repository->onUnexists[] = function () {
+    };
+}, LeanMapper\Exception\InvalidArgumentException::class, "Unknown event type given: 'unexists'.");
+
+
+Assert::exception(function () use ($repository) {
+    $repository->unexists[] = function () {
+    };
+}, LeanMapper\Exception\MemberAccessException::class, "Undefined property 'unexists' in repository " . CustomRepository::class . '.');
