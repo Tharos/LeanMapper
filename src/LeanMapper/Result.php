@@ -103,7 +103,7 @@ class Result implements \Iterator
             $dataArray = [isset($data->$primaryKey) ? $data->$primaryKey : self::DETACHED_ROW_ID => $data->toArray()];
         } else {
             $e = new InvalidArgumentException(
-                'Invalid type of data given, only \Dibi\Row, \Dibi\Row[], ArrayAccess[] or array of arrays is supported at this moment.'
+                'Invalid type of data given, only ' . DibiRow::class . ', ' . DibiRow::class . '[], ' . ArrayAccess::class . '[] or array of arrays is supported at this moment.'
             );
             if (!is_array($data)) {
                 throw $e;

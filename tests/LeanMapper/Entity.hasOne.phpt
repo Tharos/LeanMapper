@@ -52,7 +52,7 @@ Assert::exception(
         $book = new Book();
         $book->revieverId;
     },
-    'LeanMapper\Exception\InvalidStateException',
+    LeanMapper\Exception\InvalidStateException::class,
     'Cannot get value of property \'revieverId\' in entity Book due to low-level failure: Cannot get referenced Result for detached Result.'
 );
 

@@ -43,4 +43,4 @@ Assert::exception(function () use ($author) {
 
     $author->finalState = null;
 
-}, 'LeanMapper\Exception\InvalidValueException', "Property 'finalState' in entity Author cannot be null.");
+}, LeanMapper\Exception\InvalidValueException::class, "Property 'finalState' in entity Author cannot be null.");

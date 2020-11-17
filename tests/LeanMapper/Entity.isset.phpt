@@ -29,7 +29,7 @@ Assert::exception(
     function () use ($author) {
         isset($author->name);
     },
-    'LeanMapper\Exception\Exception',
+    LeanMapper\Exception\Exception::class,
     null,
     Result::ERROR_MISSING_COLUMN
 );

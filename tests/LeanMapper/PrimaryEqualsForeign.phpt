@@ -65,10 +65,10 @@ class Mapper extends DefaultMapper
 
     public function getColumn($entityClass, $field)
     {
-        if ($entityClass === 'AuthorDetail' and $field === 'author') {
+        if ($entityClass === AuthorDetail::class and $field === 'author') {
             return 'author_id';
         }
-        if ($entityClass === 'AuthorContract' and $field === 'authorContract') {
+        if ($entityClass === AuthorContract::class and $field === 'authorContract') {
             return 'author_id';
         }
         return parent::getColumn($entityClass, $field);

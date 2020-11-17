@@ -76,7 +76,7 @@ Assert::throws(
     function () use ($project) {
         $project->state = 'reopened';
     },
-    'LeanMapper\Exception\InvalidValueException',
+    LeanMapper\Exception\InvalidValueException::class,
     "Given value is not from possible values enumeration in property 'state' in entity Project."
 );
 
@@ -99,6 +99,6 @@ Assert::throws(
     function () use ($project) {
         $project->when = 'onceUponATime';
     },
-    'LeanMapper\Exception\InvalidValueException',
+    LeanMapper\Exception\InvalidValueException::class,
     "Given value is not from possible values enumeration in property 'when' in entity Project."
 );

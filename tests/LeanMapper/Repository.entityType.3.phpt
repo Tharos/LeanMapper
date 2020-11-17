@@ -44,7 +44,7 @@ class LibraryRepository extends Repository
             throw new \Exception('Entity was not found.');
         }
 
-        return $this->createEntity($row, 'ReviewedBook', 'book');
+        return $this->createEntity($row, ReviewedBook::class, 'book');
     }
 
 
@@ -56,7 +56,7 @@ class LibraryRepository extends Repository
             throw new \Exception('Entity was not found.');
         }
 
-        return $this->createEntity($row, 'Book', 'book');
+        return $this->createEntity($row, Book::class, 'book');
     }
 
 
@@ -64,7 +64,7 @@ class LibraryRepository extends Repository
     {
         return $this->createEntities(
             $this->connection->select('*')->from('book')->where('reviewer_id IS NOT NULL')->orderBy('id')->fetchAll(),
-            'ReviewedBook',
+            ReviewedBook::class,
             'book'
         );
     }
@@ -74,7 +74,7 @@ class LibraryRepository extends Repository
     {
         return $this->createEntities(
             $this->connection->select('*')->from('book')->orderBy('id')->fetchAll(),
-            'Book',
+            Book::class,
             'book'
         );
     }
@@ -89,7 +89,7 @@ $reviewedBooks = $repository->findReviewedBooks();
 $names = [];
 
 foreach ($reviewedBooks as $reviewedBook) {
-    Assert::type('ReviewedBook', $reviewedBook);
+    Assert::type(ReviewedBook::class, $reviewedBook);
     $names[] = $reviewedBook->name;
 }
 
@@ -104,7 +104,7 @@ $books = $repository->findBooks();
 $names = [];
 
 foreach ($books as $book) {
-    Assert::type('Book', $book);
+    Assert::type(Book::class, $book);
     $names[] = $book->name;
 }
 
@@ -119,13 +119,13 @@ Assert::same([
 //////////
 
 $reviewedBook = $repository->findReviewedBook(3);
-Assert::type('ReviewedBook', $reviewedBook);
+Assert::type(ReviewedBook::class, $reviewedBook);
 Assert::same(3, $reviewedBook->id);
 Assert::same('Refactoring: Improving the Design of Existing Code', $reviewedBook->name);
 
 //////////
 
 $book = $repository->findBook(2);
-Assert::type('Book', $book);
+Assert::type(Book::class, $book);
 Assert::same(2, $book->id);
 Assert::same('The Art of Computer Programming', $book->name);

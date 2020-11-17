@@ -49,7 +49,7 @@ $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 
 $book = $bookRepository->find(1);
 
-Assert::type('Author', $book->author);
+Assert::type(Author::class, $book->author);
 
 $author = $book->author;
 
@@ -66,4 +66,4 @@ Assert::equal(
 
 $book->author = $author;
 
-Assert::type('Author', $book->author);
+Assert::type(Author::class, $book->author);

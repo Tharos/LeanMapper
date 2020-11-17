@@ -69,10 +69,10 @@ $barDefaultProvider = BarDefault::getReflectionProvider();
 $fooCustomProvider = FooCustom::getReflectionProvider();
 $barCustomProvider = BarCustom::getReflectionProvider();
 
-Assert::same('LeanMapper\DefaultEntityReflectionProvider', get_class($fooDefaultProvider));
-Assert::same('LeanMapper\DefaultEntityReflectionProvider', get_class($barDefaultProvider));
-Assert::same('CustomReflectionProvider', get_class($fooCustomProvider));
-Assert::same('CustomReflectionProvider', get_class($barCustomProvider));
+Assert::same(LeanMapper\DefaultEntityReflectionProvider::class, get_class($fooDefaultProvider));
+Assert::same(LeanMapper\DefaultEntityReflectionProvider::class, get_class($barDefaultProvider));
+Assert::same(CustomReflectionProvider::class, get_class($fooCustomProvider));
+Assert::same(CustomReflectionProvider::class, get_class($barCustomProvider));
 
 Assert::same($fooDefaultProvider, $barDefaultProvider);
 Assert::same($fooCustomProvider, $barCustomProvider);

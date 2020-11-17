@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace LeanMapper\Reflection;
 
+use LeanMapper;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Relationship;
@@ -108,7 +109,7 @@ class Property
         array $customFlags = []
     ) {
         if ($relationship !== null) {
-            if (!is_subclass_of($type->getType(), 'LeanMapper\Entity')) {
+            if (!is_subclass_of($type->getType(), LeanMapper\Entity::class)) {
                 throw new InvalidArgumentException(
                     "Property '$name' in entity {$entityReflection->getName()} cannot contain relationship since it doesn't contain entity (or collection of entities)."
                 );

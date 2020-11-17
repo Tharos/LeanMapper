@@ -98,7 +98,7 @@ abstract class Entity
         if ($arg instanceof Row) {
             if ($arg->isDetached()) {
                 throw new InvalidArgumentException(
-                    'It is not allowed to create entity ' . get_called_class() . ' from detached instance of LeanMapper\Row.'
+                    'It is not allowed to create entity ' . get_called_class() . ' from detached instance of ' . Row::class . '.'
                 );
             }
             $this->row = $arg;
@@ -117,7 +117,7 @@ abstract class Entity
                     $type = Helpers::getType($arg);
                     throw new InvalidArgumentException(
                         "Argument \$arg in " . get_called_class(
-                        ) . "::__construct must contain either null, array, instance of LeanMapper\\Row or instance of Traversable, $type given."
+                        ) . "::__construct must contain either null, array, instance of " . Row::class . " or instance of " . Traversable::class . ", $type given."
                     );
                 }
                 $this->assign($arg);
@@ -273,7 +273,7 @@ abstract class Entity
             if (!is_array($arg) and (!($arg instanceof Traversable) or ($arg instanceof Entity))) {
                 throw new InvalidArgumentException(
                     "Argument of method $name in entity " . get_called_class(
-                    ) . ' must contain either array or instance of Traversable which is not Entity.'
+                    ) . ' must contain either array or instance of ' . Traversable::class . ' which is not ' . Entity::class . '.'
                 );
             }
             $property = lcfirst(substr($name, 10));
@@ -304,7 +304,7 @@ abstract class Entity
         if (!is_array($values) and !($values instanceof Traversable)) {
             $givenType = Helpers::getType($values);
             throw new InvalidArgumentException(
-                "Argument \$values in " . get_called_class() . "::assign must contain either array or instance of Traversable, $givenType given."
+                "Argument \$values in " . get_called_class() . "::assign must contain either array or instance of " . Traversable::class . ", $givenType given."
             );
         }
         foreach ($values as $property => $value) {

@@ -49,6 +49,6 @@ Assert::exception(
         $author = new Author();
         $author->name;
     },
-    'LeanMapper\Exception\InvalidStateException',
+    LeanMapper\Exception\InvalidStateException::class,
     'Cannot get value of property \'name\' in entity Author due to low-level failure: Missing \'name\' column in row with id -1.'
 );

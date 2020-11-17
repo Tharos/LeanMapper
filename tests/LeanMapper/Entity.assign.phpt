@@ -48,7 +48,7 @@ Assert::exception(
     function () use ($book) {
         $book->assign(false);
     },
-    'LeanMapper\Exception\InvalidArgumentException',
+    LeanMapper\Exception\InvalidArgumentException::class,
     'Argument $values in Book::assign must contain either array or instance of Traversable, boolean given.'
 );
 
@@ -56,6 +56,6 @@ Assert::exception(
     function () use ($book) {
         $book->assign('hello');
     },
-    'LeanMapper\Exception\InvalidArgumentException',
+    LeanMapper\Exception\InvalidArgumentException::class,
     'Argument $values in Book::assign must contain either array or instance of Traversable, string given.'
 );

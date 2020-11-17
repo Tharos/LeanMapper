@@ -27,22 +27,22 @@ class Book extends LeanMapper\Entity
             return $this->convertJson($value);
         }
 
-        if (is_a($type, 'DateTime', true)) {
+        if (is_a($type, DateTime::class, true)) {
             if ($value instanceof DateTime) {
                 return clone $value;
             }
             return new DateTime($value);
         }
 
-        if (is_a($type, 'Uuid', true)) {
+        if (is_a($type, Uuid::class, true)) {
             return ($value instanceof Uuid) ? $value : new Uuid($value);
         }
 
-        if (is_a($type, 'Time', true)) {
+        if (is_a($type, Time::class, true)) {
             return ($value instanceof Time) ? $value->getTime() : new Time($value);
         }
 
-        if (!$property->isBasicType() && is_a($type, 'Integer', true)) { // is_a() accepts 'integer' as class name
+        if (!$property->isBasicType() && is_a($type, Integer::class, true)) { // is_a() accepts 'integer' as class name
             return $this->convertToInteger($value);
         }
 
@@ -58,22 +58,22 @@ class Book extends LeanMapper\Entity
             return $this->convertJson($value);
         }
 
-        if (is_a($type, 'DateTime', true)) {
+        if (is_a($type, DateTime::class, true)) {
             if ($value instanceof DateTime) {
                 return $value->format('Y-m-d');
             }
             return $value;
         }
 
-        if (is_a($type, 'Uuid', true)) {
+        if (is_a($type, Uuid::class, true)) {
             return ($value instanceof Uuid) ? $value : new Uuid($value);
         }
 
-        if (is_a($type, 'Time', true)) {
+        if (is_a($type, Time::class, true)) {
             return ($value instanceof Time) ? $value->getTime() : new Time($value);
         }
 
-        if (!$property->isBasicType() && is_a($type, 'Integer', true)) { // is_a() accepts 'integer' as class name
+        if (!$property->isBasicType() && is_a($type, Integer::class, true)) { // is_a() accepts 'integer' as class name
             return $this->convertToInteger($value);
         }
 

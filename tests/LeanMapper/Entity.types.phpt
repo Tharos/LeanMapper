@@ -22,13 +22,13 @@ $book = new Book;
 
 $book->published = new \Dibi\DateTime;
 
-Assert::type('\Dibi\DateTime', $book->published);
+Assert::type(\Dibi\DateTime::class, $book->published);
 
 Assert::exception(
     function () use ($book) {
         $book->published = new ArrayObject;
     },
-    'LeanMapper\Exception\InvalidValueException',
+    LeanMapper\Exception\InvalidValueException::class,
     "Unexpected value type given in property 'published' in entity Book, DateTimeImmutable expected, instance of ArrayObject given."
 );
 
@@ -46,7 +46,7 @@ Assert::exception(
     function () use ($book) {
         $book->published;
     },
-    'LeanMapper\Exception\InvalidValueException',
+    LeanMapper\Exception\InvalidValueException::class,
     "Property 'published' in entity Book is expected to contain an instance of DateTimeImmutable, instance of ArrayObject given."
 );
 
@@ -60,5 +60,5 @@ $dibiRow = new \Dibi\Row(
 
 $book = new Book(Result::createInstance($dibiRow, 'book', $connection, $mapper)->getRow(Result::DETACHED_ROW_ID));
 
-Assert::type('\Dibi\DateTime', $book->published);
-Assert::type('DateTimeImmutable', $book->published);
+Assert::type(\Dibi\DateTime::class, $book->published);
+Assert::type(DateTimeImmutable::class, $book->published);

@@ -44,7 +44,7 @@ Assert::exception(
     function () use ($authorRepository, $author) {
         $authorRepository->persist($author);
     },
-    '\Dibi\DriverException',
+    \Dibi\DriverException::class,
     'UNIQUE constraint failed: author.id'
 );
 
@@ -90,6 +90,6 @@ Assert::exception(
     function () use ($authorRepository, $author) {
         $author->id = 8;
     },
-    'LeanMapper\Exception\InvalidArgumentException',
+    LeanMapper\Exception\InvalidArgumentException::class,
     "ID can only be set in detached rows."
 );

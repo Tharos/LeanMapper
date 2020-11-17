@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace LeanMapper\Bridges\Nette\DI;
 
+use LeanMapper;
 use Nette;
 use Nette\Loaders\RobotLoader;
+use Tracy;
 
 class LeanMapperExtension extends Nette\DI\CompilerExtension
 {
@@ -37,13 +39,13 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
         }
 
         $container->addDefinition($this->prefix('mapper'))
-            ->setFactory('LeanMapper\DefaultMapper');
+            ->setFactory(LeanMapper\DefaultMapper::class);
 
         $container->addDefinition($this->prefix('entityFactory'))
-            ->setFactory('LeanMapper\DefaultEntityFactory');
+            ->setFactory(LeanMapper\DefaultEntityFactory::class);
 
         $connection = $container->addDefinition($this->prefix('connection'))
-            ->setFactory('LeanMapper\Connection', [$config['db']]);
+            ->setFactory(LeanMapper\Connection::class, [$config['db']]);
 
         if (isset($config['db']['flags'])) {
             $flags = 0;
@@ -53,12 +55,12 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
             $config['db']['flags'] = $flags;
         }
 
-        if (class_exists('Tracy\Debugger') && $container->parameters['debugMode'] && $config['profiler']) {
-            $panel = $container->addDefinition($this->prefix('panel'))->setFactory('Dibi\Bridges\Tracy\Panel');
+        if (class_exists(Tracy\Debugger::class) && $container->parameters['debugMode'] && $config['profiler']) {
+            $panel = $container->addDefinition($this->prefix('panel'))->setFactory(\Dibi\Bridges\Tracy\Panel::class);
             $connection->addSetup([$panel, 'register'], [$connection]);
             if ($config['logFile']) {
                 $fileLogger = $container->addDefinition($this->prefix('fileLogger'))
-                    ->setFactory('Dibi\Loggers\FileLogger', [$config['logFile']]);
+                    ->setFactory(\Dibi\Loggers\FileLogger::class, [$config['logFile']]);
                 $connection->addSetup('$service->onEvent[] = ?', [
                     [$fileLogger, 'logEvent'],
                 ]);
@@ -89,7 +91,7 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
         $repositories = [];
         foreach (array_unique($classes) as $class) {
             if (class_exists($class)
-                && ($rc = new \ReflectionClass($class)) && $rc->isSubclassOf('LeanMapper\Repository')
+                && ($rc = new \ReflectionClass($class)) && $rc->isSubclassOf(LeanMapper\Repository::class)
                 && !$rc->isAbstract()
             ) {
                 $repositories[] = $rc->getName();
