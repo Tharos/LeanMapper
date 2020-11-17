@@ -116,4 +116,12 @@ interface IMapper
      */
     public function getImplicitFilters($entityClass, Caller $caller = null);
 
+
+
+    public function convertToRowData(string $table, array $values): array;
+
+
+
+    public function convertFromRowData(string $table, array $data): array;
+
 }

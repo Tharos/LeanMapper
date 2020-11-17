@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace LeanMapper;
 
+use Dibi\Row as DibiRow;
+
 class Helpers
 {
 
@@ -28,6 +30,44 @@ class Helpers
     public static function getType($value): string
     {
         return is_object($value) ? ('instance of ' . get_class($value)) : gettype($value);
+    }
+
+
+    /**
+     * @param  array|DibiRow $row
+     */
+    public static function convertDbRow(string $table, $row, IMapper $mapper): array
+    {
+        if ($row instanceof DibiRow) {
+            $row = $row->toArray();
+
+        } elseif (!is_array($row)) {
+            throw new Exception\InvalidArgumentException('DB row must be ' . DibiRow::class . '|array, ' . self::getType($row) . ' given.');
+        }
+
+        return $mapper->convertToRowData($table, $row);
+    }
+
+
+    /**
+     * @param  array<array>|DibiRow[] $rows
+     * @return array<array>
+     */
+    public static function convertDbRows(string $table, array $rows, IMapper $mapper): array
+    {
+        $result = [];
+
+        foreach ($rows as $k => $row) {
+            $result[$k] = self::convertDbRow($table, $row, $mapper);
+        }
+
+        return $result;
+    }
+
+
+    public static function convertRowData(string $table, array $rowData, IMapper $mapper): array
+    {
+        return $mapper->convertFromRowData($table, $rowData);
     }
 
 }

@@ -134,6 +134,18 @@ class DefaultMapper implements IMapper
     }
 
 
+    public function convertToRowData(string $table, array $values): array
+    {
+        return $values;
+    }
+
+
+    public function convertFromRowData(string $table, array $data): array
+    {
+        return $data;
+    }
+
+
 
     /**
      * Trims namespace part from fully qualified class name
