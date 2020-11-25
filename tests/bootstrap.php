@@ -20,11 +20,6 @@ $_SERVER = array_intersect_key($_SERVER, array_flip(['PHP_SELF', 'SCRIPT_NAME', 
 $_SERVER['REQUEST_TIME'] = 1234567890;
 $_ENV = $_GET = $_POST = [];
 
-if (extension_loaded('xdebug')) {
-    xdebug_disable();
-    Tester\CodeCoverage\Collector::start(__DIR__ . '/coverage.dat');
-}
-
 define('TEMP_DIR', __DIR__ . '/tmp/' . getmypid());
 @mkdir(__DIR__ . '/tmp/', 0777);
 Tester\Helpers::purge(TEMP_DIR);
