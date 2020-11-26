@@ -11,6 +11,14 @@ use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
+$queries = [];
+
+$connection->onEvent[] = function ($event) use (&$queries) {
+    if ($event->type === $event::SELECT) {
+        $queries[] = $event->sql;
+    }
+};
+
 // https://github.com/Tharos/LeanMapper/issues/65
 
 $connection->query('CREATE TABLE `interval` (
@@ -71,6 +79,10 @@ $connection->registerFilter('intersecingIntervals', function (Fluent $fluent) us
  */
 class Interval extends Entity
 {
+    public function cleanResultCache()
+    {
+        $this->row->cleanReferencingRowsCache('interval_interval', 'interval_id');
+    }
 }
 
 
@@ -156,3 +168,29 @@ Assert::same([
         ],
     ],
 ], $results);
+
+Assert::same([
+    'SELECT [interval].* FROM [interval]',
+    'SELECT [innerInt].*, [baseInt].[id] [interval_id]
+        FROM [interval] [baseInt]
+        JOIN [interval] [innerInt] ON [innerInt].[left] <= [baseInt].[right] AND [innerInt].[right] >= [baseInt].[left] AND [baseInt].[id] != [innerInt].[id]
+        WHERE [baseInt].[id] IN (1, 2, 3, 4, 5, 6)
+        ORDER BY [baseInt].[id], [innerInt].[id]',
+], $queries);
+
+////////
+
+$initQueries = $queries;
+array_shift($initQueries);
+$queries = [];
+
+foreach ($intervals as $interval) {
+    $interval->cleanResultCache();
+}
+
+foreach ($intervals as $interval) {
+    foreach ($interval->intersectingIntervals as $intersectInt) {
+    }
+}
+
+Assert::same($initQueries, $queries);

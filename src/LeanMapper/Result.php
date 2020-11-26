@@ -38,8 +38,6 @@ class Result implements \Iterator
 
     const KEY_PRELOADED = 'preloaded';
 
-    const KEY_FORCED = 'forced';
-
     const ERROR_MISSING_COLUMN = 1;
 
     /** @var Connection */
@@ -72,11 +70,17 @@ class Result implements \Iterator
     /** @var array<int|string> */
     private $keys;
 
-    /** @var array<string, self|array<FilteringResultDecorator>> */
+    /** @var array<string, self> */
     private $referenced = [];
 
-    /** @var array<string, self|array<FilteringResultDecorator>> */
+    /** @var array<string, array<FilteringResultDecorator>> */
+    private $referencedForced = [];
+
+    /** @var array<string, self> */
     private $referencing = [];
+
+    /** @var array<string, array<FilteringResultDecorator>> */
+    private $referencingForced = [];
 
     /** @var array<string, array<int|string, Row[]>> */
     private $index = [];
@@ -554,6 +558,12 @@ class Result implements \Iterator
                     unset($this->referenced[$key]);
                 }
             }
+
+            foreach ($this->referencedForced as $key => $value) {
+                if (preg_match("~^$table\\($viaColumn\\)(#.*)?$~", $key)) {
+                    unset($this->referencedForced[$key]);
+                }
+            }
         }
     }
 
@@ -566,12 +576,20 @@ class Result implements \Iterator
     {
         if ($table === null or $viaColumn === null) {
             $this->referencing = $this->index = [];
+            $this->referencingForced = [];
         } else {
+            $strategies = '(' . self::STRATEGY_IN . '|' . self::STRATEGY_UNION . ')';
+
             foreach ($this->referencing as $key => $value) {
-                $strategies = '(' . self::STRATEGY_IN . '|' . self::STRATEGY_UNION . ')';
                 if (preg_match("~^$table\\($viaColumn\\)$strategies(#.*)?$~", $key)) {
                     unset($this->index[spl_object_hash($this->referencing[$key])]);
                     unset($this->referencing[$key]);
+                }
+            }
+
+            foreach ($this->referencingForced as $key => $value) {
+                if (preg_match("~^$table\\($viaColumn\\)$strategies(#.*)?$~", $key)) {
+                    unset($this->referencingForced[$key]);
                 }
             }
         }
@@ -696,11 +714,11 @@ class Result implements \Iterator
         $key = "$table($viaColumn)";
         $primaryKey = null;
         $ids = null;
-        if (isset($this->referenced[$forcedKey = $key . '#' . self::KEY_FORCED])) {
+        if (isset($this->referencedForced[$key])) {
             $ids = $this->extractIds($viaColumn);
             $primaryKey = $this->mapper->getPrimaryKey($table);
 
-            foreach ($this->referenced[$forcedKey] as $filteringResult) {
+            foreach ($this->referencedForced[$key] as $filteringResult) {
                 if ($filteringResult->isValidFor($ids, $filtering->getArgs())) {
                     return $filteringResult->getResult();
                 }
@@ -735,10 +753,10 @@ class Result implements \Iterator
         $filteringResult = $this->applyFiltering($statement, $filtering);
 
         if ($filteringResult instanceof FilteringResultDecorator) {
-            if (!isset($this->referenced[$forcedKey])) {
-                $this->referenced[$forcedKey] = [];
+            if (!isset($this->referencedForced[$key])) {
+                $this->referencedForced[$key] = [];
             }
-            $this->referenced[$forcedKey][] = $filteringResult;
+            $this->referencedForced[$key][] = $filteringResult;
             return $filteringResult->getResult();
         }
 
@@ -769,9 +787,9 @@ class Result implements \Iterator
         }
         $key = "$table($viaColumn)$strategy";
         $ids = null;
-        if (isset($this->referencing[$forcedKey = $key . '#' . self::KEY_FORCED])) {
+        if (isset($this->referencingForced[$key])) {
             $ids = $this->extractIds($this->mapper->getPrimaryKey($this->table));
-            foreach ($this->referencing[$forcedKey] as $filteringResult) {
+            foreach ($this->referencingForced[$key] as $filteringResult) {
                 if ($filteringResult->isValidFor($ids, $filtering->getArgs())) {
                     return $filteringResult->getResult();
                 }
@@ -804,10 +822,10 @@ class Result implements \Iterator
                 $filteringResult = $this->applyFiltering($statement, $filtering);
 
                 if ($filteringResult instanceof FilteringResultDecorator) {
-                    if (!isset($this->referencing[$forcedKey])) {
-                        $this->referencing[$forcedKey] = [];
+                    if (!isset($this->referencingForced[$key])) {
+                        $this->referencingForced[$key] = [];
                     }
-                    $this->referencing[$forcedKey][] = $filteringResult;
+                    $this->referencingForced[$key][] = $filteringResult;
                     return $filteringResult->getResult();
                 }
                 $args = $statement->_export();
@@ -848,10 +866,10 @@ class Result implements \Iterator
                 $filteringResult = $this->applyFiltering($firstStatement, $filtering);
 
                 if ($filteringResult instanceof FilteringResultDecorator) {
-                    if (!isset($this->referencing[$forcedKey])) {
-                        $this->referencing[$forcedKey] = [];
+                    if (!isset($this->referencingForced[$key])) {
+                        $this->referencingForced[$key] = [];
                     }
-                    $this->referencing[$forcedKey][] = $filteringResult;
+                    $this->referencingForced[$key][] = $filteringResult;
                     return $filteringResult->getResult();
                 }
                 $args = $firstStatement->_export();
