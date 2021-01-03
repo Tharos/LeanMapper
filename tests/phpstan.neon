@@ -1,5 +1,5 @@
 parameters:
-    level: 6
+    level: 7
 
     paths:
         - ../src
@@ -8,3 +8,10 @@ parameters:
 
     ignoreErrors:
         - '#Unsafe usage of new static\(\).#'
+
+
+services:
+    -
+        class: LeanMapper\Tests\PhpStan\DibiFluentDynamicReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicMethodReturnTypeExtension

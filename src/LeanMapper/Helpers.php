@@ -44,6 +44,21 @@ class Helpers
 
 
     /**
+     * @return array<string>
+     */
+    public static function split(string $pattern, string $subject): array
+    {
+        $res = preg_split($pattern, $subject);
+
+        if (!is_array($res)) {
+            throw new Exception\InvalidStateException('Function preg_split() failed.');
+        }
+
+        return $res;
+    }
+
+
+    /**
      * @param  array<string, mixed>|DibiRow<string, mixed> $row
      * @return array<string, mixed>
      */

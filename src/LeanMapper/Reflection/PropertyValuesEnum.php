@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
+use LeanMapper\Exception\InvalidStateException;
 use ReflectionClass;
 
 /**
@@ -89,7 +90,13 @@ class PropertyValuesEnum
             $constants = $reflection->getParentClass()->getConstants();
         } else {
             $aliases = $reflection->getAliases();
-            $reflectionClass = new ReflectionClass($aliases->translate($class));
+            $className = $aliases->translate($class);
+
+            if (!class_exists($className) && !interface_exists($className)) {
+                throw new InvalidStateException("Class or interface $className not found.");
+            }
+
+            $reflectionClass = new ReflectionClass($className);
             $constants = $reflectionClass->getConstants();
         }
         $values = [];

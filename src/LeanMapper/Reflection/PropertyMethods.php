@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
+use LeanMapper\Helpers;
 
 /**
  * Set of property access methods (given in useMethods flag)
@@ -71,7 +72,7 @@ class PropertyMethods
             $setter = 'set' . $ucName;
         }
         $counter = 0;
-        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $method) {
+        foreach (Helpers::split('#\s*\|\s*#', trim($definition)) as $method) {
             $counter++;
             if ($counter > 2) {
                 throw new InvalidAnnotationException('Property methods cannot have more than two parts.');

@@ -690,6 +690,12 @@ abstract class Entity
                         ) . ", {$property->getType()} expected, $givenType given."
                     );
                 }
+                if (!($value instanceof Entity)) {
+                    throw new InvalidValueException(
+                        "Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class(
+                        ) . ", " . Entity::class. " expected, $givenType given."
+                    );
+                }
                 if ($value->isDetached()) { // the value should be entity
                     throw new InvalidValueException(
                         "Detached entity cannot be assigned to property '{$property->getName()}' with relationship in entity " . get_called_class(
@@ -751,6 +757,9 @@ abstract class Entity
             $property = $this->getCurrentReflection()->getEntityProperty($property);
         }
         $relationship = $property->getRelationship();
+        if ($relationship === null) {
+            throw new InvalidArgumentException("Property '{$property->getName()}' in entity " . get_called_class() . " has no relationship.");
+        }
         $method = explode('\\', get_class($relationship));
         $method = 'get' . end($method) . 'Value';
         try {
@@ -952,7 +961,9 @@ abstract class Entity
             return null;
         } else {
             $row = reset($rows);
+            /** @phpstan-ignore-next-line https://github.com/phpstan/phpstan/issues/2142 */
             $entityClass = $this->mapper->getEntityClass($targetTable, $row);
+            /** @phpstan-ignore-next-line https://github.com/phpstan/phpstan/issues/2142 */
             $entity = $this->entityFactory->createEntity($entityClass, $row);
             $this->checkConsistency($property, $entityClass, $entity);
             $entity->makeAlive($this->entityFactory);

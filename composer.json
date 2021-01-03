@@ -22,6 +22,9 @@
 			"LeanMapper": "src/"
 		}
 	},
+	"autoload-dev": {
+		"classmap": ["tests/phpstan/DibiFluentDynamicReturnTypeExtension.php"]
+	},
 	"require": {
 		"php": ">= 7.1",
 		"dibi/dibi": "~4.0"

@@ -19,10 +19,10 @@ namespace LeanMapper\Reflection;
 class AliasesBuilder
 {
 
-    /** @var array<string, string> */
+    /** @var array<string, class-string> */
     private $aliases = [];
 
-    /** @var string */
+    /** @var class-string|string */
     private $current = '';
 
     /** @var string */
@@ -68,6 +68,7 @@ class AliasesBuilder
      */
     public function finishCurrent(): void
     {
+        /** @phpstan-ignore-next-line 'class-string' does not accept 'string' */
         $this->aliases[$this->lastPart] = $this->current;
         $this->resetCurrent();
     }

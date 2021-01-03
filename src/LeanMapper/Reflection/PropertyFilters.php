@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
+use LeanMapper\Helpers;
 
 /**
  * Set of property filters
@@ -78,13 +79,13 @@ class PropertyFilters
     {
         $propertyFilters = [];
         $propertyTargetedArgs = [];
-        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $set) {
+        foreach (Helpers::split('#\s*\|\s*#', trim($definition)) as $set) {
             if ($set === '') {
                 $propertyFilters[] = $propertyTargetedArgs[] = [];
                 continue;
             }
             $filters = $targetedArgs = [];
-            foreach (preg_split('#\s*,\s*#', $set) as $filter) {
+            foreach (Helpers::split('#\s*,\s*#', $set) as $filter) {
                 $matches = [];
                 preg_match('~^([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(?:#(.*))?$~', $filter, $matches);
                 if (empty($matches)) {

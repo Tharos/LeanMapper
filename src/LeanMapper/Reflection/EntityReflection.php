@@ -97,7 +97,19 @@ class EntityReflection extends \ReflectionClass
     public function getAliases(): Aliases
     {
         if ($this->aliases === null) {
-            $this->aliases = AliasesParser::parseSource(file_get_contents($this->getFileName()), $this->getNamespaceName());
+            $filename = $this->getFileName();
+
+            if (!is_string($filename)) {
+                throw new InvalidStateException('EntityReflection::getFileName() failed.');
+            }
+
+            $source = file_get_contents($filename);
+
+            if (!is_string($source)) {
+                throw new InvalidStateException("Reading of source code from $filename failed.");
+            }
+
+            $this->aliases = AliasesParser::parseSource($source, $this->getNamespaceName());
         }
         return $this->aliases;
     }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
+use LeanMapper\Helpers;
 
 /**
  * Set of property passes (given in passThru flag)
@@ -66,7 +67,7 @@ class PropertyPasses
         $counter = 0;
         $getterPass = null;
         $setterPass = null;
-        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $pass) {
+        foreach (Helpers::split('#\s*\|\s*#', trim($definition)) as $pass) {
             $counter++;
             if ($counter > 2) {
                 throw new InvalidAnnotationException('Property passes cannot have more than two parts.');
