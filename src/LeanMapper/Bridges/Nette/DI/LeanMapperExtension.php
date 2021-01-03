@@ -22,9 +22,9 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
 
 
     /**
-     * @param string[]|string|NULL $scanDirs
+     * @param string[]|string|null $scanDirs
      */
-    public function __construct($scanDirs = NULL)
+    public function __construct($scanDirs = null)
     {
         $this->defaults['scanDirs'] = $scanDirs;
     }

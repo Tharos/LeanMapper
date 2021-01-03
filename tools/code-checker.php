@@ -49,6 +49,17 @@ $checker->addTask([$tasks, 'trailingWhiteSpaceFixer']);
 $checker->addTask([$tasks, 'tabIndentationChecker'], '*.json');
 $checker->addTask([$tasks, 'yamlIndentationChecker'], '*.php,*.phpt');
 $checker->addTask([$tasks, 'unexpectedTabsChecker'], '*.yml');
+$checker->addTask(function (string $contents, Nette\CodeChecker\Result $result) {
+    foreach (@token_get_all($contents) as $token) { // @ can trigger error
+        if (is_array($token) && $token[0] === T_STRING) {
+            $keyword = strtolower($token[1]);
+
+            if (($keyword === 'null' || $keyword === 'true' || $keyword === 'false') && $token[1] !== $keyword) {
+                $result->error("Invalid $keyword keyword", $token[2]);
+            }
+        }
+    }
+}, '*.php,*.phpt');
 
 $ok = $checker->run([__DIR__ . '/../']);
 

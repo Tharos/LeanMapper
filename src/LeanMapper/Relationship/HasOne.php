@@ -55,7 +55,7 @@ class HasOne
 
     public function hasTargetTable(): bool
     {
-        return $this->targetTable !== NULL;
+        return $this->targetTable !== null;
     }
 
 }

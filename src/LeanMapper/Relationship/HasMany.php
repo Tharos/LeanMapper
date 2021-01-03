@@ -67,7 +67,7 @@ class HasMany
 
     public function hasRelationshipTable(): bool
     {
-        return $this->relationshipTable !== NULL;
+        return $this->relationshipTable !== null;
     }
 
 

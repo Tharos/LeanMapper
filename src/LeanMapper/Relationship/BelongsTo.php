@@ -59,7 +59,7 @@ abstract class BelongsTo
 
     public function hasTargetTable(): bool
     {
-        return $this->targetTable !== NULL;
+        return $this->targetTable !== null;
     }
 
 
