@@ -77,6 +77,7 @@ class Events
 
     /**
      * Gets reference to array of registered events
+     *
      * @return array<callable>
      */
     public function &getCallbacksReference(string $event): array

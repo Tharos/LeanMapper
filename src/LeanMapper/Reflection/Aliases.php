@@ -40,6 +40,7 @@ class Aliases
 
     /**
      * Determines fully qualified class name
+     *
      * @return string
      */
     public function translate(string $identifier): string

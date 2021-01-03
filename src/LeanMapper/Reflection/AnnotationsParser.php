@@ -45,6 +45,7 @@ class AnnotationsParser
 
     /**
      * Parse value pieces of requested annotation from given doc comment
+     *
      * @return array<string>
      */
     public static function parseAnnotationValues(string $annotation, string $docComment): array
@@ -57,6 +58,7 @@ class AnnotationsParser
 
     /**
      * Parse value pieces of requested multiline annotation from given doc comment
+     *
      * @return array<string>
      */
     public static function parseMultiLineAnnotationValues(string $annotation, string $docComment): array

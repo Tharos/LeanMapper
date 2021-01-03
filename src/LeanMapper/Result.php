@@ -310,6 +310,7 @@ class Result implements \Iterator
 
     /**
      * Returns values of columns of requested row
+     *
      * @param  int|string $id
      * @return array<string, mixed>
      */
@@ -321,6 +322,7 @@ class Result implements \Iterator
 
     /**
      * Returns values of columns of requested row that were modified
+     *
      * @param  int|string $id
      * @return array<string, mixed>
      */
@@ -479,6 +481,7 @@ class Result implements \Iterator
 
     /**
      * Adds new data entry to referencing Result
+     *
      * @param  array<string, mixed> $values
      */
     public function addToReferencing(array $values, string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = self::STRATEGY_IN): void
@@ -498,6 +501,7 @@ class Result implements \Iterator
 
     /**
      * Remove given data entry from referencing Result
+     *
      * @param  array<string, mixed> $values
      */
     public function removeFromReferencing(array $values, string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = self::STRATEGY_IN): void

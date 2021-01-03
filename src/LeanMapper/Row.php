@@ -123,6 +123,7 @@ class Row
 
     /**
      * Returns values of columns
+     *
      * @return array<string, mixed>
      */
     public function getData(): array
@@ -133,6 +134,7 @@ class Row
 
     /**
      * Returns values of columns that were modified
+     *
      * @return array<string, mixed>
      */
     public function getModifiedData(): array
@@ -225,6 +227,7 @@ class Row
 
     /**
      * Adds new data entry to referencing Result
+     *
      * @param array<string, mixed> $values
      */
     public function addToReferencing(array $values, string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = null): void
@@ -235,6 +238,7 @@ class Row
 
     /**
      * Remove given data entry from referencing Result
+     *
      * @param array<string, mixed> $values
      */
     public function removeFromReferencing(array $values, string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = null): void

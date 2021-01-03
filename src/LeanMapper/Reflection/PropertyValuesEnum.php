@@ -56,6 +56,7 @@ class PropertyValuesEnum
 
     /**
      * Gets possible enumeration values
+     *
      * @return array<string, mixed>
      */
     public function getValues(): array

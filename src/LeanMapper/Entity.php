@@ -292,6 +292,7 @@ abstract class Entity
 
     /**
      * Gets high-level values of properties
+     *
      * @param  array<string>|null $whitelist
      * @return array<string, mixed>
      */
@@ -332,6 +333,7 @@ abstract class Entity
 
     /**
      * Gets low-level values of underlying Row columns
+     *
      * @return array<string, mixed>
      */
     public function getRowData(): array
@@ -342,6 +344,7 @@ abstract class Entity
 
     /**
      * Gets low-level values of underlying Row columns that were modified
+     *
      * @return array<string, mixed>
      */
     public function getModifiedRowData(): array
@@ -352,6 +355,7 @@ abstract class Entity
 
     /**
      * Gets current M:N differences
+     *
      * @return array<string, array<mixed, int>>
      */
     public function getHasManyRowDifferences(): array
@@ -788,6 +792,7 @@ abstract class Entity
 
     /**
      * Called after value is read from Row
+     *
      * @param  mixed $value
      * @return mixed
      */
@@ -799,6 +804,7 @@ abstract class Entity
 
     /**
      * Called before value is passed to Row
+     *
      * @param  mixed $value
      * @return mixed
      */

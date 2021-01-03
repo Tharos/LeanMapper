@@ -292,6 +292,7 @@ abstract class Repository
 
     /**
      * Creates new Entity instance from given \Dibi\Row instance
+     *
      * @param DibiRow<string, mixed> $dibiRow
      */
     protected function createEntity(DibiRow $dibiRow, ?string $entityClass = null, ?string $table = null): Entity

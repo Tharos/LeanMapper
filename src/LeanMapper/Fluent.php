@@ -85,6 +85,7 @@ class Fluent extends \Dibi\Fluent
 
     /**
      * Exports current state
+     *
      * @param array<mixed> $args
      * @return array<mixed>
      */

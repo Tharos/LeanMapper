@@ -44,6 +44,7 @@ class PropertyFilters
 
     /**
      * Gets array of entity's filters (array of filter names)
+     *
      * @return array<string>
      */
     public function getFilters(int $index = 0): array
@@ -57,6 +58,7 @@ class PropertyFilters
 
     /**
      * Gets filters arguments hard-coded in annotation
+     *
      * @return array<string, array<mixed>>
      */
     public function getFiltersTargetedArgs(int $index = 0): array

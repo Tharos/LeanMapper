@@ -269,6 +269,7 @@ class Property
 
     /**
      * Gets property filters
+     *
      * @return array<string>|null
      */
     public function getFilters(int $index = 0): ?array
@@ -279,6 +280,7 @@ class Property
 
     /**
      * Gets filters arguments hard-coded in annotation
+     *
      * @return array<string, array<mixed>>|null
      */
     public function getFiltersTargetedArgs(int $index = 0): ?array
@@ -350,6 +352,7 @@ class Property
 
     /**
      * Gets value of requested custom flag
+     *
      * @throws InvalidArgumentException
      */
     public function getCustomFlagValue(string $name): string
