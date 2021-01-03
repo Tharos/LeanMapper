@@ -15,6 +15,7 @@ namespace LeanMapper;
 
 /**
  * @author Vojtěch Kohout
+ * @implements \Iterator<string, mixed>
  */
 class ResultProxy implements \Iterator
 {
@@ -31,6 +32,9 @@ class ResultProxy implements \Iterator
 
 
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getData(int $id): array
     {
         return $this->result->getData($id);

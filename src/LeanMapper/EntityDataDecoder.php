@@ -7,7 +7,10 @@ namespace LeanMapper;
 class EntityDataDecoder
 {
 
-    public static function process(Entity $entity, $maxDepth = 10)
+    /**
+     * @return mixed|null
+     */
+    public static function process(Entity $entity, int $maxDepth = 10)
     {
         if ($maxDepth <= 0) {
             if (!method_exists($entity, '_getMapper')) {

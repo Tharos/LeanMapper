@@ -77,6 +77,9 @@ class Fluent extends \Dibi\Fluent
 
 
 
+    /**
+     * @param array<mixed> $args
+     */
     public function createSelect(?array $args = null): self
     {
         return call_user_func_array([$this->getConnection(), 'select'], func_get_args());
@@ -86,6 +89,8 @@ class Fluent extends \Dibi\Fluent
 
     /**
      * Exports current state
+     * @param array<mixed> $args
+     * @return array<mixed>
      */
     public function _export(?string $clause = null, array $args = []): array
     {

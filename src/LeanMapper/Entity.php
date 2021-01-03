@@ -84,7 +84,7 @@ abstract class Entity
 
 
     /**
-     * @param Row|iterable|null $arg
+     * @param Row|iterable<string, mixed>|null $arg
      * @throws InvalidArgumentException
      */
     public function __construct($arg = null)
@@ -212,6 +212,7 @@ abstract class Entity
 
 
     /**
+     * @param  array<mixed> $arguments
      * @return mixed|void
      * @throws InvalidMethodCallException
      * @throws InvalidArgumentException
@@ -280,6 +281,8 @@ abstract class Entity
     /**
      * Performs mass value assignment (using setters)
      *
+     * @param  iterable<string, mixed> $values
+     * @param  array<string>|null $whitelist
      * @throws InvalidArgumentException
      */
     public function assign(iterable $values, ?array $whitelist = null): void
@@ -298,6 +301,8 @@ abstract class Entity
 
     /**
      * Gets high-level values of properties
+     * @param  array<string>|null $whitelist
+     * @return array<string, mixed>
      */
     public function getData(?array $whitelist = null): array
     {
@@ -337,6 +342,7 @@ abstract class Entity
 
     /**
      * Gets low-level values of underlying Row columns
+     * @return array<string, mixed>
      */
     public function getRowData(): array
     {
@@ -347,6 +353,7 @@ abstract class Entity
 
     /**
      * Gets low-level values of underlying Row columns that were modified
+     * @return array<string, mixed>
      */
     public function getModifiedRowData(): array
     {
@@ -357,6 +364,7 @@ abstract class Entity
 
     /**
      * Gets current M:N differences
+     * @return array<string, array<mixed, int>>
      */
     public function getHasManyRowDifferences(): array
     {
@@ -492,6 +500,7 @@ abstract class Entity
 
     /**
      * @param Property|string $property
+     * @param array<mixed> $filterArgs
      * @throws InvalidValueException
      * @throws InvalidStateException
      * @throws MemberAccessException
@@ -825,6 +834,11 @@ abstract class Entity
 
 
 
+    /**
+     * @param  array<string|\Closure> $filters1
+     * @param  array<string|\Closure> $filters2
+     * @return array<string|\Closure>
+     */
     protected function mergeFilters(array $filters1, array $filters2): array
     {
         if (!empty($filters2)) {
@@ -1108,6 +1122,7 @@ abstract class Entity
 
 
     /**
+     * @param  array<mixed> $arguments
      * @throws InvalidMethodCallException
      */
     private function checkMethodArgumentsCount(int $expectedCount, array $arguments, string $methodName): void

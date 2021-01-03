@@ -26,7 +26,7 @@ interface IEntityFactory
     /**
      * Creates entity instance from given entity class name and argument
      *
-     * @param Row|Traversable|array|null $arg
+     * @param Row|iterable<string, mixed>|null $arg
      */
     public function createEntity(string $entityClass, $arg = null): Entity;
 

@@ -68,7 +68,7 @@ class Property
     /** @var PropertyValuesEnum|null */
     private $propertyValuesEnum;
 
-    /** @var array */
+    /** @var array<string, mixed> */
     private $customFlags;
 
 
@@ -76,6 +76,7 @@ class Property
     /**
      * @param mixed|null $defaultValue
      * @param Relationship\HasOne|Relationship\HasMany|Relationship\BelongsToOne|Relationship\BelongsToMany|null $relationship
+     * @param array<string, mixed> $customFlags
      * @throws InvalidArgumentException
      */
     public function __construct(
@@ -283,6 +284,7 @@ class Property
 
     /**
      * Gets property filters
+     * @return array<string>|null
      */
     public function getFilters(int $index = 0): ?array
     {
@@ -293,6 +295,7 @@ class Property
 
     /**
      * Gets filters arguments hard-coded in annotation
+     * @return array<string, array<mixed>>|null
      */
     public function getFiltersTargetedArgs(int $index = 0): ?array
     {
@@ -348,7 +351,7 @@ class Property
     /**
      * Gets possible enumeration values
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getEnumValues(): array
     {

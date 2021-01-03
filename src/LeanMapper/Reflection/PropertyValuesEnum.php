@@ -24,14 +24,18 @@ use ReflectionClass;
 class PropertyValuesEnum
 {
 
-    /** @var array */
+    /** @var array<string, mixed> */
     private $values = [];
 
-    /** @var array */
+    /** @var array<mixed, true> */
     private $index = [];
 
 
 
+    /**
+     * @param array<string, mixed> $values
+     * @param array<mixed, true> $index
+     */
     public function __construct(array $values, array $index)
     {
         $this->values = $values;
@@ -54,6 +58,7 @@ class PropertyValuesEnum
 
     /**
      * Gets possible enumeration values
+     * @return array<string, mixed>
      */
     public function getValues(): array
     {

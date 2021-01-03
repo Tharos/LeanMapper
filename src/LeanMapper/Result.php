@@ -25,6 +25,7 @@ use LeanMapper\Exception\InvalidStateException;
  * Set of related data, heart of Lean Mapper
  *
  * @author Vojtěch Kohout
+ * @implements \Iterator<string, mixed>
  */
 class Result implements \Iterator
 {
@@ -53,10 +54,10 @@ class Result implements \Iterator
     /** @var array<int|string, array<string, bool>> */
     private $modified = [];
 
-    /** @var array */
+    /** @var array<array<string, mixed>> */
     private $added = [];
 
-    /** @var array */
+    /** @var array<array<string, mixed>> */
     private $removed = [];
 
     /** @var string */
@@ -68,7 +69,7 @@ class Result implements \Iterator
     /** @var IMapper */
     protected $mapper;
 
-    /** @var array */
+    /** @var array<int|string> */
     private $keys;
 
     /** @var array<string, self|array<FilteringResultDecorator>> */
@@ -88,7 +89,7 @@ class Result implements \Iterator
     /**
      * Creates new common instance (it means persisted)
      *
-     * @param \Dibi\Row|array<\Dibi\Row|array|ArrayAccess> $data
+     * @param \Dibi\Row<string, mixed>|array<\Dibi\Row|array<string, mixed>|ArrayAccess<string, mixed>> $data
      * @throws InvalidArgumentException
      */
     public static function createInstance($data, string $table, Connection $connection, IMapper $mapper): self
@@ -281,6 +282,7 @@ class Result implements \Iterator
     /**
      * Adds new data entry
      *
+     * @param  array<string, mixed> $values
      * @throws InvalidStateException
      */
     public function addDataEntry(array $values): void
@@ -298,6 +300,7 @@ class Result implements \Iterator
     /**
      * Removes given data entry
      *
+     * @param  array<string, mixed> $values
      * @throws InvalidStateException
      */
     public function removeDataEntry(array $values): void
@@ -499,6 +502,7 @@ class Result implements \Iterator
 
     /**
      * Adds new data entry to referencing Result
+     * @param  array<string, mixed> $values
      */
     public function addToReferencing(array $values, string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = self::STRATEGY_IN): void
     {
@@ -518,6 +522,7 @@ class Result implements \Iterator
 
     /**
      * Remove given data entry from referencing Result
+     * @param  array<string, mixed> $values
      */
     public function removeFromReferencing(array $values, string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = self::STRATEGY_IN): void
     {
@@ -974,6 +979,9 @@ class Result implements \Iterator
 
 
 
+    /**
+     * @param  array<mixed> $arguments
+     */
     private function calculateArgumentsHash(array $arguments): string
     {
         return md5(serialize($arguments));

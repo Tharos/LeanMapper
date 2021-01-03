@@ -19,7 +19,7 @@ namespace LeanMapper\Reflection;
 class AliasesBuilder
 {
 
-    /** @var array */
+    /** @var array<string, string> */
     private $aliases = [];
 
     /** @var string */

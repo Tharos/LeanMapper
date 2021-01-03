@@ -44,7 +44,8 @@ class Helpers
 
 
     /**
-     * @param  array|DibiRow $row
+     * @param  array<string, mixed>|DibiRow<string, mixed> $row
+     * @return array<string, mixed>
      */
     public static function convertDbRow(string $table, $row, IMapper $mapper): array
     {

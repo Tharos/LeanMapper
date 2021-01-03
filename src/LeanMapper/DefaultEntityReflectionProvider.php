@@ -22,7 +22,7 @@ use ReflectionMethod;
 class DefaultEntityReflectionProvider implements IEntityReflectionProvider
 {
 
-    /** @var array */
+    /** @var array<string> */
     protected $internalGetters = ['getData', 'getRowData', 'getModifiedRowData', 'getCurrentReflection', 'getReflection', 'getHasManyRowDifferences', 'getEntityClass'];
 
 

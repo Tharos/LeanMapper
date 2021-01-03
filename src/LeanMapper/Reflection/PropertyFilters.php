@@ -23,14 +23,18 @@ use LeanMapper\Exception\InvalidAnnotationException;
 class PropertyFilters
 {
 
-    /** @var array */
+    /** @var array<array<string>> */
     private $filters = [];
 
-    /** @var array */
+    /** @var array<array<string, array<mixed>>> */
     private $targetedArgs = [];
 
 
 
+    /**
+     * @param array<array<string>> $filters
+     * @param array<array<string, array<mixed>>> $targetedArgs
+     */
     public function __construct(array $filters, array $targetedArgs)
     {
         $this->filters = $filters;
@@ -41,6 +45,7 @@ class PropertyFilters
 
     /**
      * Gets array of entity's filters (array of filter names)
+     * @return array<string>
      */
     public function getFilters(int $index = 0): array
     {
@@ -54,6 +59,7 @@ class PropertyFilters
 
     /**
      * Gets filters arguments hard-coded in annotation
+     * @return array<string, array<mixed>>
      */
     public function getFiltersTargetedArgs(int $index = 0): array
     {

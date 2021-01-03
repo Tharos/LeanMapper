@@ -383,7 +383,7 @@ class PropertyFactory
 
 
     /**
-     * @return array  (definition, flags)
+     * @return array{string, array<string, true>}  (definition, flags)
      */
     private static function parseRelationshipFlags(string $definition): array
     {

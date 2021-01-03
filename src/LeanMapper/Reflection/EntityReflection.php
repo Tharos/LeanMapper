@@ -23,6 +23,7 @@ use ReflectionMethod;
  * Entity reflection
  *
  * @author Vojtěch Kohout
+ * @extends \ReflectionClass<\LeanMapper\Entity>
  */
 class EntityReflection extends \ReflectionClass
 {
@@ -36,10 +37,10 @@ class EntityReflection extends \ReflectionClass
     /** @var Property[] */
     private $properties = null;
 
-    /** @var array */
+    /** @var array<string, ReflectionMethod>|null */
     private $getters = null;
 
-    /** @var array */
+    /** @var array<string, ReflectionMethod>|null */
     private $setters = null;
 
     /** @var Aliases|null */

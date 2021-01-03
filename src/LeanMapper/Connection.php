@@ -33,7 +33,7 @@ class Connection extends \Dibi\Connection
 
     const WIRE_ENTITY_AND_PROPERTY = 3;
 
-    /** @var array */
+    /** @var array<string, array{callable, string}> */
     private $filters;
 
 

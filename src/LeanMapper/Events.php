@@ -37,7 +37,7 @@ class Events
 
     const EVENT_AFTER_DELETE = 'afterDelete';
 
-    /** @var array */
+    /** @var array<string, array<callable>> */
     private $events = [
         self::EVENT_BEFORE_PERSIST => [],
         self::EVENT_BEFORE_CREATE => [],
@@ -80,6 +80,7 @@ class Events
 
     /**
      * Gets reference to array of registered events
+     * @return array<callable>
      */
     public function &getCallbacksReference(string $event): array
     {

@@ -21,7 +21,7 @@ namespace LeanMapper\Reflection;
 class Aliases
 {
 
-    /** @var array<string, string> */
+    /** @var array<string, class-string> */
     private $aliases;
 
     /** @var string */
@@ -30,7 +30,7 @@ class Aliases
 
 
     /**
-     * @param array<string, string> $aliases
+     * @param array<string, class-string> $aliases
      */
     public function __construct(array $aliases, string $namespace = '')
     {

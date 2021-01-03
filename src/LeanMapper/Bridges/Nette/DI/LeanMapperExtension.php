@@ -12,6 +12,7 @@ use Tracy;
 class LeanMapperExtension extends Nette\DI\CompilerExtension
 {
 
+    /** @var array<string, mixed> */
     public $defaults = [
         'db' => [],
         'profiler' => true,
@@ -21,6 +22,9 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
 
 
 
+    /**
+     * @param string[]|string|NULL $scanDirs
+     */
     public function __construct($scanDirs = NULL)
     {
         $this->defaults['scanDirs'] = $scanDirs;
@@ -70,6 +74,10 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
 
 
 
+    /**
+     * @param  array<string, mixed> $config
+     * @return array<class-string>
+     */
     private function findRepositories($config)
     {
         $classes = [];

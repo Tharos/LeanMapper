@@ -23,17 +23,17 @@ use LeanMapper\Exception\InvalidArgumentException;
 class DataDifference
 {
 
-    /** @var array */
+    /** @var array<array<string, mixed>> */
     private $added;
 
-    /** @var array */
+    /** @var array<array<string, mixed>> */
     private $removed;
 
 
 
     /**
-     * @param array $added
-     * @param array $removed
+     * @param array<array<string, mixed>> $added
+     * @param array<array<string, mixed>> $removed
      */
     public function __construct(array $added, array $removed)
     {
@@ -57,6 +57,7 @@ class DataDifference
      * Gets differences by given pivot
      *
      * @param mixed $pivot
+     * @return array<mixed, int>
      * @throws InvalidArgumentException
      */
     public function getByPivot($pivot): array

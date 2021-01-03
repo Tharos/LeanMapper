@@ -80,7 +80,7 @@ interface IMapper
     /**
      * Gets filters that should be used used every time when given entity is loaded from database
      *
-     * @return array|ImplicitFilters
+     * @return array<string>|ImplicitFilters
      */
     public function getImplicitFilters(string $entityClass, ?Caller $caller = null);
 

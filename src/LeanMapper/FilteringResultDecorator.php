@@ -22,11 +22,14 @@ class FilteringResultDecorator
     /** @var FilteringResult */
     private $filteringResult;
 
-    /** @var array */
+    /** @var array<mixed> */
     private $baseArgs;
 
 
 
+    /**
+     * @param  array<mixed> $baseArgs
+     */
     public function __construct(FilteringResult $filteringResult, array $baseArgs)
     {
         $this->filteringResult = $filteringResult;
