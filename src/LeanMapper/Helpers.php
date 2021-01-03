@@ -34,6 +34,16 @@ class Helpers
 
 
     /**
+     * Trims namespace part from fully qualified class name
+     */
+    public static function trimNamespace(string $class): string
+    {
+        $class = explode('\\', $class);
+        return end($class);
+    }
+
+
+    /**
      * @param  array|DibiRow $row
      */
     public static function convertDbRow(string $table, $row, IMapper $mapper): array

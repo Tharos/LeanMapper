@@ -15,6 +15,7 @@ namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
 use LeanMapper\Exception\UtilityClassException;
+use LeanMapper\Helpers;
 use LeanMapper\IMapper;
 use LeanMapper\Relationship;
 use LeanMapper\Result;
@@ -423,19 +424,7 @@ class PropertyFactory
      */
     private static function getSurrogateRelationshipColumn(PropertyType $propertyType)
     {
-        return strtolower(self::trimNamespace($propertyType->getType())) . '{hasOne:' . self::generateRandomString(10) . '}';
-    }
-
-
-
-    /**
-     * @param string $class
-     * @return string
-     */
-    private static function trimNamespace($class)
-    {
-        $class = explode('\\', $class);
-        return end($class);
+        return strtolower(Helpers::trimNamespace($propertyType->getType())) . '{hasOne:' . self::generateRandomString(10) . '}';
     }
 
 

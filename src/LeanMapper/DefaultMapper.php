@@ -56,7 +56,7 @@ class DefaultMapper implements IMapper
      */
     public function getTable($entityClass)
     {
-        return strtolower($this->trimNamespace($entityClass));
+        return strtolower(Helpers::trimNamespace($entityClass));
     }
 
 
@@ -143,20 +143,6 @@ class DefaultMapper implements IMapper
     public function convertFromRowData(string $table, array $data): array
     {
         return $data;
-    }
-
-
-
-    /**
-     * Trims namespace part from fully qualified class name
-     *
-     * @param string $class
-     * @return string
-     */
-    protected function trimNamespace($class)
-    {
-        $class = explode('\\', $class);
-        return end($class);
     }
 
 }
