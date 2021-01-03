@@ -650,8 +650,11 @@ abstract class Entity
         if ($property->isBasicType()) {
             if ($pass !== null) {
                 $value = $this->$pass($value);
-            } elseif ($value !== null) {
-                settype($value, $property->getType());
+            } elseif ($value !== null && !Helpers::isType($value, $property->getType())) {
+                $givenType = Helpers::getType($value);
+                throw new InvalidValueException(
+                    "Unexpected value type given in property '{$property->getName()}' in entity " . get_called_class() . ", {$property->getType()} expected, $givenType given."
+                );
             }
             if ($value !== null and $property->containsEnumeration() and !$property->isValueFromEnum($value)) {
                 throw new InvalidValueException(

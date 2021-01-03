@@ -27,6 +27,35 @@ class Helpers
     /**
      * @param  mixed $value
      */
+    public static function isType($value, string $expectedType): bool
+    {
+        if ($value === null) {
+            throw new Exception\InvalidValueException('Value null is not supported.');
+        }
+
+        if ($expectedType === 'bool' || $expectedType === 'bool') {
+            return is_bool($value);
+
+        } elseif ($expectedType === 'int' || $expectedType === 'integer') {
+            return is_int($value);
+
+        } elseif ($expectedType === 'float') {
+            return is_float($value);
+
+        } elseif ($expectedType === 'string') {
+            return is_string($value);
+
+        } elseif ($expectedType === 'array') {
+            return is_array($value);
+        }
+
+        return is_object($value) && ($value instanceof $expectedType);
+    }
+
+
+    /**
+     * @param  mixed $value
+     */
     public static function getType($value): string
     {
         return is_object($value) ? ('instance of ' . get_class($value)) : gettype($value);
