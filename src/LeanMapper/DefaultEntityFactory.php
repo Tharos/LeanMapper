@@ -21,18 +21,12 @@ namespace LeanMapper;
 class DefaultEntityFactory implements IEntityFactory
 {
 
-    /**
-     * {@inheritdoc}
-     */
     public function createEntity(string $entityClass, $arg = null): Entity
     {
         return new $entityClass($arg);
     }
 
 
-    /**
-     * {@inheritdoc}
-     */
     public function createCollection(array $entities)
     {
         return $entities;

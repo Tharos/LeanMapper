@@ -36,72 +36,48 @@ class DefaultMapper implements IMapper
     }
 
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPrimaryKey(string $table): string
     {
         return 'id';
     }
 
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTable(string $entityClass): string
     {
         return strtolower(Helpers::trimNamespace($entityClass));
     }
 
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEntityClass(string $table, ?Row $row = null): string
     {
         return ($this->defaultEntityNamespace !== null ? $this->defaultEntityNamespace . '\\' : '') . ucfirst($table);
     }
 
 
-    /**
-     * {@inheritdoc}
-     */
     public function getColumn(string $entityClass, string $field): string
     {
         return $field;
     }
 
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEntityField(string $table, string $column): string
     {
         return $column;
     }
 
 
-    /**
-     * {@inheritdoc}
-     */
     public function getRelationshipTable(string $sourceTable, string $targetTable): string
     {
         return $sourceTable . $this->relationshipTableGlue . $targetTable;
     }
 
 
-    /**
-     * {@inheritdoc}
-     */
     public function getRelationshipColumn(string $sourceTable, string $targetTable, ?string $relationshipName = null): string
     {
         return ($relationshipName !== null ? $relationshipName : $targetTable) . '_' . $this->getPrimaryKey($targetTable);
     }
 
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTableByRepositoryClass(string $repositoryClass): string
     {
         $matches = [];
@@ -112,9 +88,6 @@ class DefaultMapper implements IMapper
     }
 
 
-    /**
-     * {@inheritdoc}
-     */
     public function getImplicitFilters(string $entityClass, ?Caller $caller = null)
     {
         return [];
