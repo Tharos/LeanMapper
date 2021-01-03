@@ -28,7 +28,6 @@ class PropertyType
     private $isBasicType;
 
 
-
     public function __construct(string $type, Aliases $aliases)
     {
         if (preg_match('#^(boolean|bool|integer|int|float|string|array)$#', $type)) {
@@ -51,7 +50,6 @@ class PropertyType
     }
 
 
-
     /**
      * Gets type
      */
@@ -59,7 +57,6 @@ class PropertyType
     {
         return $this->type;
     }
-
 
 
     /**

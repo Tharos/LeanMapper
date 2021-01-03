@@ -31,13 +31,11 @@ class PropertyPasses
     private $setterPass;
 
 
-
     public function __construct(?string $getterPass, ?string $setterPass)
     {
         $this->getterPass = $getterPass;
         $this->setterPass = $setterPass;
     }
-
 
 
     /**
@@ -47,7 +45,6 @@ class PropertyPasses
     {
         return $this->getterPass;
     }
-
 
 
     /**

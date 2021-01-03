@@ -72,7 +72,6 @@ class Property
     private $customFlags;
 
 
-
     /**
      * @param mixed|null $defaultValue
      * @param Relationship\HasOne|Relationship\HasMany|Relationship\BelongsToOne|Relationship\BelongsToMany|null $relationship
@@ -147,7 +146,6 @@ class Property
     }
 
 
-
     /**
      * Gets property name
      */
@@ -155,7 +153,6 @@ class Property
     {
         return $this->name;
     }
-
 
 
     /**
@@ -167,7 +164,6 @@ class Property
     }
 
 
-
     /**
      * Tells whether property is assumed to contain collection
      */
@@ -177,7 +173,6 @@ class Property
     }
 
 
-
     /**
      * Tells whether property has default value (defined in annotation)
      */
@@ -185,7 +180,6 @@ class Property
     {
         return $this->hasDefaultValue;
     }
-
 
 
     /**
@@ -199,7 +193,6 @@ class Property
     }
 
 
-
     /**
      * Gets property type
      */
@@ -207,7 +200,6 @@ class Property
     {
         return $this->type->getType();
     }
-
 
 
     /**
@@ -219,7 +211,6 @@ class Property
     }
 
 
-
     /**
      * Tells whether property is writable
      */
@@ -227,7 +218,6 @@ class Property
     {
         return $this->isWritable;
     }
-
 
 
     /**
@@ -239,7 +229,6 @@ class Property
     }
 
 
-
     /**
      * Tells whether property represents relationship
      */
@@ -247,7 +236,6 @@ class Property
     {
         return $this->relationship !== null;
     }
-
 
 
     /**
@@ -261,7 +249,6 @@ class Property
     }
 
 
-
     /**
      * Gets getter method
      */
@@ -271,7 +258,6 @@ class Property
     }
 
 
-
     /**
      * Gets setter method
      */
@@ -279,7 +265,6 @@ class Property
     {
         return $this->propertyMethods !== null ? $this->propertyMethods->getSetter() : null;
     }
-
 
 
     /**
@@ -292,7 +277,6 @@ class Property
     }
 
 
-
     /**
      * Gets filters arguments hard-coded in annotation
      * @return array<string, array<mixed>>|null
@@ -301,7 +285,6 @@ class Property
     {
         return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersTargetedArgs($index) : null;
     }
-
 
 
     /**
@@ -313,7 +296,6 @@ class Property
     }
 
 
-
     /**
      * Gets setter pass
      */
@@ -323,7 +305,6 @@ class Property
     }
 
 
-
     /**
      * Tells whether property contains enumeration
      */
@@ -331,7 +312,6 @@ class Property
     {
         return $this->propertyValuesEnum !== null;
     }
-
 
 
     /**
@@ -347,7 +327,6 @@ class Property
     }
 
 
-
     /**
      * Gets possible enumeration values
      *
@@ -360,7 +339,6 @@ class Property
     }
 
 
-
     /**
      * Tells whether property has custom flag
      */
@@ -368,7 +346,6 @@ class Property
     {
         return array_key_exists($name, $this->customFlags);
     }
-
 
 
     /**

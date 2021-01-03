@@ -32,7 +32,6 @@ class PropertyValuesEnum
     private $index = [];
 
 
-
     /**
      * @param array<string, mixed> $values
      * @param array<mixed, true> $index
@@ -44,7 +43,6 @@ class PropertyValuesEnum
     }
 
 
-
     /**
      * Tells wheter given value is from enumeration
      *
@@ -54,7 +52,6 @@ class PropertyValuesEnum
     {
         return isset($this->index[$value]);
     }
-
 
 
     /**

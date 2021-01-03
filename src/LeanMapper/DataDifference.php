@@ -30,7 +30,6 @@ class DataDifference
     private $removed;
 
 
-
     /**
      * @param array<array<string, mixed>> $added
      * @param array<array<string, mixed>> $removed
@@ -42,7 +41,6 @@ class DataDifference
     }
 
 
-
     /**
      * Performs quick lookup whether current instance may have any differences
      */
@@ -50,7 +48,6 @@ class DataDifference
     {
         return !empty($this->added) or !empty($this->removed);
     }
-
 
 
     /**

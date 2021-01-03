@@ -32,7 +32,6 @@ class AnnotationsParser
     }
 
 
-
     /**
      * Parse value of requested simple annotation from given doc comment
      */
@@ -42,7 +41,6 @@ class AnnotationsParser
         preg_match("#@$annotation\\s+([^\\s]+)#", $docComment, $matches);
         return !empty($matches) ? $matches[1] : null;
     }
-
 
 
     /**
@@ -55,7 +53,6 @@ class AnnotationsParser
         preg_match_all("#@$annotation\\s+([^@\\n\\r]*)#", $docComment, $matches);
         return $matches[1];
     }
-
 
 
     /**

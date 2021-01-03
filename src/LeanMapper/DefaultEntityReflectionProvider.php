@@ -26,7 +26,6 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     protected $internalGetters = ['getData', 'getRowData', 'getModifiedRowData', 'getCurrentReflection', 'getReflection', 'getHasManyRowDifferences', 'getEntityClass'];
 
 
-
     /**
      * @return Property[]
      */
@@ -45,7 +44,6 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     }
 
 
-
     /**
      * @return ReflectionMethod[]
      */
@@ -62,7 +60,6 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     }
 
 
-
     /**
      * @return ReflectionMethod[]
      */
@@ -77,7 +74,6 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
         }
         return $setters;
     }
-
 
 
     /**

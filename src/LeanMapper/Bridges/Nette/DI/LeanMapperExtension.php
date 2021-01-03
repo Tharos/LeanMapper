@@ -21,7 +21,6 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
     ];
 
 
-
     /**
      * @param string[]|string|NULL $scanDirs
      */
@@ -29,7 +28,6 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
     {
         $this->defaults['scanDirs'] = $scanDirs;
     }
-
 
 
     public function loadConfiguration()
@@ -71,7 +69,6 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
             }
         }
     }
-
 
 
     /**

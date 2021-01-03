@@ -31,7 +31,6 @@ interface IEntityFactory
     public function createEntity(string $entityClass, $arg = null): Entity;
 
 
-
     /**
      * Allows wrap set of entities in custom collection
      *

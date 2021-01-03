@@ -30,12 +30,10 @@ class DefaultMapper implements IMapper
     protected $relationshipTableGlue = '_';
 
 
-
     public function __construct(?string $defaultEntityNamespace = 'Model\Entity')
     {
         $this->defaultEntityNamespace = $defaultEntityNamespace;
     }
-
 
 
     /**
@@ -47,7 +45,6 @@ class DefaultMapper implements IMapper
     }
 
 
-
     /**
      * {@inheritdoc}
      */
@@ -55,7 +52,6 @@ class DefaultMapper implements IMapper
     {
         return strtolower(Helpers::trimNamespace($entityClass));
     }
-
 
 
     /**
@@ -67,7 +63,6 @@ class DefaultMapper implements IMapper
     }
 
 
-
     /**
      * {@inheritdoc}
      */
@@ -75,7 +70,6 @@ class DefaultMapper implements IMapper
     {
         return $field;
     }
-
 
 
     /**
@@ -87,7 +81,6 @@ class DefaultMapper implements IMapper
     }
 
 
-
     /**
      * {@inheritdoc}
      */
@@ -97,7 +90,6 @@ class DefaultMapper implements IMapper
     }
 
 
-
     /**
      * {@inheritdoc}
      */
@@ -105,7 +97,6 @@ class DefaultMapper implements IMapper
     {
         return ($relationshipName !== NULL ? $relationshipName : $targetTable) . '_' . $this->getPrimaryKey($targetTable);
     }
-
 
 
     /**
@@ -119,7 +110,6 @@ class DefaultMapper implements IMapper
         }
         throw new InvalidStateException('Cannot determine table name.');
     }
-
 
 
     /**

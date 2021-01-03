@@ -31,14 +31,12 @@ abstract class BelongsTo
     private $strategy;
 
 
-
     public function __construct(?string $columnReferencingSourceTable, ?string $targetTable, string $strategy)
     {
         $this->columnReferencingSourceTable = $columnReferencingSourceTable;
         $this->targetTable = $targetTable;
         $this->strategy = $strategy;
     }
-
 
 
     /**
@@ -50,7 +48,6 @@ abstract class BelongsTo
     }
 
 
-
     /**
      * Gets name of target table
      */
@@ -60,12 +57,10 @@ abstract class BelongsTo
     }
 
 
-
     public function hasTargetTable(): bool
     {
         return $this->targetTable !== NULL;
     }
-
 
 
     /**

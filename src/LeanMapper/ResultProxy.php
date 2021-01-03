@@ -24,12 +24,10 @@ class ResultProxy implements \Iterator
     private $result;
 
 
-
     public function __construct(Result $result)
     {
         $this->result = $result;
     }
-
 
 
     /**
@@ -41,12 +39,10 @@ class ResultProxy implements \Iterator
     }
 
 
-
     public function setReferencedResult(Result $referencedResult, string $table, ?string $viaColumn = null): void
     {
         $this->result->setReferencedResult($referencedResult, $table, $viaColumn);
     }
-
 
 
     public function setReferencingResult(Result $referencingResult, string $table, ?string $viaColumn = null, ?string $strategy = Result::STRATEGY_IN): void
@@ -65,12 +61,10 @@ class ResultProxy implements \Iterator
     }
 
 
-
     public function next(): void
     {
         $this->result->next();
     }
-
 
 
     /**
@@ -82,12 +76,10 @@ class ResultProxy implements \Iterator
     }
 
 
-
     public function valid(): bool
     {
         return $this->result->valid();
     }
-
 
 
     public function rewind(): void

@@ -29,7 +29,6 @@ class AliasesBuilder
     private $lastPart = '';
 
 
-
     /**
      * Sets current definition to empty string
      */
@@ -37,7 +36,6 @@ class AliasesBuilder
     {
         $this->current = $this->lastPart = '';
     }
-
 
 
     /**
@@ -52,7 +50,6 @@ class AliasesBuilder
     }
 
 
-
     /**
      * Appends last part to current definition
      */
@@ -60,7 +57,6 @@ class AliasesBuilder
     {
         $this->lastPart = $name;
     }
-
 
 
     /**
@@ -72,7 +68,6 @@ class AliasesBuilder
         $this->aliases[$this->lastPart] = $this->current;
         $this->resetCurrent();
     }
-
 
 
     /**

@@ -54,7 +54,6 @@ abstract class Entity
     private $currentReflection;
 
 
-
     /**
      * Gets reflection of current entity
      */
@@ -69,7 +68,6 @@ abstract class Entity
     }
 
 
-
     protected static function getReflectionProvider(): IEntityReflectionProvider
     {
         static $reflectionProvider = null;
@@ -80,7 +78,6 @@ abstract class Entity
 
         return $reflectionProvider;
     }
-
 
 
     /**
@@ -120,7 +117,6 @@ abstract class Entity
     }
 
 
-
     /**
      * @return mixed
      * @throws InvalidMethodCallException
@@ -150,7 +146,6 @@ abstract class Entity
         }
         return $this->get($property);
     }
-
 
 
     /**
@@ -189,7 +184,6 @@ abstract class Entity
     }
 
 
-
     /**
      * Tells whether given property exists and is not null
      *
@@ -208,7 +202,6 @@ abstract class Entity
             throw $e;
         }
     }
-
 
 
     /**
@@ -277,7 +270,6 @@ abstract class Entity
     }
 
 
-
     /**
      * Performs mass value assignment (using setters)
      *
@@ -296,7 +288,6 @@ abstract class Entity
             }
         }
     }
-
 
 
     /**
@@ -339,7 +330,6 @@ abstract class Entity
     }
 
 
-
     /**
      * Gets low-level values of underlying Row columns
      * @return array<string, mixed>
@@ -350,7 +340,6 @@ abstract class Entity
     }
 
 
-
     /**
      * Gets low-level values of underlying Row columns that were modified
      * @return array<string, mixed>
@@ -359,7 +348,6 @@ abstract class Entity
     {
         return $this->row->getModifiedData();
     }
-
 
 
     /**
@@ -393,7 +381,6 @@ abstract class Entity
     }
 
 
-
     /**
      * Tells whether entity was modified
      */
@@ -401,7 +388,6 @@ abstract class Entity
     {
         return $this->row->isModified();
     }
-
 
 
     /**
@@ -424,7 +410,6 @@ abstract class Entity
     }
 
 
-
     /**
      * Detaches entity
      */
@@ -434,7 +419,6 @@ abstract class Entity
         $this->entityFactory = null;
         $this->mapper = null;
     }
-
 
 
     /**
@@ -452,7 +436,6 @@ abstract class Entity
     }
 
 
-
     /**
      * Tells whether entity is in detached state (like newly created entity)
      */
@@ -460,7 +443,6 @@ abstract class Entity
     {
         return $this->row->isDetached();
     }
-
 
 
     /**
@@ -487,7 +469,6 @@ abstract class Entity
     }
 
 
-
     /**
      * @return array
      */
@@ -495,7 +476,6 @@ abstract class Entity
     {
         return ['row', 'mapper', 'entityFactory'];
     }
-
 
 
     /**
@@ -639,7 +619,6 @@ abstract class Entity
     }
 
 
-
     /**
      * @param Property|string $property
      * @param mixed $value
@@ -727,7 +706,6 @@ abstract class Entity
     }
 
 
-
     /**
      * Gets current entity's reflection (cached in memory)
      */
@@ -738,7 +716,6 @@ abstract class Entity
         }
         return $this->currentReflection;
     }
-
 
 
     /**
@@ -771,7 +748,6 @@ abstract class Entity
             );
         }
     }
-
 
 
     /**
@@ -810,7 +786,6 @@ abstract class Entity
     }
 
 
-
     /**
      * Called after value is read from Row
      * @param  mixed $value
@@ -820,7 +795,6 @@ abstract class Entity
     {
         return $value;
     }
-
 
 
     /**
@@ -834,13 +808,11 @@ abstract class Entity
     }
 
 
-
     protected function createImplicitFilters(string $entityClass, ?Caller $caller = null): ImplicitFilters
     {
         $implicitFilters = $this->mapper->getImplicitFilters($entityClass, $caller);
         return ($implicitFilters instanceof ImplicitFilters) ? $implicitFilters : new ImplicitFilters($implicitFilters);
     }
-
 
 
     /**
@@ -859,7 +831,6 @@ abstract class Entity
         }
         return $filters1;
     }
-
 
 
     /**
@@ -899,7 +870,6 @@ abstract class Entity
     }
 
 
-
     /**
      * @return Entity[]
      * @throws InvalidValueException
@@ -934,7 +904,6 @@ abstract class Entity
         }
         return $this->entityFactory->createCollection($value);
     }
-
 
 
     /**
@@ -972,7 +941,6 @@ abstract class Entity
     }
 
 
-
     /**
      * @return Entity[]
      */
@@ -993,7 +961,6 @@ abstract class Entity
         }
         return $this->entityFactory->createCollection($value);
     }
-
 
 
     /**
@@ -1030,7 +997,6 @@ abstract class Entity
     }
 
 
-
     /**
      * @throws InvalidStateException
      */
@@ -1044,7 +1010,6 @@ abstract class Entity
             );
         }
     }
-
 
 
     /**
@@ -1115,7 +1080,6 @@ abstract class Entity
     }
 
 
-
     /**
      * @throws InvalidValueException
      */
@@ -1129,7 +1093,6 @@ abstract class Entity
             );
         }
     }
-
 
 
     /**

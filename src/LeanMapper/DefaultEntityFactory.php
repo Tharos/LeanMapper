@@ -30,7 +30,6 @@ class DefaultEntityFactory implements IEntityFactory
     }
 
 
-
     /**
      * {@inheritdoc}
      */

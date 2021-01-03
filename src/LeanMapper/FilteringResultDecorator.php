@@ -26,7 +26,6 @@ class FilteringResultDecorator
     private $baseArgs;
 
 
-
     /**
      * @param  array<mixed> $baseArgs
      */
@@ -37,12 +36,10 @@ class FilteringResultDecorator
     }
 
 
-
     public function getResult(): Result
     {
         return $this->filteringResult->getResult();
     }
-
 
 
     /**

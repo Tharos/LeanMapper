@@ -89,7 +89,6 @@ class Result implements \Iterator
     private $proxy;
 
 
-
     /**
      * Creates new common instance (it means persisted)
      *
@@ -129,7 +128,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * Creates new detached instance (it means non-persisted)
      */
@@ -137,7 +135,6 @@ class Result implements \Iterator
     {
         return new static;
     }
-
 
 
     public static function enableSerialization(Connection $connection): void
@@ -148,7 +145,6 @@ class Result implements \Iterator
             throw new InvalidStateException("Given connection doesn't equal to connection already present in Result.");
         }
     }
-
 
 
     /**
@@ -164,12 +160,10 @@ class Result implements \Iterator
     }
 
 
-
     public function hasConnection(): bool
     {
         return $this->connection !== null;
     }
-
 
 
     public function setMapper(IMapper $mapper): void
@@ -178,12 +172,10 @@ class Result implements \Iterator
     }
 
 
-
     public function getMapper(): ?IMapper
     {
         return $this->mapper;
     }
-
 
 
     /**
@@ -209,7 +201,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * Gets value of given column from row with given id
      *
@@ -232,7 +223,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * Sets value of given column in row with given id
      *
@@ -253,7 +243,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * Tells whether row with given id has given column
      *
@@ -263,7 +252,6 @@ class Result implements \Iterator
     {
         return isset($this->data[$id]) and array_key_exists($column, $this->data[$id]);
     }
-
 
 
     /**
@@ -282,7 +270,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * Adds new data entry
      *
@@ -298,7 +285,6 @@ class Result implements \Iterator
         $this->added[] = $values;
         $this->cleanReferencedResultsCache();
     }
-
 
 
     /**
@@ -322,7 +308,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * Returns values of columns of requested row
      * @param  int|string $id
@@ -332,7 +317,6 @@ class Result implements \Iterator
     {
         return isset($this->data[$id]) ? $this->data[$id] : [];
     }
-
 
 
     /**
@@ -352,7 +336,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * Creates new DataDifference instance relevant to current Result state
      */
@@ -360,7 +343,6 @@ class Result implements \Iterator
     {
         return new DataDifference($this->added, $this->removed);
     }
-
 
 
     /**
@@ -374,7 +356,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * Tells whether Result is in detached state (in means non-persisted)
      */
@@ -382,7 +363,6 @@ class Result implements \Iterator
     {
         return $this->isDetached;
     }
-
 
 
     /**
@@ -398,7 +378,6 @@ class Result implements \Iterator
         }
         unset($this->modified[$id]);
     }
-
 
 
     /**
@@ -426,13 +405,11 @@ class Result implements \Iterator
     }
 
 
-
     public function cleanAddedAndRemovedMeta(): void
     {
         $this->added = [];
         $this->removed = [];
     }
-
 
 
     /**
@@ -450,7 +427,6 @@ class Result implements \Iterator
         $rowId = $this->getDataEntry($id, $viaColumn);
         return $rowId === null ? null : $result->getRow($rowId);
     }
-
 
 
     /**
@@ -481,7 +457,6 @@ class Result implements \Iterator
     }
 
 
-
     public function setReferencedResult(self $referencedResult, string $table, ?string $viaColumn = null): void
     {
         if ($viaColumn === null) {
@@ -489,7 +464,6 @@ class Result implements \Iterator
         }
         $this->referenced["$table($viaColumn)#" . self::KEY_PRELOADED] = $referencedResult;
     }
-
 
 
     public function setReferencingResult(self $referencingResult, string $table, ?string $viaColumn = null, ?string $strategy = self::STRATEGY_IN): void
@@ -501,7 +475,6 @@ class Result implements \Iterator
         $this->referencing["$table($viaColumn)$strategy#" . self::KEY_PRELOADED] = $referencingResult;
         unset($this->index[spl_object_hash($referencingResult)]);
     }
-
 
 
     /**
@@ -523,7 +496,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * Remove given data entry from referencing Result
      * @param  array<string, mixed> $values
@@ -536,13 +508,11 @@ class Result implements \Iterator
     }
 
 
-
     public function createReferencingDataDifference(string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = self::STRATEGY_IN): DataDifference
     {
         return $this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
             ->createDataDifference();
     }
-
 
 
     /**
@@ -566,7 +536,6 @@ class Result implements \Iterator
             }
         }
     }
-
 
 
     /**
@@ -596,13 +565,11 @@ class Result implements \Iterator
     }
 
 
-
     public function cleanReferencingAddedAndRemovedMeta(string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = self::STRATEGY_IN): void
     {
         $this->getReferencingResult($table, $viaColumn, $filtering, $strategy)
             ->cleanAddedAndRemovedMeta();
     }
-
 
 
     /**
@@ -620,7 +587,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * @return array
      */
@@ -632,7 +598,6 @@ class Result implements \Iterator
 
         return ['isDetached', 'data', 'modified', 'added', 'removed', 'table', 'mapper', 'keys', 'referenced', 'referencing', 'index', 'proxy'];
     }
-
 
 
     public function __wakeup()
@@ -654,12 +619,10 @@ class Result implements \Iterator
     }
 
 
-
     public function next(): void
     {
         next($this->keys);
     }
-
 
 
     /**
@@ -671,12 +634,10 @@ class Result implements \Iterator
     }
 
 
-
     public function valid(): bool
     {
         return current($this->keys) !== false;
     }
-
 
 
     public function rewind(): void
@@ -699,7 +660,6 @@ class Result implements \Iterator
         $this->mapper = $mapper;
         $this->isDetached = ($table === null or $connection === null or $mapper === null);
     }
-
 
 
     /**
@@ -769,7 +729,6 @@ class Result implements \Iterator
         }
         return $this->referenced[$key];
     }
-
 
 
     /**
@@ -887,7 +846,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * @return array<int|string>
      */
@@ -905,7 +863,6 @@ class Result implements \Iterator
         }
         return array_keys($ids);
     }
-
 
 
     /**
@@ -938,7 +895,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * @param  array<int|string>|null $relatedKeys
      */
@@ -947,7 +903,6 @@ class Result implements \Iterator
         $selection = $this->connection->select('%n.*', $table)->from('%n', $table);
         return $relatedKeys !== null ? $selection->setRelatedKeys($relatedKeys) : $selection;
     }
-
 
 
     /**
@@ -964,7 +919,6 @@ class Result implements \Iterator
         }
         return $strategy;
     }
-
 
 
     /**
@@ -996,7 +950,6 @@ class Result implements \Iterator
     }
 
 
-
     /**
      * @param  array<mixed> $arguments
      */
@@ -1006,12 +959,10 @@ class Result implements \Iterator
     }
 
 
-
     private function isAlias(string $column): bool
     {
         return strncmp($column, '*', 1) === 0;
     }
-
 
 
     private function trimAlias(string $column): string

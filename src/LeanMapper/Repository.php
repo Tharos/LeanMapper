@@ -52,7 +52,6 @@ abstract class Repository
     private $tableAnnotationChecked = false;
 
 
-
     public function __construct(Connection $connection, IMapper $mapper, IEntityFactory $entityFactory)
     {
         $this->connection = $connection;
@@ -61,7 +60,6 @@ abstract class Repository
         $this->events = new Events;
         $this->initEvents();
     }
-
 
 
     /**
@@ -75,7 +73,6 @@ abstract class Repository
 
         throw new Exception\MemberAccessException("Undefined property '$name' in repository " . get_called_class() . '.');
     }
-
 
 
     protected function createFluent(/*$filterArg1, $filterArg2, ...*/): Fluent
@@ -104,14 +101,12 @@ abstract class Repository
     }
 
 
-
     /**
      * Allows initialize repository's events
      */
     protected function initEvents(): void
     {
     }
-
 
 
     /**
@@ -145,7 +140,6 @@ abstract class Repository
     }
 
 
-
     /**
      * Removes given entity (or entity with given id) from database
      *
@@ -171,7 +165,6 @@ abstract class Repository
     }
 
 
-
     /**
      * Performs database insert (can be customized)
      *
@@ -188,7 +181,6 @@ abstract class Repository
         );
         return isset($values[$primaryKey]) ? $values[$primaryKey] : $this->connection->getInsertId();
     }
-
 
 
     /**
@@ -210,7 +202,6 @@ abstract class Repository
     }
 
 
-
     /**
      * Performs database delete (can be customized)
      *
@@ -230,7 +221,6 @@ abstract class Repository
             $id
         );
     }
-
 
 
     /**
@@ -300,7 +290,6 @@ abstract class Repository
     }
 
 
-
     /**
      * Creates new Entity instance from given \Dibi\Row instance
      * @param DibiRow<string, mixed> $dibiRow
@@ -321,7 +310,6 @@ abstract class Repository
         $entity->makeAlive($this->entityFactory);
         return $entity;
     }
-
 
 
     /**
@@ -360,7 +348,6 @@ abstract class Repository
     }
 
 
-
     /**
      * Gets name of (main) database table related to entity that repository can handle
      *
@@ -380,7 +367,6 @@ abstract class Repository
         }
         return $this->table;
     }
-
 
 
     /**
@@ -411,7 +397,6 @@ abstract class Repository
         }
         return $this->docComment;
     }
-
 
 
     /**

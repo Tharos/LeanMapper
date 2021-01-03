@@ -37,7 +37,6 @@ class Connection extends \Dibi\Connection
     private $filters;
 
 
-
     /**
      * Registers new filter
      *
@@ -61,7 +60,6 @@ class Connection extends \Dibi\Connection
     }
 
 
-
     public function hasFilter(string $name): bool
     {
         try {
@@ -71,7 +69,6 @@ class Connection extends \Dibi\Connection
         }
         return true;
     }
-
 
 
     /**
@@ -84,7 +81,6 @@ class Connection extends \Dibi\Connection
     }
 
 
-
     /**
      * Gets wiring schema
      */
@@ -93,7 +89,6 @@ class Connection extends \Dibi\Connection
         $this->checkFilterExistence($filterName);
         return $this->filters[$filterName][1];
     }
-
 
 
     /**
@@ -118,7 +113,6 @@ class Connection extends \Dibi\Connection
             throw new InvalidArgumentException("Filter with name '$name' was not found.");
         }
     }
-
 
 
     /**

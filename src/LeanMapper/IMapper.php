@@ -27,12 +27,10 @@ interface IMapper
     public function getPrimaryKey(string $table): string;
 
 
-
     /**
      * Gets table name from given fully qualified entity class name
      */
     public function getTable(string $entityClass): string;
-
 
 
     /**
@@ -41,12 +39,10 @@ interface IMapper
     public function getEntityClass(string $table, ?Row $row = null): string;
 
 
-
     /**
      * Gets table column name from given fully qualified entity class name and entity field name
      */
     public function getColumn(string $entityClass, string $field): string;
-
 
 
     /**
@@ -55,12 +51,10 @@ interface IMapper
     public function getEntityField(string $table, string $column): string;
 
 
-
     /**
      * Gets relationship table name from given source table name and target table name
      */
     public function getRelationshipTable(string $sourceTable, string $targetTable): string;
-
 
 
     /**
@@ -69,12 +63,10 @@ interface IMapper
     public function getRelationshipColumn(string $sourceTable, string $targetTable, ?string $relationshipName = null): string;
 
 
-
     /**
      * Gets table name from repository class name
      */
     public function getTableByRepositoryClass(string $repositoryClass): string;
-
 
 
     /**
@@ -85,13 +77,11 @@ interface IMapper
     public function getImplicitFilters(string $entityClass, ?Caller $caller = null);
 
 
-
     /**
      * @param  array<string, mixed> $values
      * @return array<string, mixed>
      */
     public function convertToRowData(string $table, array $values): array;
-
 
 
     /**

@@ -50,7 +50,6 @@ class Events
     ];
 
 
-
     /**
      * Registers new callback for given event
      */
@@ -59,7 +58,6 @@ class Events
         $this->checkEventType($event);
         $this->events[$event][] = $callback;
     }
-
 
 
     /**
@@ -75,7 +73,6 @@ class Events
             call_user_func($callback, $arg);
         }
     }
-
 
 
     /**

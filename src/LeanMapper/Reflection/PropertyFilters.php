@@ -31,7 +31,6 @@ class PropertyFilters
     private $targetedArgs = [];
 
 
-
     /**
      * @param array<array<string>> $filters
      * @param array<array<string, array<mixed>>> $targetedArgs
@@ -41,7 +40,6 @@ class PropertyFilters
         $this->filters = $filters;
         $this->targetedArgs = $targetedArgs;
     }
-
 
 
     /**
@@ -57,7 +55,6 @@ class PropertyFilters
     }
 
 
-
     /**
      * Gets filters arguments hard-coded in annotation
      * @return array<string, array<mixed>>
@@ -69,7 +66,6 @@ class PropertyFilters
         }
         return $this->targetedArgs[$index];
     }
-
 
 
     /**

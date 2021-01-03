@@ -28,13 +28,11 @@ class HasOne
     private $targetTable;
 
 
-
     public function __construct(?string $columnReferencingTargetTable, ?string $targetTable)
     {
         $this->columnReferencingTargetTable = $columnReferencingTargetTable;
         $this->targetTable = $targetTable;
     }
-
 
 
     /**
@@ -46,7 +44,6 @@ class HasOne
     }
 
 
-
     /**
      * Gets name of target table
      */
@@ -54,7 +51,6 @@ class HasOne
     {
         return $this->targetTable;
     }
-
 
 
     public function hasTargetTable(): bool

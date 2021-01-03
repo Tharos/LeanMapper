@@ -29,13 +29,11 @@ class FilteringResult
     private $validationFunction;
 
 
-
     public function __construct(Result $result, ?Closure $validationFunction = null)
     {
         $this->result = $result;
         $this->validationFunction = $validationFunction;
     }
-
 
 
     /**
@@ -45,7 +43,6 @@ class FilteringResult
     {
         return $this->result;
     }
-
 
 
     /**
@@ -58,7 +55,6 @@ class FilteringResult
         }
         return $this->validationFunction;
     }
-
 
 
     public function hasValidationFunction(): bool

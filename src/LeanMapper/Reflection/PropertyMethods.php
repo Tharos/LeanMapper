@@ -31,13 +31,11 @@ class PropertyMethods
     private $setter;
 
 
-
     public function __construct(string $getter, ?string $setter)
     {
         $this->getter = $getter;
         $this->setter = $setter;
     }
-
 
 
     /**
@@ -49,7 +47,6 @@ class PropertyMethods
     }
 
 
-
     /**
      * Gets setter method
      */
@@ -57,7 +54,6 @@ class PropertyMethods
     {
         return $this->setter;
     }
-
 
 
     /**

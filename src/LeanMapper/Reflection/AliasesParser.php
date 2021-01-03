@@ -32,7 +32,6 @@ class AliasesParser
     const STATE_JUST_FINISHED = 4;
 
 
-
     /**
      * @throws UtilityClassException
      */
@@ -40,7 +39,6 @@ class AliasesParser
     {
         throw new UtilityClassException('Cannot instantiate utility class ' . get_called_class() . '.');
     }
-
 
 
     /**

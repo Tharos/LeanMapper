@@ -26,12 +26,10 @@ interface IEntityReflectionProvider
     function getProperties(EntityReflection $entityClass, IMapper $mapper = null): array;
 
 
-
     /**
      * @return ReflectionMethod[]
      */
     function getGetters(EntityReflection $entityClass): array;
-
 
 
     /**

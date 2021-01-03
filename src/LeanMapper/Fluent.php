@@ -50,12 +50,10 @@ class Fluent extends \Dibi\Fluent
     private $relatedKeys;
 
 
-
     public function __construct(Connection $connection)
     {
         parent::__construct($connection);
     }
-
 
 
     /**
@@ -76,7 +74,6 @@ class Fluent extends \Dibi\Fluent
     }
 
 
-
     /**
      * @param array<mixed> $args
      */
@@ -84,7 +81,6 @@ class Fluent extends \Dibi\Fluent
     {
         return call_user_func_array([$this->getConnection(), 'select'], func_get_args());
     }
-
 
 
     /**
@@ -98,7 +94,6 @@ class Fluent extends \Dibi\Fluent
     }
 
 
-
     /**
      * @return array<int|string>|null
      */
@@ -106,7 +101,6 @@ class Fluent extends \Dibi\Fluent
     {
         return $this->relatedKeys;
     }
-
 
 
     /**

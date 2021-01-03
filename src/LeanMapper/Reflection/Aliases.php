@@ -28,7 +28,6 @@ class Aliases
     private $namespace;
 
 
-
     /**
      * @param array<string, class-string> $aliases
      */
@@ -37,7 +36,6 @@ class Aliases
         $this->aliases = $aliases;
         $this->namespace = $namespace;
     }
-
 
 
     /**

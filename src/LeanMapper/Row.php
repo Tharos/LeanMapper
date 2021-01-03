@@ -41,7 +41,6 @@ class Row
     }
 
 
-
     /**
      * Gets value of given column
      *
@@ -51,7 +50,6 @@ class Row
     {
         return $this->result->getDataEntry($this->id, $name);
     }
-
 
 
     /**
@@ -72,7 +70,6 @@ class Row
     }
 
 
-
     /**
      * Tells whether Row has given column and is not null
      */
@@ -80,7 +77,6 @@ class Row
     {
         return $this->hasColumn($name) and $this->$name !== null;
     }
-
 
 
     /**
@@ -92,7 +88,6 @@ class Row
     }
 
 
-
     /**
      * Unsets given column
      */
@@ -102,12 +97,10 @@ class Row
     }
 
 
-
     public function setConnection(Connection $connection): void
     {
         $this->result->setConnection($connection);
     }
-
 
 
     public function hasConnection(): bool
@@ -116,19 +109,16 @@ class Row
     }
 
 
-
     public function setMapper(IMapper $mapper): void
     {
         $this->result->setMapper($mapper);
     }
 
 
-
     public function getMapper(): ?IMapper
     {
         return $this->result->getMapper();
     }
-
 
 
     /**
@@ -141,7 +131,6 @@ class Row
     }
 
 
-
     /**
      * Returns values of columns that were modified
      * @return array<string, mixed>
@@ -150,7 +139,6 @@ class Row
     {
         return $this->result->getModifiedData($this->id);
     }
-
 
 
     /**
@@ -162,7 +150,6 @@ class Row
     }
 
 
-
     /**
      * Tells whether Row is in detached state
      */
@@ -170,7 +157,6 @@ class Row
     {
         return $this->result->isDetached();
     }
-
 
 
     /**
@@ -187,7 +173,6 @@ class Row
     }
 
 
-
     /**
      * Marks Row as attached
      *
@@ -200,7 +185,6 @@ class Row
     }
 
 
-
     /**
      * Marks Row as non-modified (isModified returns false right after this method call)
      */
@@ -208,7 +192,6 @@ class Row
     {
         $this->result->markAsUpdated($this->id);
     }
-
 
 
     /**
@@ -223,7 +206,6 @@ class Row
     }
 
 
-
     /**
      * Gets array of Row instances referencing current Row
      *
@@ -235,12 +217,10 @@ class Row
     }
 
 
-
     public function setReferencedRow(?self $row = null, string $viaColumn): void
     {
         $this->referencedRows[$viaColumn] = $row;
     }
-
 
 
     /**
@@ -253,7 +233,6 @@ class Row
     }
 
 
-
     /**
      * Remove given data entry from referencing Result
      * @param array<string, mixed> $values
@@ -264,12 +243,10 @@ class Row
     }
 
 
-
     public function createReferencingDataDifference(string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = null): DataDifference
     {
         return $this->result->createReferencingDataDifference($table, $viaColumn, $filtering, $strategy);
     }
-
 
 
     /**
@@ -281,7 +258,6 @@ class Row
     }
 
 
-
     /**
      * Cleans in-memory cache with referencing rows
      */
@@ -291,12 +267,10 @@ class Row
     }
 
 
-
     public function cleanReferencingAddedAndRemovedMeta(string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = null): void
     {
         $this->result->cleanReferencingAddedAndRemovedMeta($table, $viaColumn, $filtering, $strategy);
     }
-
 
 
     public function getResultProxy(string $proxyClass = ResultProxy::class): ResultProxy

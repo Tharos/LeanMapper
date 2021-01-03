@@ -31,7 +31,6 @@ class ImplicitFilters
     private $targetedArgs;
 
 
-
     /**
      * @param array<string|Closure>|string|Closure $filters
      * @param array<string, array<mixed>> $targetedArgs
@@ -52,7 +51,6 @@ class ImplicitFilters
     }
 
 
-
     /**
      * @return array<string|Closure>
      */
@@ -60,7 +58,6 @@ class ImplicitFilters
     {
         return $this->filters;
     }
-
 
 
     /**

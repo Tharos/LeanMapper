@@ -50,7 +50,6 @@ class EntityReflection extends \ReflectionClass
     private $docComment;
 
 
-
     /**
      * @param mixed $argument
      */
@@ -60,7 +59,6 @@ class EntityReflection extends \ReflectionClass
         $this->mapper = $mapper;
         $this->entityReflectionProvider = $entityReflectionProvider !== null ? $entityReflectionProvider : new DefaultEntityReflectionProvider;
     }
-
 
 
     /**
@@ -75,7 +73,6 @@ class EntityReflection extends \ReflectionClass
     }
 
 
-
     /**
      * Gets array of all entity's properties
      *
@@ -88,7 +85,6 @@ class EntityReflection extends \ReflectionClass
         }
         return $this->properties;
     }
-
 
 
     /**
@@ -115,7 +111,6 @@ class EntityReflection extends \ReflectionClass
     }
 
 
-
     /**
      * Gets parent entity's reflection
      */
@@ -123,7 +118,6 @@ class EntityReflection extends \ReflectionClass
     {
         return ($reflection = parent::getParentClass()) ? new self($reflection->getName(), $this->mapper, $this->entityReflectionProvider) : null;
     }
-
 
 
     /**
@@ -140,7 +134,6 @@ class EntityReflection extends \ReflectionClass
     }
 
 
-
     /**
      * Gets requested getter's reflection
      */
@@ -151,7 +144,6 @@ class EntityReflection extends \ReflectionClass
         }
         return isset($this->getters[$name]) ? $this->getters[$name] : null;
     }
-
 
 
     /**
@@ -166,7 +158,6 @@ class EntityReflection extends \ReflectionClass
         }
         return $this->getters;
     }
-
 
 
     /**

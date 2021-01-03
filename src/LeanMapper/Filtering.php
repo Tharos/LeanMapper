@@ -41,7 +41,6 @@ class Filtering
     private $targetedArgs;
 
 
-
     /**
      * @param array<string|Closure>|string|Closure $filters
      * @param array<mixed>|null $args
@@ -66,7 +65,6 @@ class Filtering
     }
 
 
-
     /**
      * @return array<string|Closure>
      */
@@ -74,7 +72,6 @@ class Filtering
     {
         return $this->filters;
     }
-
 
 
     /**
@@ -86,19 +83,16 @@ class Filtering
     }
 
 
-
     public function getEntity(): ?Entity
     {
         return $this->entity;
     }
 
 
-
     public function getProperty(): ?Property
     {
         return $this->property;
     }
-
 
 
     /**

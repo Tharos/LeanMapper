@@ -35,7 +35,6 @@ class PropertyFactory
     }
 
 
-
     /**
      * Creates new Property instance from given annotation
      *
@@ -381,7 +380,6 @@ class PropertyFactory
     }
 
 
-
     /**
      * @return array{string, array<string, true>}  (definition, flags)
      */
@@ -404,19 +402,16 @@ class PropertyFactory
     }
 
 
-
     private static function getSurrogateRelationshipColumn(PropertyType $propertyType): string
     {
         return strtolower(Helpers::trimNamespace($propertyType->getType())) . '{hasOne:' . self::generateRandomString(10) . '}';
     }
 
 
-
     private static function generateRandomString(int $length): string
     {
         return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length);
     }
-
 
 
     /**

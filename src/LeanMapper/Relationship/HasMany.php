@@ -37,7 +37,6 @@ class HasMany
     private $strategy;
 
 
-
     public function __construct(?string $columnReferencingSourceTable, ?string $relationshipTable, ?string $columnReferencingTargetTable, ?string $targetTable, string $strategy)
     {
         $this->columnReferencingSourceTable = $columnReferencingSourceTable;
@@ -46,7 +45,6 @@ class HasMany
         $this->targetTable = $targetTable;
         $this->strategy = $strategy;
     }
-
 
 
     /**
@@ -58,7 +56,6 @@ class HasMany
     }
 
 
-
     /**
      * Gets name of relationship table
      */
@@ -68,12 +65,10 @@ class HasMany
     }
 
 
-
     public function hasRelationshipTable(): bool
     {
         return $this->relationshipTable !== NULL;
     }
-
 
 
     /**
@@ -85,7 +80,6 @@ class HasMany
     }
 
 
-
     /**
      * Gets name of target table
      */
@@ -93,7 +87,6 @@ class HasMany
     {
         return $this->targetTable;
     }
-
 
 
     /**
