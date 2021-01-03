@@ -110,9 +110,6 @@ class Fluent extends \Dibi\Fluent
      */
     public function setRelatedKeys(?array $keys): self
     {
-        if (!is_array($keys) and $keys !== null) {
-            throw new InvalidArgumentException('Invalid related keys given. Expected array or null, ' . Helpers::getType($keys) . ' given.');
-        }
         $this->relatedKeys = $keys;
         return $this;
     }

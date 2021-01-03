@@ -90,10 +90,13 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
 
         $repositories = [];
         foreach (array_unique($classes) as $class) {
-            if (class_exists($class)
-                && ($rc = new \ReflectionClass($class)) && $rc->isSubclassOf(LeanMapper\Repository::class)
-                && !$rc->isAbstract()
-            ) {
+            if (!class_exists($class)) {
+                continue;
+            }
+
+            $rc = new \ReflectionClass($class);
+
+            if ($rc->isSubclassOf(\LeanMapper\Repository::class) && !$rc->isAbstract()) {
                 $repositories[] = $rc->getName();
             }
         }

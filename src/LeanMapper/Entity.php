@@ -84,7 +84,7 @@ abstract class Entity
 
 
     /**
-     * @param Row|Traversable|array|null $arg
+     * @param Row|iterable|null $arg
      * @throws InvalidArgumentException
      */
     public function __construct($arg = null)
@@ -107,7 +107,7 @@ abstract class Entity
             }
             $this->initDefaults();
             if ($arg !== null) {
-                if (!is_array($arg) and !($arg instanceof Traversable)) {
+                if (!is_iterable($arg)) {
                     $type = Helpers::getType($arg);
                     throw new InvalidArgumentException(
                         "Argument \$arg in " . get_called_class(

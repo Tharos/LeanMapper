@@ -88,7 +88,7 @@ class Result implements \Iterator
     /**
      * Creates new common instance (it means persisted)
      *
-     * @param \Dibi\Row|\Dibi\Row[] $data
+     * @param \Dibi\Row|array<\Dibi\Row|array|ArrayAccess> $data
      * @throws InvalidArgumentException
      */
     public static function createInstance($data, string $table, Connection $connection, IMapper $mapper): self
@@ -104,9 +104,10 @@ class Result implements \Iterator
             if (!is_array($data)) {
                 throw $e;
             }
-            if (!empty($data)) {
+            if (count($data)) {
+                /** @var mixed $record */
                 $record = reset($data);
-                if (!($record instanceof DibiRow) and !is_array($record) and (!$record instanceof ArrayAccess)) {
+                if (!($record instanceof DibiRow) and !is_array($record) and !($record instanceof ArrayAccess)) {
                     throw $e;
                 }
             }
@@ -874,7 +875,7 @@ class Result implements \Iterator
         }
         $ids = [];
         foreach ($this->data as $data) {
-            if (!isset($data[$column]) or $data[$column] === null) {
+            if (!isset($data[$column])) {
                 continue;
             }
             $ids[$data[$column]] = true;

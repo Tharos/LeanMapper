@@ -25,7 +25,7 @@ class EntityDataDecoder
                     $items[] = self::process($item, $maxDepth - 1);
                 }
                 $value = $items;
-            } elseif (is_object($value) && !is_null($value)) {
+            } elseif (is_object($value)) {
                 if ($value instanceof \DateTime) {
                     $value = $value->format('Y-m-d H:i:s');
                 } elseif ($value instanceof Entity) {

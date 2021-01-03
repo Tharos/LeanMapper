@@ -1,8 +1,10 @@
 parameters:
-    level: 3
+    level: 4
 
     paths:
         - ../src
+
+    treatPhpDocTypesAsCertain: false
 
     ignoreErrors:
         - '#Unsafe usage of new static\(\).#'
