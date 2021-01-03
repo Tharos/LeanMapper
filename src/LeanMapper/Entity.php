@@ -47,7 +47,7 @@ abstract class Entity
     /** @var IEntityFactory|null */
     protected $entityFactory;
 
-    /** @var EntityReflection[] */
+    /** @var array<string, array<string, EntityReflection>> */
     protected static $reflections = [];
 
     /** @var EntityReflection|null */

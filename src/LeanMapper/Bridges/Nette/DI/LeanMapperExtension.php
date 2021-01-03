@@ -83,7 +83,7 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
             }
 
             $robot->addDirectory($config['scanDirs']);
-            $robot->acceptFiles = '*.php';
+            $robot->acceptFiles = ['*.php'];
             $robot->rebuild();
             $classes = array_keys($robot->getIndexedClasses());
         }

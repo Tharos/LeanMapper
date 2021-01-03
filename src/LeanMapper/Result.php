@@ -71,10 +71,10 @@ class Result implements \Iterator
     /** @var array */
     private $keys;
 
-    /** @var self[] */
+    /** @var array<string, self|array<FilteringResultDecorator>> */
     private $referenced = [];
 
-    /** @var self[] */
+    /** @var array<string, self|array<FilteringResultDecorator>> */
     private $referencing = [];
 
     /** @var array<string, array<int|string, Row[]>> */
