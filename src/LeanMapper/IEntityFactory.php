@@ -28,7 +28,7 @@ interface IEntityFactory
      *
      * @param Row|iterable<string, mixed>|null $arg
      */
-    public function createEntity(string $entityClass, $arg = null): Entity;
+    function createEntity(string $entityClass, $arg = null): Entity;
 
 
     /**
@@ -37,6 +37,6 @@ interface IEntityFactory
      * @param Entity[] $entities
      * @return mixed
      */
-    public function createCollection(array $entities);
+    function createCollection(array $entities);
 
 }
