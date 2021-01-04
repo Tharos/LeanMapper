@@ -105,4 +105,10 @@ class DefaultMapper implements IMapper
         return $data;
     }
 
+
+    protected function trimNamespace(string $class): string
+    {
+        return Helpers::trimNamespace($class);
+    }
+
 }
