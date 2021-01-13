@@ -33,7 +33,7 @@ class Helpers
             throw new Exception\InvalidValueException('Value null is not supported.');
         }
 
-        if ($expectedType === 'bool' || $expectedType === 'bool') {
+        if ($expectedType === 'bool' || $expectedType === 'boolean') {
             return is_bool($value);
 
         } elseif ($expectedType === 'int' || $expectedType === 'integer') {

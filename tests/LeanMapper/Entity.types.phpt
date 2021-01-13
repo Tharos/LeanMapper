@@ -12,6 +12,7 @@ require_once __DIR__ . '/../bootstrap.php';
 /**
  * @property DateTimeImmutable $published
  * @property int $year
+ * @property boolean $active
  */
 class Book extends LeanMapper\Entity
 {
@@ -23,9 +24,11 @@ $book = new Book;
 
 $book->published = new \Dibi\DateTime;
 $book->year = 2021;
+$book->active = true;
 
 Assert::type(\Dibi\DateTime::class, $book->published);
 Assert::type('int', $book->year);
+Assert::type('bool', $book->active);
 
 Assert::exception(
     function () use ($book) {
@@ -50,6 +53,14 @@ Assert::exception(
     },
     LeanMapper\Exception\InvalidValueException::class,
     "Unexpected value type given in property 'year' in entity Book, integer expected, instance of ArrayObject given."
+);
+
+Assert::exception(
+    function () use ($book) {
+        $book->active = new ArrayObject;
+    },
+    LeanMapper\Exception\InvalidValueException::class,
+    "Unexpected value type given in property 'active' in entity Book, boolean expected, instance of ArrayObject given."
 );
 
 //////////
