@@ -68,6 +68,10 @@ class AliasesParser
                 if (is_array($token)) {
                     if ($token[0] === T_STRING) {
                         $builder->appendToCurrent($token[1]);
+                    } elseif (PHP_VERSION_ID >= 80000 && $token[0] === T_NAME_QUALIFIED) {
+                        $builder->appendToCurrent($token[1]);
+                        $builder->setLast(substr($token[1], strrpos($token[1], '\\') + 1));
+                        return AliasesParser::STATE_GATHERING;
                     } elseif ($token[0] === T_AS) {
                         return AliasesParser::STATE_IN_AS_PART;
                     }
