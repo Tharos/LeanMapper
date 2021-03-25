@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\DefaultEntityFactory;
 use Tester\Assert;
 
@@ -67,7 +69,7 @@ $author = $authorRepository->find(1);
 
 $books = $author->books;
 
-Assert::type('ArrayObject', $books);
+Assert::type(ArrayObject::class, $books);
 
 Assert::equal(1, count($books));
 
@@ -75,6 +77,6 @@ Assert::equal(1, count($books));
 
 $authors = $authorRepository->findAll();
 
-Assert::type('ArrayObject', $authors);
+Assert::type(ArrayObject::class, $authors);
 
 Assert::equal(5, count($authors));

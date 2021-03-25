@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Reflection\Property;
 use Tester\Assert;
 
@@ -9,33 +11,33 @@ require_once __DIR__ . '/../bootstrap.php';
 
 /**
  * @property int $id
- * @property DateTime $pubdate
+ * @property DateTimeInterface $pubdate
  */
 class Book extends LeanMapper\Entity
 {
     protected function decodeRowValue($value, Property $property)
     {
-        if (is_a($property->getType(), 'DateTime', true)) {
-            if ($value instanceof DateTime) {
+        if (is_a($property->getType(), DateTimeInterface::class, true)) {
+            if ($value instanceof DateTimeInterface) {
                 return clone $value;
             }
             return new DateTime($value);
         }
 
-        return parent::decodeRowValue($value, $type);
+        return parent::decodeRowValue($value, $property);
     }
 
 
     protected function encodeRowValue($value, Property $property)
     {
-        if (is_a($property->getType(), 'DateTime', true)) {
-            if ($value instanceof DateTime) {
+        if (is_a($property->getType(), DateTimeInterface::class, true)) {
+            if ($value instanceof DateTimeInterface) {
                 return $value->format('Y-m-d');
             }
             return $value;
         }
 
-        return parent::decodeRowValue($value, $type);
+        return parent::encodeRowValue($value, $property);
     }
 }
 

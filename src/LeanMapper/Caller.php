@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 /**
@@ -24,7 +26,6 @@ class Caller
     private $complement;
 
 
-
     /**
      * @param mixed $instance
      * @param mixed|null $complement
@@ -36,7 +37,6 @@ class Caller
     }
 
 
-
     /**
      * @return mixed
      */
@@ -44,7 +44,6 @@ class Caller
     {
         return $this->instance;
     }
-
 
 
     /**
@@ -56,7 +55,6 @@ class Caller
     }
 
 
-
     /**
      * @return bool
      */
@@ -64,7 +62,6 @@ class Caller
     {
         return $this->instance instanceof Entity;
     }
-
 
 
     /**

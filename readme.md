@@ -1,7 +1,7 @@
 Lean Mapper
 ===========
 
-[![Build Status](https://travis-ci.org/Tharos/LeanMapper.svg?branch=develop)](https://travis-ci.org/Tharos/LeanMapper)
+[![Tests Status](https://github.com/Tharos/LeanMapper/workflows/Tests/badge.svg)](https://github.com/Tharos/LeanMapper/actions)
 
 Lean Mapper is a tiny ORM based on powerful [Dibi database abstraction library](http://dibiphp.com) for PHP.
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Test: LeanMapperQuery\Query limit and offset.
  * @author Michal Bohuslávek
@@ -25,7 +27,7 @@ $fluent = getFluent('book');
 Assert::same('SELECT [book].* FROM [book]', (string)$fluent);
 
 $fluent = getFluent('book')->limit(10);
-Assert::same('  SELECT [book].* FROM [book] LIMIT 10', (string)$fluent);
+Assert::same('SELECT [book].* FROM [book] LIMIT 10', (string)$fluent);
 
 $fluent = getFluent('book')->limit(10)->offset(50);
-Assert::same('  SELECT [book].* FROM [book] LIMIT 10 OFFSET 50', (string)$fluent);
+Assert::same('SELECT [book].* FROM [book] LIMIT 10 OFFSET 50', (string)$fluent);

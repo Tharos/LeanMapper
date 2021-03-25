@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidStateException;
@@ -21,6 +23,7 @@ use ReflectionMethod;
  * Entity reflection
  *
  * @author Vojtěch Kohout
+ * @extends \ReflectionClass<\LeanMapper\Entity>
  */
 class EntityReflection extends \ReflectionClass
 {
@@ -34,26 +37,23 @@ class EntityReflection extends \ReflectionClass
     /** @var Property[] */
     private $properties = null;
 
-    /** @var array */
+    /** @var array<string, ReflectionMethod>|null */
     private $getters = null;
 
-    /** @var array */
+    /** @var array<string, ReflectionMethod>|null */
     private $setters = null;
 
     /** @var Aliases|null */
     private $aliases;
 
-    /** @var string */
+    /** @var string|false|null */
     private $docComment;
-
 
 
     /**
      * @param mixed $argument
-     * @param IMapper|null $mapper
-     * @param IEntityReflectionProvider|null $entityReflectionProvider
      */
-    public function __construct($argument, IMapper $mapper = null, IEntityReflectionProvider $entityReflectionProvider = null)
+    public function __construct($argument, ?IMapper $mapper = null, ?IEntityReflectionProvider $entityReflectionProvider = null)
     {
         parent::__construct($argument);
         $this->mapper = $mapper;
@@ -61,14 +61,10 @@ class EntityReflection extends \ReflectionClass
     }
 
 
-
     /**
      * Gets requested entity's property
-     *
-     * @param string $name
-     * @return Property|null
      */
-    public function getEntityProperty($name)
+    public function getEntityProperty(string $name): ?Property
     {
         if ($this->properties === null) {
             $this->createProperties();
@@ -77,13 +73,12 @@ class EntityReflection extends \ReflectionClass
     }
 
 
-
     /**
      * Gets array of all entity's properties
      *
      * @return Property[]
      */
-    public function getEntityProperties()
+    public function getEntityProperties(): array
     {
         if ($this->properties === null) {
             $this->createProperties();
@@ -92,38 +87,43 @@ class EntityReflection extends \ReflectionClass
     }
 
 
-
     /**
      * Gets Aliases instance relevant to current class
-     *
-     * @return Aliases
      */
-    public function getAliases()
+    public function getAliases(): Aliases
     {
         if ($this->aliases === null) {
-            $this->aliases = AliasesParser::parseSource(file_get_contents($this->getFileName()), $this->getNamespaceName());
+            $filename = $this->getFileName();
+
+            if (!is_string($filename)) {
+                throw new InvalidStateException('EntityReflection::getFileName() failed.');
+            }
+
+            $source = file_get_contents($filename);
+
+            if (!is_string($source)) {
+                throw new InvalidStateException("Reading of source code from $filename failed.");
+            }
+
+            $this->aliases = AliasesParser::parseSource($source, $this->getNamespaceName());
         }
         return $this->aliases;
     }
 
 
-
     /**
      * Gets parent entity's reflection
-     *
-     * @return self|null
      */
-    public function getParentClass()
+    public function getParentClass(): ?self
     {
         return ($reflection = parent::getParentClass()) ? new self($reflection->getName(), $this->mapper, $this->entityReflectionProvider) : null;
     }
 
 
-
     /**
      * Gets doc comment of current class
      *
-     * @return string
+     * @return string|false
      */
     public function getDocComment()
     {
@@ -134,14 +134,10 @@ class EntityReflection extends \ReflectionClass
     }
 
 
-
     /**
      * Gets requested getter's reflection
-     *
-     * @param string $name
-     * @return ReflectionMethod|null
      */
-    public function getGetter($name)
+    public function getGetter(string $name): ?ReflectionMethod
     {
         if ($this->getters === null) {
             $this->createGetters();
@@ -150,13 +146,12 @@ class EntityReflection extends \ReflectionClass
     }
 
 
-
     /**
      * Gets array of getter's reflections
      *
      * @return ReflectionMethod[]
      */
-    public function getGetters()
+    public function getGetters(): array
     {
         if ($this->getters === null) {
             $this->createGetters();
@@ -165,14 +160,10 @@ class EntityReflection extends \ReflectionClass
     }
 
 
-
     /**
      * Gets requested setter's reflection
-     *
-     * @param string $name
-     * @return ReflectionMethod|null
      */
-    public function getSetter($name)
+    public function getSetter(string $name): ?ReflectionMethod
     {
         if ($this->setters === null) {
             $this->createSetters();
@@ -186,7 +177,7 @@ class EntityReflection extends \ReflectionClass
     /**
      * @throws InvalidStateException
      */
-    private function createGetters()
+    private function createGetters(): void
     {
         $this->getters = [];
         $getters = $this->entityReflectionProvider->getGetters($this);
@@ -205,7 +196,7 @@ class EntityReflection extends \ReflectionClass
     /**
      * @throws InvalidStateException
      */
-    private function createSetters()
+    private function createSetters(): void
     {
         $this->setters = [];
         $setters = $this->entityReflectionProvider->getSetters($this);
@@ -224,7 +215,7 @@ class EntityReflection extends \ReflectionClass
     /**
      * @throws InvalidStateException
      */
-    private function createProperties()
+    private function createProperties(): void
     {
         $this->properties = [];
         $properties = $this->entityReflectionProvider->getProperties($this, $this->mapper);

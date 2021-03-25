@@ -1,0 +1,17 @@
+parameters:
+    level: 7
+
+    paths:
+        - ../src
+
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        - '#Unsafe usage of new static\(\).#'
+
+
+services:
+    -
+        class: LeanMapper\Tests\PhpStan\DibiFluentDynamicReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicMethodReturnTypeExtension

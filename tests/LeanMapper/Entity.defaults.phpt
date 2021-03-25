@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Entity;
 use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\PropertyFactory;
@@ -35,7 +37,7 @@ Assert::exception(
     function () use ($entityReflection) {
         PropertyFactory::createFromAnnotation('property', 'bool $active = foobar', $entityReflection);
     },
-    'LeanMapper\Exception\InvalidAnnotationException',
+    LeanMapper\Exception\InvalidAnnotationException::class,
     "Invalid property definition given: @property bool \$active = foobar in entity EmptyEntity, property of type boolean cannot have default value 'foobar'."
 );
 
@@ -61,7 +63,7 @@ Assert::exception(
     function () use ($entityReflection) {
         PropertyFactory::createFromAnnotation('property', 'int $count = true', $entityReflection);
     },
-    'LeanMapper\Exception\InvalidAnnotationException',
+    LeanMapper\Exception\InvalidAnnotationException::class,
     "Invalid property definition given: @property int \$count = true in entity EmptyEntity, property of type integer cannot have default value 'true'."
 );
 
@@ -135,7 +137,7 @@ Assert::exception(
     function () use ($entityReflection) {
         PropertyFactory::createFromAnnotation('property', 'array $list = ARRAY', $entityReflection);
     },
-    'LeanMapper\Exception\InvalidAnnotationException',
+    LeanMapper\Exception\InvalidAnnotationException::class,
     "Invalid property definition given: @property array \$list = ARRAY in entity EmptyEntity, property of type array cannot have default value 'ARRAY'."
 );
 
@@ -159,6 +161,6 @@ Assert::exception(
     function () use ($entityReflection) {
         PropertyFactory::createFromAnnotation('property', 'DateTime $created = 10', $entityReflection);
     },
-    'LeanMapper\Exception\InvalidAnnotationException',
+    LeanMapper\Exception\InvalidAnnotationException::class,
     "Invalid property definition given: @property DateTime \$created = 10 in entity EmptyEntity, only properties of basic types may have default values specified."
 );

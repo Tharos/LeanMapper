@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Connection;
 use LeanMapper\DefaultMapper;
 use LeanMapper\Entity;
@@ -44,11 +46,14 @@ class AuthorContract extends Entity
 class Mapper extends DefaultMapper
 {
 
-    protected $defaultEntityNamespace = null;
+    public function __construct()
+    {
+        $this->defaultEntityNamespace = null;
+    }
 
 
 
-    public function getPrimaryKey($table)
+    public function getPrimaryKey(string $table): string
     {
         if ($table === 'authordetail' or $table === 'authorcontract') {
             return 'author_id';
@@ -58,12 +63,12 @@ class Mapper extends DefaultMapper
 
 
 
-    public function getColumn($entityClass, $field)
+    public function getColumn(string $entityClass, string $field): string
     {
-        if ($entityClass === 'AuthorDetail' and $field === 'author') {
+        if ($entityClass === AuthorDetail::class and $field === 'author') {
             return 'author_id';
         }
-        if ($entityClass === 'AuthorContract' and $field === 'authorContract') {
+        if ($entityClass === AuthorContract::class and $field === 'authorContract') {
             return 'author_id';
         }
         return parent::getColumn($entityClass, $field);
@@ -71,7 +76,7 @@ class Mapper extends DefaultMapper
 
 
 
-    public function getRelationshipColumn($sourceTable, $targetTable/*, $relationshipName = null*/)
+    public function getRelationshipColumn(string $sourceTable, string $targetTable, ?string $relationshipName = null): string
     {
         if ($sourceTable === 'authorcontract' and $targetTable === 'authordetail') {
             return 'author_id';
@@ -79,13 +84,12 @@ class Mapper extends DefaultMapper
         if ($sourceTable === 'authordetail' and $targetTable === 'author') {
             return 'author_id';
         }
-        $relationshipName = (func_num_args() === 3) ? func_get_arg(2) : null;
         return parent::getRelationshipColumn($sourceTable, $targetTable, $relationshipName);
     }
 
 
 
-    public function getEntityField($table, $column)
+    public function getEntityField(string $table, string $column): string
     {
         if ($table === 'authordetail' and $column === 'author_id') {
             return 'author';

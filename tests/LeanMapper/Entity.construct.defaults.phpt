@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Entity;
 use Tester\Assert;
 
@@ -15,7 +17,7 @@ require_once __DIR__ . '/../bootstrap.php';
 class Book extends Entity
 {
 
-    protected function initDefaults()
+    protected function initDefaults(): void
     {
         $this->assign(
             [
@@ -32,7 +34,7 @@ class Book extends Entity
  */
 class Role extends LeanMapper\Entity
 {
-    protected function initDefaults()
+    protected function initDefaults(): void
     {
         $this->assign(
             [
@@ -48,7 +50,7 @@ class Role extends LeanMapper\Entity
  */
 class User extends LeanMapper\Entity
 {
-    protected function initDefaults()
+    protected function initDefaults(): void
     {
         $this->firstname = null;
     }
@@ -58,7 +60,7 @@ class User extends LeanMapper\Entity
 
 $book = new Book;
 
-Assert::type('Book', $book);
+Assert::type(Book::class, $book);
 
 Assert::equal(
     [
@@ -82,7 +84,7 @@ Assert::exception(
     function () use ($book) {
         $book->id;
     },
-    'LeanMapper\Exception\Exception',
+    LeanMapper\Exception\Exception::class,
     "Cannot get value of property 'id' in entity Book due to low-level failure: Missing 'id' column in row with id -1."
 );
 
@@ -90,7 +92,7 @@ Assert::exception(
     function () use ($book) {
         $book->getData();
     },
-    'LeanMapper\Exception\Exception',
+    LeanMapper\Exception\Exception::class,
     "Cannot get value of property 'id' in entity Book due to low-level failure: Missing 'id' column in row with id -1."
 );
 

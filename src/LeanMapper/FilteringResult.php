@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use Closure;
@@ -27,17 +29,11 @@ class FilteringResult
     private $validationFunction;
 
 
-
-    /**
-     * @param Result $result
-     * @param Closure $validationFunction
-     */
-    public function __construct(Result $result, Closure $validationFunction = null)
+    public function __construct(Result $result, ?Closure $validationFunction = null)
     {
         $this->result = $result;
         $this->validationFunction = $validationFunction;
     }
-
 
 
     /**
@@ -49,12 +45,10 @@ class FilteringResult
     }
 
 
-
     /**
-     * @return Closure
      * @throws InvalidMethodCallException
      */
-    public function getValidationFunction()
+    public function getValidationFunction(): Closure
     {
         if ($this->validationFunction === null) {
             throw new InvalidMethodCallException("FilteringResult doesn't have validation function.");
@@ -63,11 +57,7 @@ class FilteringResult
     }
 
 
-
-    /**
-     * @return bool
-     */
-    public function hasValidationFunction()
+    public function hasValidationFunction(): bool
     {
         return $this->validationFunction !== null;
     }

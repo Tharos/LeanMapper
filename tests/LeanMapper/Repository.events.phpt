@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Connection;
 use LeanMapper\Entity;
 use LeanMapper\IEntityFactory;
@@ -31,7 +33,7 @@ class CustomRepository extends Repository
 
 
 
-    protected function initEvents()
+    protected function initEvents(): void
     {
         $this->onAfterPersist[] = function ($author) {
             $this->log->append('after persist: ' . $author->name);
@@ -76,3 +78,15 @@ Assert::equal(
     ],
     $log->getArrayCopy()
 );
+
+
+Assert::exception(function () use ($repository) {
+    $repository->onUnexists[] = function () {
+    };
+}, LeanMapper\Exception\InvalidArgumentException::class, "Unknown event type given: 'unexists'.");
+
+
+Assert::exception(function () use ($repository) {
+    $repository->unexists[] = function () {
+    };
+}, LeanMapper\Exception\MemberAccessException::class, "Undefined property 'unexists' in repository " . CustomRepository::class . '.');

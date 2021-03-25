@@ -9,10 +9,13 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 /**
  * @author Vojtěch Kohout
+ * @implements \Iterator<string, mixed>
  */
 class ResultProxy implements \Iterator
 {
@@ -21,47 +24,28 @@ class ResultProxy implements \Iterator
     private $result;
 
 
-
-    /**
-     * @param Result $result
-     */
     public function __construct(Result $result)
     {
         $this->result = $result;
     }
 
 
-
     /**
-     * @param int $id
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getData($id)
+    public function getData(int $id): array
     {
         return $this->result->getData($id);
     }
 
 
-
-    /**
-     * @param Result $referencedResult
-     * @param string $table
-     * @param string $viaColumn
-     */
-    public function setReferencedResult(Result $referencedResult, $table, $viaColumn = null)
+    public function setReferencedResult(Result $referencedResult, string $table, ?string $viaColumn = null): void
     {
         $this->result->setReferencedResult($referencedResult, $table, $viaColumn);
     }
 
 
-
-    /**
-     * @param Result $referencingResult
-     * @param string $table
-     * @param string $viaColumn
-     * @param string $strategy
-     */
-    public function setReferencingResult(Result $referencingResult, $table, $viaColumn = null, $strategy = Result::STRATEGY_IN)
+    public function setReferencingResult(Result $referencingResult, string $table, ?string $viaColumn = null, ?string $strategy = Result::STRATEGY_IN): void
     {
         $this->result->setReferencingResult($referencingResult, $table, $viaColumn, $strategy);
     }
@@ -77,16 +61,14 @@ class ResultProxy implements \Iterator
     }
 
 
-
-    public function next()
+    public function next(): void
     {
         $this->result->next();
     }
 
 
-
     /**
-     * @return int
+     * @return mixed
      */
     public function key()
     {
@@ -94,18 +76,13 @@ class ResultProxy implements \Iterator
     }
 
 
-
-    /**
-     * @return bool
-     */
-    public function valid()
+    public function valid(): bool
     {
         return $this->result->valid();
     }
 
 
-
-    public function rewind()
+    public function rewind(): void
     {
         $this->result->rewind();
     }

@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Relationship;
 
 /**
@@ -29,13 +31,7 @@ abstract class BelongsTo
     private $strategy;
 
 
-
-    /**
-     * @param string|null $columnReferencingSourceTable
-     * @param string|null $targetTable
-     * @param string $strategy
-     */
-    public function __construct($columnReferencingSourceTable, $targetTable, $strategy)
+    public function __construct(?string $columnReferencingSourceTable, ?string $targetTable, string $strategy)
     {
         $this->columnReferencingSourceTable = $columnReferencingSourceTable;
         $this->targetTable = $targetTable;
@@ -43,37 +39,34 @@ abstract class BelongsTo
     }
 
 
-
     /**
      * Gets name of column referencing source table
-     *
-     * @return string|null
      */
-    public function getColumnReferencingSourceTable()
+    public function getColumnReferencingSourceTable(): ?string
     {
         return $this->columnReferencingSourceTable;
     }
 
 
-
     /**
      * Gets name of target table
-     *
-     * @return string|null
      */
-    public function getTargetTable()
+    public function getTargetTable(): ?string
     {
         return $this->targetTable;
     }
 
 
+    public function hasTargetTable(): bool
+    {
+        return $this->targetTable !== null;
+    }
+
 
     /**
      * Gets strategy used to get referencing result
-     *
-     * @return string strategy
      */
-    public function getStrategy()
+    public function getStrategy(): string
     {
         return $this->strategy;
     }

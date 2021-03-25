@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Repository;
 use Tester\Assert;
 
@@ -42,7 +44,7 @@ Assert::exception(
     function () use ($authorRepository, $author) {
         $authorRepository->persist($author);
     },
-    '\Dibi\DriverException',
+    \Dibi\DriverException::class,
     'UNIQUE constraint failed: author.id'
 );
 
@@ -53,11 +55,12 @@ $author->name = 'John Doe';
 
 Assert::true($author->isDetached());
 
-$authorRepository->persist($author);
+$insertedId = $authorRepository->persist($author);
 
 Assert::false($author->isDetached());
 
 Assert::equal('John Doe', $authors[3]->name);
+Assert::same(6, $insertedId);
 
 //////////
 
@@ -67,13 +70,19 @@ $author = new Author(
     ]
 );
 
-$authorRepository->persist($author);
+$insertedId = $authorRepository->persist($author);
 
 Assert::equal(7, $author->id);
+Assert::same(7, $insertedId);
 
-$authorRepository->persist($author);
+$affectedRows = $authorRepository->persist($author);
 
 Assert::equal(7, $author->id);
+Assert::null($affectedRows); // no changes
+
+$author->name = 'John Doe';
+$result = $authorRepository->persist($author);
+Assert::type(Dibi\Result::class, $result); // updated
 
 //////////
 
@@ -81,6 +90,6 @@ Assert::exception(
     function () use ($authorRepository, $author) {
         $author->id = 8;
     },
-    'LeanMapper\Exception\InvalidArgumentException',
+    LeanMapper\Exception\InvalidArgumentException::class,
     "ID can only be set in detached rows."
 );

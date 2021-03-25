@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Entity;
 use Tester\Assert;
 
@@ -20,7 +22,7 @@ Assert::exception(
         $reflection = AuthorWithDuplicatedColumn::getReflection();
         $reflection->getEntityProperties();
     },
-    'LeanMapper\Exception\InvalidStateException',
+    LeanMapper\Exception\InvalidStateException::class,
     "Mapping collision in property 'site' (column 'website') in entity AuthorWithDuplicatedColumn. Please fix mapping or make chosen properties read only (using property-read)."
 );
 
@@ -39,7 +41,7 @@ Assert::exception(
         $reflection = AuthorWithDuplicatedProperty1::getReflection();
         $reflection->getEntityProperties();
     },
-    'LeanMapper\Exception\InvalidStateException',
+    LeanMapper\Exception\InvalidStateException::class,
     "Duplicated property 'id' in entity AuthorWithDuplicatedProperty1. Please fix property name."
 );
 
@@ -58,7 +60,7 @@ Assert::exception(
         $reflection = AuthorWithDuplicatedProperty2::getReflection();
         $reflection->getEntityProperties();
     },
-    'LeanMapper\Exception\InvalidStateException',
+    LeanMapper\Exception\InvalidStateException::class,
     "Duplicated property 'id' in entity AuthorWithDuplicatedProperty2. Please fix property name."
 );
 
@@ -77,6 +79,6 @@ Assert::exception(
         $reflection = AuthorWithDuplicatedReadProperty::getReflection();
         $reflection->getEntityProperties();
     },
-    'LeanMapper\Exception\InvalidStateException',
+    LeanMapper\Exception\InvalidStateException::class,
     "Duplicated property 'id' in entity AuthorWithDuplicatedReadProperty. Please fix property name."
 );

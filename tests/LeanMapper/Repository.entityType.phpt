@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Entity;
 use Tester\Assert;
 
@@ -52,7 +54,7 @@ Assert::exception(
     function () use ($author, $bookRepository) {
         $bookRepository->persist($author);
     },
-    'LeanMapper\Exception\InvalidArgumentException',
+    LeanMapper\Exception\InvalidArgumentException::class,
     'Repository BookRepository can only handle Book entites. Use different repository to handle Author.'
 );
 
@@ -60,6 +62,6 @@ Assert::exception(
     function () use ($author, $bookRepository) {
         $bookRepository->delete($author);
     },
-    'LeanMapper\Exception\InvalidArgumentException',
+    LeanMapper\Exception\InvalidArgumentException::class,
     'Repository BookRepository can only handle Book entites. Use different repository to handle Author.'
 );

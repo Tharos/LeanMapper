@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LeanMapper\Bridges\Nette\DI;
 
+use LeanMapper;
 use Nette;
 use Nette\Loaders\RobotLoader;
+use Tracy;
 
 class LeanMapperExtension extends Nette\DI\CompilerExtension
 {
 
+    /** @var array<string, mixed> */
     public $defaults = [
         'db' => [],
         'profiler' => true,
@@ -16,39 +21,33 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
     ];
 
 
-
     /**
-     * Returns extension configuration.
-     * @return array
+     * @param string[]|string|null $scanDirs
      */
-    public function getConfig()
+    public function __construct($scanDirs = null)
     {
-        $container = $this->getContainerBuilder();
-        $this->defaults['scanDirs'] = $container->expand('%appDir%');
-
-        return parent::getConfig($this->defaults);
+        $this->defaults['scanDirs'] = $scanDirs;
     }
-
 
 
     public function loadConfiguration()
     {
         $container = $this->getContainerBuilder();
-        $config = $this->getConfig();
+        $config = $this->validateConfig($this->defaults);
 
         $index = 1;
         foreach ($this->findRepositories($config) as $repositoryClass) {
-            $container->addDefinition($this->prefix('table.' . $index++))->setClass($repositoryClass);
+            $container->addDefinition($this->prefix('table.' . $index++))->setFactory($repositoryClass);
         }
 
         $container->addDefinition($this->prefix('mapper'))
-            ->setClass('LeanMapper\DefaultMapper');
+            ->setFactory(LeanMapper\DefaultMapper::class);
 
         $container->addDefinition($this->prefix('entityFactory'))
-            ->setClass('LeanMapper\DefaultEntityFactory');
+            ->setFactory(LeanMapper\DefaultEntityFactory::class);
 
         $connection = $container->addDefinition($this->prefix('connection'))
-            ->setClass('LeanMapper\Connection', [$config['db']]);
+            ->setFactory(LeanMapper\Connection::class, [$config['db']]);
 
         if (isset($config['db']['flags'])) {
             $flags = 0;
@@ -58,12 +57,12 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
             $config['db']['flags'] = $flags;
         }
 
-        if (class_exists('Tracy\Debugger') && $container->parameters['debugMode'] && $config['profiler']) {
-            $panel = $container->addDefinition($this->prefix('panel'))->setClass('Dibi\Bridges\Tracy\Panel');
+        if (class_exists(Tracy\Debugger::class) && $container->parameters['debugMode'] && $config['profiler']) {
+            $panel = $container->addDefinition($this->prefix('panel'))->setFactory(\Dibi\Bridges\Tracy\Panel::class);
             $connection->addSetup([$panel, 'register'], [$connection]);
             if ($config['logFile']) {
                 $fileLogger = $container->addDefinition($this->prefix('fileLogger'))
-                    ->setClass('Dibi\Loggers\FileLogger', [$config['logFile']]);
+                    ->setFactory(\Dibi\Loggers\FileLogger::class, [$config['logFile']]);
                 $connection->addSetup('$service->onEvent[] = ?', [
                     [$fileLogger, 'logEvent'],
                 ]);
@@ -72,7 +71,10 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
     }
 
 
-
+    /**
+     * @param  array<string, mixed> $config
+     * @return array<class-string>
+     */
     private function findRepositories($config)
     {
         $classes = [];
@@ -86,17 +88,20 @@ class LeanMapperExtension extends Nette\DI\CompilerExtension
             }
 
             $robot->addDirectory($config['scanDirs']);
-            $robot->acceptFiles = '*.php';
+            $robot->acceptFiles = ['*.php'];
             $robot->rebuild();
             $classes = array_keys($robot->getIndexedClasses());
         }
 
         $repositories = [];
         foreach (array_unique($classes) as $class) {
-            if (class_exists($class)
-                && ($rc = new \ReflectionClass($class)) && $rc->isSubclassOf('LeanMapper\Repository')
-                && !$rc->isAbstract()
-            ) {
+            if (!class_exists($class)) {
+                continue;
+            }
+
+            $rc = new \ReflectionClass($class);
+
+            if ($rc->isSubclassOf(\LeanMapper\Repository::class) && !$rc->isAbstract()) {
                 $repositories[] = $rc->getName();
             }
         }

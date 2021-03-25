@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 /**
@@ -19,19 +21,12 @@ namespace LeanMapper;
 class DefaultEntityFactory implements IEntityFactory
 {
 
-    /**
-     * {@inheritdoc}
-     */
-    public function createEntity($entityClass, $arg = null)
+    public function createEntity(string $entityClass, $arg = null): Entity
     {
         return new $entityClass($arg);
     }
 
 
-
-    /**
-     * {@inheritdoc}
-     */
     public function createCollection(array $entities)
     {
         return $entities;

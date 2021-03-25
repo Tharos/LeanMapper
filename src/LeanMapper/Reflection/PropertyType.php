@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
 /**
@@ -26,12 +28,7 @@ class PropertyType
     private $isBasicType;
 
 
-
-    /**
-     * @param string $type
-     * @param Aliases $aliases
-     */
-    public function __construct($type, Aliases $aliases)
+    public function __construct(string $type, Aliases $aliases)
     {
         if (preg_match('#^(boolean|bool|integer|int|float|string|array)$#', $type)) {
             if ($type === 'bool') {
@@ -53,25 +50,19 @@ class PropertyType
     }
 
 
-
     /**
      * Gets type
-     *
-     * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
 
-
     /**
      * Tells whether current type is basic type (boolean|integer|float|string|array)
-     *
-     * @return bool
      */
-    public function isBasicType()
+    public function isBasicType(): bool
     {
         return $this->isBasicType;
     }

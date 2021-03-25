@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Repository;
 use Tester\Assert;
 
@@ -82,7 +84,7 @@ $authors = $repository->findAuthors();
 $names = [];
 
 foreach ($authors as $author) {
-    Assert::type('Author', $author);
+    Assert::type(Author::class, $author);
     $names[] = $author->name;
 }
 
@@ -100,7 +102,7 @@ $books = $repository->findBooks();
 $names = [];
 
 foreach ($books as $book) {
-    Assert::type('Book', $book);
+    Assert::type(Book::class, $book);
     $names[] = $book->name;
 }
 
@@ -115,13 +117,13 @@ Assert::same([
 //////////
 
 $author = $repository->findAuthor(3);
-Assert::type('Author', $author);
+Assert::type(Author::class, $author);
 Assert::same(3, $author->id);
 Assert::same('Martin Fowler', $author->name);
 
 //////////
 
 $book = $repository->findBook(2);
-Assert::type('Book', $book);
+Assert::type(Book::class, $book);
 Assert::same(2, $book->id);
 Assert::same('The Art of Computer Programming', $book->name);

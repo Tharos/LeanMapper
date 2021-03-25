@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
 /**
@@ -19,33 +21,29 @@ namespace LeanMapper\Reflection;
 class Aliases
 {
 
-    /** @var array */
+    /** @var array<string, class-string> */
     private $aliases;
 
     /** @var string */
     private $namespace;
 
 
-
     /**
-     * @param array $aliases
-     * @param string $namespace
+     * @param array<string, class-string> $aliases
      */
-    public function __construct(array $aliases, $namespace = '')
+    public function __construct(array $aliases, string $namespace = '')
     {
         $this->aliases = $aliases;
         $this->namespace = $namespace;
     }
 
 
-
     /**
      * Determines fully qualified class name
      *
-     * @param string $identifier
      * @return string
      */
-    public function translate($identifier)
+    public function translate(string $identifier): string
     {
         $pieces = explode('\\', $identifier);
         if (isset($this->aliases[$pieces[0]])) {

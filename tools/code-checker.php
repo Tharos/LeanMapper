@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 $autoload = __DIR__ . '/../temp/code-checker/vendor/autoload.php';
 
 if (@!include $autoload) {
     echo "Install nette/code-checker using Composer into directory ../temp/code-checker, use\n";
-    echo "composer create-project nette/code-checker temp/code-checker ^3\n";
+    echo "composer create-project nette/code-checker temp/code-checker ^3.2\n";
     exit(1);
 }
 
@@ -35,6 +37,7 @@ $checker->addTask([$tasks, 'phpSyntaxChecker'], '*.php,*.phpt');
 $checker->addTask([$tasks, 'invalidPhpDocChecker'], '*.php,*.phpt');
 $checker->addTask([$tasks, 'shortArraySyntaxFixer'], '*.php,*.phpt');
 
+$checker->addTask([$tasks, 'strictTypesDeclarationChecker'], '*.php,*.phpt');
 $checker->addTask([$tasks, 'newlineNormalizer'], '!*.sh');
 
 $checker->addTask([$tasks, 'invalidDoubleQuotedStringChecker'], '*.php,*.phpt');
@@ -46,7 +49,18 @@ $checker->addTask([$tasks, 'trailingWhiteSpaceFixer']);
 $checker->addTask([$tasks, 'tabIndentationChecker'], '*.json');
 $checker->addTask([$tasks, 'yamlIndentationChecker'], '*.php,*.phpt');
 $checker->addTask([$tasks, 'unexpectedTabsChecker'], '*.yml');
+$checker->addTask(function (string $contents, Nette\CodeChecker\Result $result) {
+    foreach (@token_get_all($contents) as $token) { // @ can trigger error
+        if (is_array($token) && $token[0] === T_STRING) {
+            $keyword = strtolower($token[1]);
 
-$ok = $checker->run(__DIR__ . '/../');
+            if (($keyword === 'null' || $keyword === 'true' || $keyword === 'false') && $token[1] !== $keyword) {
+                $result->error("Invalid $keyword keyword", $token[2]);
+            }
+        }
+    }
+}, '*.php,*.phpt');
+
+$ok = $checker->run([__DIR__ . '/../']);
 
 exit($ok ? 0 : 1);

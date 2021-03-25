@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use Traversable;
@@ -24,12 +26,9 @@ interface IEntityFactory
     /**
      * Creates entity instance from given entity class name and argument
      *
-     * @param string $entityClass
-     * @param Row|Traversable|array|null $arg
-     * @return Entity
+     * @param Row|iterable<string, mixed>|null $arg
      */
-    public function createEntity($entityClass, $arg = null);
-
+    function createEntity(string $entityClass, $arg = null): Entity;
 
 
     /**
@@ -38,6 +37,6 @@ interface IEntityFactory
      * @param Entity[] $entities
      * @return mixed
      */
-    public function createCollection(array $entities);
+    function createCollection(array $entities);
 
 }

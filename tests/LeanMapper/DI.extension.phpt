@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Nette\Configurator;
 use Nette\Utils\Random;
 
@@ -14,7 +16,7 @@ $configurator->addConfig(__DIR__ . '/DI.extension.1.neon');
 $container = $configurator->createContainer();
 \Tester\Assert::true($container instanceof \Nette\DI\Container);
 
-$mapper = $container->getByType('LeanMapper\DefaultMapper');
+$mapper = $container->getByType(LeanMapper\DefaultMapper::class);
 \Tester\Assert::true($mapper instanceof LeanMapper\DefaultMapper);
 $mapper = $container->getService('LeanMapper.mapper');
 \Tester\Assert::true($mapper instanceof LeanMapper\DefaultMapper);
@@ -36,7 +38,7 @@ $configurator->addConfig(__DIR__ . '/DI.extension.2.neon');
 /** @var \Nette\DI\Container $container */
 $container = $configurator->createContainer();
 
-$mapper = $container->getByType('LeanMapper\DefaultMapper');
+$mapper = $container->getByType(LeanMapper\DefaultMapper::class);
 \Tester\Assert::true($mapper instanceof MyMapper);
 $mapper = $container->getByType('MyMapper');
 \Tester\Assert::true($mapper instanceof MyMapper);

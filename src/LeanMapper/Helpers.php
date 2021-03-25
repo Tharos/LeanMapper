@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use Dibi\Row as DibiRow;
@@ -24,20 +26,72 @@ class Helpers
 
     /**
      * @param  mixed $value
-     * @return string
      */
-    public static function getType($value)
+    public static function isType($value, string $expectedType): bool
+    {
+        if ($value === null) {
+            throw new Exception\InvalidValueException('Value null is not supported.');
+        }
+
+        if ($expectedType === 'bool' || $expectedType === 'boolean') {
+            return is_bool($value);
+
+        } elseif ($expectedType === 'int' || $expectedType === 'integer') {
+            return is_int($value);
+
+        } elseif ($expectedType === 'float') {
+            return is_float($value);
+
+        } elseif ($expectedType === 'string') {
+            return is_string($value);
+
+        } elseif ($expectedType === 'array') {
+            return is_array($value);
+        }
+
+        return is_object($value) && ($value instanceof $expectedType);
+    }
+
+
+    /**
+     * @param  mixed $value
+     */
+    public static function getType($value): string
     {
         return is_object($value) ? ('instance of ' . get_class($value)) : gettype($value);
     }
 
 
     /**
-     * @param  string $table
-     * @param  array|DibiRow $row
-     * @return array
+     * Trims namespace part from fully qualified class name
      */
-    public static function convertDbRow($table, $row, IMapper $mapper)
+    public static function trimNamespace(string $class): string
+    {
+        $class = explode('\\', $class);
+        return end($class);
+    }
+
+
+    /**
+     * @return array<string>
+     */
+    public static function split(string $pattern, string $subject): array
+    {
+        $res = preg_split($pattern, $subject);
+
+        if (!is_array($res)) {
+            throw new Exception\InvalidStateException('Function preg_split() failed.');
+        }
+
+        return $res;
+    }
+
+
+    /**
+     * @param  array<string, mixed>|DibiRow<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    public static function convertDbRow(string $table, $row, IMapper $mapper): array
     {
         if ($row instanceof DibiRow) {
             $row = $row->toArray();
@@ -46,19 +100,15 @@ class Helpers
             throw new Exception\InvalidArgumentException('DB row must be ' . DibiRow::class . '|array, ' . self::getType($row) . ' given.');
         }
 
-        if ($mapper instanceof IRowMapper) {
-            return $mapper->convertToRowData($table, $row);
-        }
-
-        return $row;
+        return $mapper->convertToRowData($table, $row);
     }
 
 
     /**
-     * @param  array<array>|DibiRow[] $rows
-     * @return array<array>
+     * @param  array<array<string, mixed>|DibiRow<string, mixed>> $rows
+     * @return array<array<string, mixed>>
      */
-    public static function convertDbRows($table, array $rows, IMapper $mapper)
+    public static function convertDbRows(string $table, array $rows, IMapper $mapper): array
     {
         $result = [];
 
@@ -70,13 +120,13 @@ class Helpers
     }
 
 
-    public static function convertRowData($table, array $rowData, IMapper $mapper)
+    /**
+     * @param  array<string, mixed> $rowData
+     * @return array<string, mixed>
+     */
+    public static function convertRowData(string $table, array $rowData, IMapper $mapper): array
     {
-        if ($mapper instanceof IRowMapper) {
-            return $mapper->convertFromRowData($table, $rowData);
-        }
-
-        return $rowData;
+        return $mapper->convertFromRowData($table, $rowData);
     }
 
 }

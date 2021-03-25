@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Reflection\AnnotationsParser;
 use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\Property;
@@ -17,7 +19,7 @@ class CustomReflectionProvider extends LeanMapper\DefaultEntityReflectionProvide
     public static $customFilters;
 
 
-    public function getProperties(EntityReflection $entityClass, LeanMapper\IMapper $mapper = null)
+    public function getProperties(EntityReflection $entityClass, ?LeanMapper\IMapper $mapper = null): array
     {
         $properties = [];
         $annotationTypes = ['property', 'property-read'];
@@ -79,7 +81,7 @@ class CustomReflectionProvider extends LeanMapper\DefaultEntityReflectionProvide
  */
 class Book extends LeanMapper\Entity
 {
-    public static function getReflectionProvider()
+    public static function getReflectionProvider(): LeanMapper\IEntityReflectionProvider
     {
         return new CustomReflectionProvider;
     }
@@ -87,7 +89,7 @@ class Book extends LeanMapper\Entity
 
 //////////
 
-$propertyFilters = new PropertyFilters(['myfilter'], []);
+$propertyFilters = new PropertyFilters([['myfilter']], []);
 CustomReflectionProvider::$customFilters = $propertyFilters;
 
 $reflection = Book::getReflection($mapper);

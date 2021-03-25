@@ -9,8 +9,11 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
+use LeanMapper;
 use LeanMapper\Exception\InvalidArgumentException;
 use LeanMapper\Exception\InvalidMethodCallException;
 use LeanMapper\Relationship;
@@ -65,48 +68,35 @@ class Property
     /** @var PropertyValuesEnum|null */
     private $propertyValuesEnum;
 
-    /** @var array */
+    /** @var array<string, mixed> */
     private $customFlags;
 
 
-
     /**
-     * @param string $name
-     * @param EntityReflection $entityReflection
-     * @param string|null $column
-     * @param PropertyType $type
-     * @param bool $isWritable
-     * @param bool $isNullable
-     * @param bool $containsCollection
-     * @param bool $hasDefaultValue
      * @param mixed|null $defaultValue
      * @param Relationship\HasOne|Relationship\HasMany|Relationship\BelongsToOne|Relationship\BelongsToMany|null $relationship
-     * @param PropertyMethods|null $propertyMethods
-     * @param PropertyFilters|null $propertyFilters
-     * @param PropertyPasses|null $propertyPasses
-     * @param PropertyValuesEnum|null $propertyValuesEnum
-     * @param array $customFlags
+     * @param array<string, mixed> $customFlags
      * @throws InvalidArgumentException
      */
     public function __construct(
-        $name,
+        string $name,
         EntityReflection $entityReflection,
-        $column,
+        ?string $column,
         PropertyType $type,
-        $isWritable,
-        $isNullable,
-        $containsCollection,
-        $hasDefaultValue,
+        bool $isWritable,
+        bool $isNullable,
+        bool $containsCollection,
+        bool $hasDefaultValue,
         $defaultValue = null,
         $relationship = null,
-        PropertyMethods $propertyMethods = null,
-        PropertyFilters $propertyFilters = null,
-        PropertyPasses $propertyPasses = null,
-        PropertyValuesEnum $propertyValuesEnum = null,
+        ?PropertyMethods $propertyMethods = null,
+        ?PropertyFilters $propertyFilters = null,
+        ?PropertyPasses $propertyPasses = null,
+        ?PropertyValuesEnum $propertyValuesEnum = null,
         array $customFlags = []
     ) {
         if ($relationship !== null) {
-            if (!is_subclass_of($type->getType(), 'LeanMapper\Entity')) {
+            if (!is_subclass_of($type->getType(), LeanMapper\Entity::class)) {
                 throw new InvalidArgumentException(
                     "Property '$name' in entity {$entityReflection->getName()} cannot contain relationship since it doesn't contain entity (or collection of entities)."
                 );
@@ -156,53 +146,40 @@ class Property
     }
 
 
-
     /**
      * Gets property name
-     *
-     * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
 
-
     /**
      * Gets name of column holding low-level value
-     *
-     * @return string|null
      */
-    public function getColumn()
+    public function getColumn(): ?string
     {
         return $this->column;
     }
 
 
-
     /**
      * Tells whether property is assumed to contain collection
-     *
-     * @return bool
      */
-    public function containsCollection()
+    public function containsCollection(): bool
     {
         return $this->containsCollection;
     }
 
 
-
     /**
      * Tells whether property has default value (defined in annotation)
-     *
-     * @return bool
      */
-    public function hasDefaultValue()
+    public function hasDefaultValue(): bool
     {
         return $this->hasDefaultValue;
     }
-
 
 
     /**
@@ -216,65 +193,49 @@ class Property
     }
 
 
-
     /**
      * Gets property type
-     *
-     * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type->getType();
     }
 
 
-
     /**
      * Tells whether property type is basic type (boolean|integer|float|string|array)
-     *
-     * @return bool
      */
-    public function isBasicType()
+    public function isBasicType(): bool
     {
         return $this->type->isBasicType();
     }
 
 
-
     /**
      * Tells whether property is writable
-     *
-     * @return bool
      */
-    public function isWritable()
+    public function isWritable(): bool
     {
         return $this->isWritable;
     }
 
 
-
     /**
      * Tells whether property can be null
-     *
-     * @return bool
      */
-    public function isNullable()
+    public function isNullable(): bool
     {
         return $this->isNullable;
     }
 
 
-
     /**
      * Tells whether property represents relationship
-     *
-     * @return bool
      */
-    public function hasRelationship()
+    public function hasRelationship(): bool
     {
         return $this->relationship !== null;
     }
-
 
 
     /**
@@ -288,142 +249,113 @@ class Property
     }
 
 
-
     /**
      * Gets getter method
-     *
-     * @return string|null
      */
-    public function getGetter()
+    public function getGetter(): ?string
     {
         return $this->propertyMethods !== null ? $this->propertyMethods->getGetter() : null;
     }
 
 
-
     /**
      * Gets setter method
-     *
-     * @return string|null
      */
-    public function getSetter()
+    public function getSetter(): ?string
     {
         return $this->propertyMethods !== null ? $this->propertyMethods->getSetter() : null;
     }
 
 
-
     /**
      * Gets property filters
      *
-     * @param int $index
-     * @return array|null
+     * @return array<string>|null
      */
-    public function getFilters($index = 0)
+    public function getFilters(int $index = 0): ?array
     {
         return $this->propertyFilters !== null ? $this->propertyFilters->getFilters($index) : null;
     }
 
 
-
     /**
      * Gets filters arguments hard-coded in annotation
      *
-     * @param int $index
-     * @return array|null
+     * @return array<string, array<mixed>>|null
      */
-    public function getFiltersTargetedArgs($index = 0)
+    public function getFiltersTargetedArgs(int $index = 0): ?array
     {
         return $this->propertyFilters !== null ? $this->propertyFilters->getFiltersTargetedArgs($index) : null;
     }
 
 
-
     /**
      * Gets getter pass
-     *
-     * @return string|null
      */
-    public function getGetterPass()
+    public function getGetterPass(): ?string
     {
         return $this->propertyPasses !== null ? $this->propertyPasses->getGetterPass() : null;
     }
 
 
-
     /**
      * Gets setter pass
-     *
-     * @return string|null
      */
-    public function getSetterPass()
+    public function getSetterPass(): ?string
     {
         return $this->propertyPasses !== null ? $this->propertyPasses->getSetterPass() : null;
     }
 
 
-
     /**
      * Tells whether property contains enumeration
-     *
-     * @return bool
      */
-    public function containsEnumeration()
+    public function containsEnumeration(): bool
     {
         return $this->propertyValuesEnum !== null;
     }
-
 
 
     /**
      * Tells wheter given value is from enumeration
      *
      * @param mixed $value
-     * @return bool
      * @throws InvalidMethodCallException
      */
-    public function isValueFromEnum($value)
+    public function isValueFromEnum($value): bool
     {
         $this->checkContainsEnumeration();
         return $this->propertyValuesEnum->isValueFromEnum($value);
     }
 
 
-
     /**
      * Gets possible enumeration values
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getEnumValues()
+    public function getEnumValues(): array
     {
         $this->checkContainsEnumeration();
         return $this->propertyValuesEnum->getValues();
     }
 
 
-
     /**
      * Tells whether property has custom flag
-     *
-     * @param string $name
-     * @return bool
      */
-    public function hasCustomFlag($name)
+    public function hasCustomFlag(string $name): bool
     {
         return array_key_exists($name, $this->customFlags);
     }
 
 
-
     /**
      * Gets value of requested custom flag
      *
-     * @param string $name
-     * @return string
      * @throws InvalidArgumentException
      */
-    public function getCustomFlagValue($name)
+    public function getCustomFlagValue(string $name): string
     {
         if (!$this->hasCustomFlag($name)) {
             throw new InvalidArgumentException(
@@ -438,7 +370,7 @@ class Property
     /**
      * @throws InvalidMethodCallException
      */
-    private function checkContainsEnumeration()
+    private function checkContainsEnumeration(): void
     {
         if (!$this->containsEnumeration()) {
             throw new InvalidMethodCallException(

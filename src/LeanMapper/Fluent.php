@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use Closure;
@@ -18,24 +20,40 @@ use LeanMapper\Exception\InvalidArgumentException;
  * \Dibi\Fluent with filter support
  *
  * @author Vojtěch Kohout
+ * @method Connection getConnection()
+ * @method Fluent select(...$field)
+ * @method Fluent distinct()
+ * @method Fluent from($table, ...$args = null)
+ * @method Fluent where(...$cond)
+ * @method Fluent groupBy(...$field)
+ * @method Fluent having(...$cond)
+ * @method Fluent orderBy(...$field)
+ * @method Fluent limit(int $limit)
+ * @method Fluent offset(int $offset)
+ * @method Fluent join(...$table)
+ * @method Fluent leftJoin(...$table)
+ * @method Fluent innerJoin(...$table)
+ * @method Fluent rightJoin(...$table)
+ * @method Fluent outerJoin(...$table)
+ * @method Fluent as(...$field)
+ * @method Fluent on(...$cond)
+ * @method Fluent and(...$cond)
+ * @method Fluent or(...$cond)
+ * @method Fluent using(...$cond)
+ * @method Fluent asc()
+ * @method Fluent desc()
  */
 class Fluent extends \Dibi\Fluent
 {
 
-    /** @var array */
-    public static $masks = [ // fixes missing UNION in dibi
-        'SELECT' => [
-            'SELECT', 'DISTINCT', 'FROM', 'WHERE', 'GROUP BY',
-            'HAVING', 'ORDER BY', 'LIMIT', 'OFFSET', 'UNION',
-        ],
-        'UPDATE' => ['UPDATE', 'SET', 'WHERE', 'ORDER BY', 'LIMIT'],
-        'INSERT' => ['INSERT', 'INTO', 'VALUES', 'SELECT'],
-        'DELETE' => ['DELETE', 'FROM', 'USING', 'WHERE', 'ORDER BY', 'LIMIT'],
-    ];
-
-    /** @var array|null */
+    /** @var array<int|string>|null */
     private $relatedKeys;
 
+
+    public function __construct(Connection $connection)
+    {
+        parent::__construct($connection);
+    }
 
 
     /**
@@ -56,58 +74,42 @@ class Fluent extends \Dibi\Fluent
     }
 
 
-
     /**
-     * @param array|null $args
-     * @return self
+     * @param array<mixed> $args
      */
-    public function createSelect($args = null)
+    public function createSelect(?array $args = null): self
     {
         return call_user_func_array([$this->getConnection(), 'select'], func_get_args());
     }
 
 
-
     /**
      * Exports current state
      *
-     * @param string|null $clause
-     * @param array|null $args
-     * @return array
+     * @param array<mixed> $args
+     * @return array<mixed>
      */
-    public function _export($clause = null, $args = null)
+    public function _export(?string $clause = null, array $args = []): array
     {
-        $args = func_get_args();
-
-        $reflector = new \ReflectionClass(get_class($this));
-        $parent = $reflector->getParentClass();
-        $method = $parent->getMethod('_export');
-        $method->setAccessible('true');
-        return $method->invokeArgs($this, $args);
+        return parent::_export($clause, $args);
     }
 
 
-
     /**
-     * @return array|null
+     * @return array<int|string>|null
      */
-    public function getRelatedKeys()
+    public function getRelatedKeys(): ?array
     {
         return $this->relatedKeys;
     }
 
 
-
     /**
-     * @param array|null $keys
-     * @return self
+     * @param array<int|string>|null $keys
      * @throws InvalidArgumentException
      */
-    public function setRelatedKeys($keys)
+    public function setRelatedKeys(?array $keys): self
     {
-        if (!is_array($keys) and $keys !== null) {
-            throw new InvalidArgumentException('Invalid related keys given. Expected array or null, ' . gettype($keys) . ' given.');
-        }
         $this->relatedKeys = $keys;
         return $this;
     }

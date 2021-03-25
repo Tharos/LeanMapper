@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PDO as DbLayer;
 use Tester\Assert;
 
@@ -41,4 +43,4 @@ Assert::exception(function () use ($author) {
 
     $author->finalState = null;
 
-}, 'LeanMapper\Exception\InvalidValueException', "Property 'finalState' in entity Author cannot be null.");
+}, LeanMapper\Exception\InvalidValueException::class, "Property 'finalState' in entity Author cannot be null.");

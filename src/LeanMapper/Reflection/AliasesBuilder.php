@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
 /**
@@ -17,33 +19,29 @@ namespace LeanMapper\Reflection;
 class AliasesBuilder
 {
 
-    /** @var array */
+    /** @var array<string, class-string> */
     private $aliases = [];
 
-    /** @var string */
+    /** @var class-string|string */
     private $current = '';
 
     /** @var string */
     private $lastPart = '';
 
 
-
     /**
      * Sets current definition to empty string
      */
-    public function resetCurrent()
+    public function resetCurrent(): void
     {
         $this->current = $this->lastPart = '';
     }
 
 
-
     /**
      * Appends name to current definition
-     *
-     * @param string $name
      */
-    public function appendToCurrent($name)
+    public function appendToCurrent(string $name): void
     {
         if ($this->current !== '') {
             $this->current .= '\\';
@@ -52,37 +50,30 @@ class AliasesBuilder
     }
 
 
-
     /**
      * Appends last part to current definition
-     *
-     * @param string $name
      */
-    public function setLast($name)
+    public function setLast(string $name): void
     {
         $this->lastPart = $name;
     }
 
 
-
     /**
      * Finishes building of current definition and begins to build new one
      */
-    public function finishCurrent()
+    public function finishCurrent(): void
     {
+        /** @phpstan-ignore-next-line 'class-string' does not accept 'string' */
         $this->aliases[$this->lastPart] = $this->current;
         $this->resetCurrent();
     }
 
 
-
     /**
      * Creates new Aliases instance
-     *
-     * @param string $namespace
-     * @return Aliases
      */
-    public function getAliases($namespace = '')
+    public function getAliases(string $namespace = ''): Aliases
     {
         return new Aliases($this->aliases, $namespace);
     }

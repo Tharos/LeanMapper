@@ -9,9 +9,12 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
+use LeanMapper\Exception\InvalidStateException;
 use ReflectionClass;
 
 /**
@@ -22,14 +25,17 @@ use ReflectionClass;
 class PropertyValuesEnum
 {
 
-    /** @var array */
+    /** @var array<string, mixed> */
     private $values = [];
 
-    /** @var array */
+    /** @var array<mixed, true> */
     private $index = [];
 
 
-
+    /**
+     * @param array<string, mixed> $values
+     * @param array<mixed, true> $index
+     */
     public function __construct(array $values, array $index)
     {
         $this->values = $values;
@@ -37,38 +43,32 @@ class PropertyValuesEnum
     }
 
 
-
     /**
      * Tells wheter given value is from enumeration
      *
      * @param mixed $value
-     * @return bool
      */
-    public function isValueFromEnum($value)
+    public function isValueFromEnum($value): bool
     {
         return isset($this->index[$value]);
     }
 
 
-
     /**
      * Gets possible enumeration values
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getValues()
+    public function getValues(): array
     {
         return $this->values;
     }
 
 
     /**
-     * @param string $definition
-     * @param EntityReflection $reflection
-     * @return static
      * @throws InvalidAnnotationException
      */
-    public static function createFromDefinition($definition, EntityReflection $reflection)
+    public static function createFromDefinition(string $definition, EntityReflection $reflection): self
     {
         $matches = [];
         preg_match(
@@ -88,7 +88,13 @@ class PropertyValuesEnum
             $constants = $reflection->getParentClass()->getConstants();
         } else {
             $aliases = $reflection->getAliases();
-            $reflectionClass = new ReflectionClass($aliases->translate($class));
+            $className = $aliases->translate($class);
+
+            if (!class_exists($className) && !interface_exists($className)) {
+                throw new InvalidStateException("Class or interface $className not found.");
+            }
+
+            $reflectionClass = new ReflectionClass($className);
             $constants = $reflectionClass->getConstants();
         }
         $values = [];

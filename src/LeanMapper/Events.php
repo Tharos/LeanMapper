@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use LeanMapper\Exception\InvalidArgumentException;
@@ -35,7 +37,7 @@ class Events
 
     const EVENT_AFTER_DELETE = 'afterDelete';
 
-    /** @var array */
+    /** @var array<string, array<callable>> */
     private $events = [
         self::EVENT_BEFORE_PERSIST => [],
         self::EVENT_BEFORE_CREATE => [],
@@ -48,29 +50,23 @@ class Events
     ];
 
 
-
     /**
      * Registers new callback for given event
-     *
-     * @param string $event
-     * @param mixed $callback
      */
-    public function registerCallback($event, $callback)
+    public function registerCallback(string $event, callable $callback): void
     {
         $this->checkEventType($event);
         $this->events[$event][] = $callback;
     }
 
 
-
     /**
      * Invokes callbacks registered for given event
      *
-     * @param string $event
      * @param mixed $arg
      * @throws InvalidArgumentException
      */
-    public function invokeCallbacks($event, $arg)
+    public function invokeCallbacks(string $event, $arg): void
     {
         $this->checkEventType($event);
         foreach ($this->events[$event] as $callback) {
@@ -79,14 +75,12 @@ class Events
     }
 
 
-
     /**
      * Gets reference to array of registered events
      *
-     * @param string $event
-     * @return array
+     * @return array<callable>
      */
-    public function &getCallbacksReference($event)
+    public function &getCallbacksReference(string $event): array
     {
         $this->checkEventType($event);
         return $this->events[$event];
@@ -96,10 +90,9 @@ class Events
     //////////////////////
 
     /**
-     * @param string $event
      * @throws InvalidArgumentException
      */
-    private function checkEventType($event)
+    private function checkEventType(string $event): void
     {
         if (!isset($this->events[$event])) {
             throw new InvalidArgumentException("Unknown event type given: '$event'.");

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Entity;
 use LeanMapper\Result;
 use LeanMapper\Row;
@@ -22,7 +24,7 @@ class Book extends Entity
 
 $book = new Book;
 
-Assert::type('Book', $book);
+Assert::type(Book::class, $book);
 
 //////////
 
@@ -34,7 +36,7 @@ $data = [
 
 $book = new Book($data);
 
-Assert::type('Book', $book);
+Assert::type(Book::class, $book);
 Assert::equal($data, $book->getData());
 
 //////////
@@ -43,7 +45,7 @@ $dibiRow = new \Dibi\Row($data);
 $row = new Row(Result::createInstance($dibiRow, 'book', $connection, $mapper), 1);
 $book = new Book($row);
 
-Assert::type('Book', $book);
+Assert::type(Book::class, $book);
 Assert::equal($data, $book->getData());
 
 //////////
@@ -52,14 +54,14 @@ $dibiRow = new \Dibi\Row($data);
 $row = Result::createInstance($dibiRow, 'book', $connection, $mapper)->getRow(1);
 $book = new Book($row);
 
-Assert::type('Book', $book);
+Assert::type(Book::class, $book);
 Assert::equal($data, $book->getData());
 
 //////////
 
 $book = new Book(new ArrayObject($data));
 
-Assert::type('Book', $book);
+Assert::type(Book::class, $book);
 Assert::equal($data, $book->getData());
 
 //////////
@@ -68,7 +70,7 @@ Assert::exception(
     function () {
         new Book(false);
     },
-    'LeanMapper\Exception\InvalidArgumentException',
+    LeanMapper\Exception\InvalidArgumentException::class,
     'Argument $arg in Book::__construct must contain either null, array, instance of LeanMapper\Row or instance of Traversable, boolean given.'
 );
 
@@ -76,7 +78,7 @@ Assert::exception(
     function () {
         new Book('hello');
     },
-    'LeanMapper\Exception\InvalidArgumentException',
+    LeanMapper\Exception\InvalidArgumentException::class,
     'Argument $arg in Book::__construct must contain either null, array, instance of LeanMapper\Row or instance of Traversable, string given.'
 );
 
@@ -90,6 +92,6 @@ Assert::exception(
     function () use ($row) {
         new Book($row);
     },
-    'LeanMapper\Exception\InvalidArgumentException',
+    LeanMapper\Exception\InvalidArgumentException::class,
     'It is not allowed to create entity Book from detached instance of LeanMapper\Row.'
 );

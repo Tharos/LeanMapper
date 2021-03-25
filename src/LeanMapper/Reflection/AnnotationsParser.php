@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\UtilityClassException;
@@ -30,15 +32,10 @@ class AnnotationsParser
     }
 
 
-
     /**
      * Parse value of requested simple annotation from given doc comment
-     *
-     * @param string $annotation
-     * @param string $docComment
-     * @return string|null
      */
-    public static function parseSimpleAnnotationValue($annotation, $docComment)
+    public static function parseSimpleAnnotationValue(string $annotation, string $docComment): ?string
     {
         $matches = [];
         preg_match("#@$annotation\\s+([^\\s]+)#", $docComment, $matches);
@@ -46,15 +43,12 @@ class AnnotationsParser
     }
 
 
-
     /**
      * Parse value pieces of requested annotation from given doc comment
      *
-     * @param string $annotation
-     * @param string $docComment
-     * @return array
+     * @return array<string>
      */
-    public static function parseAnnotationValues($annotation, $docComment)
+    public static function parseAnnotationValues(string $annotation, string $docComment): array
     {
         $matches = [];
         preg_match_all("#@$annotation\\s+([^@\\n\\r]*)#", $docComment, $matches);
@@ -62,15 +56,12 @@ class AnnotationsParser
     }
 
 
-
     /**
      * Parse value pieces of requested multiline annotation from given doc comment
      *
-     * @param string $annotation
-     * @param string $docComment
-     * @return array
+     * @return array<string>
      */
-    public static function parseMultiLineAnnotationValues($annotation, $docComment)
+    public static function parseMultiLineAnnotationValues(string $annotation, string $docComment): array
     {
         $matches = [];
         preg_match_all("#@$annotation\\h+([^\n\r@]+(?:\\s*\*\\h{2,}+[^\n\r@]+)*)#", $docComment, $matches);

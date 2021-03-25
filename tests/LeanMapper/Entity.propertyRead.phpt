@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Entity;
 use Tester\Assert;
 
@@ -39,7 +41,7 @@ Assert::exception(
     function () use ($author) {
         $author->name = 'test';
     },
-    'LeanMapper\Exception\MemberAccessException',
+    LeanMapper\Exception\MemberAccessException::class,
     "Cannot write to read-only property 'name' in entity Author."
 );
 
@@ -47,7 +49,7 @@ Assert::exception(
     function () use ($author) {
         $author->setName('test');
     },
-    'LeanMapper\Exception\MemberAccessException',
+    LeanMapper\Exception\MemberAccessException::class,
     "Cannot write to read-only property 'name' in entity Author."
 );
 
@@ -59,7 +61,7 @@ Assert::exception(
     function () use ($author) {
         $author->name = 'test';
     },
-    'LeanMapper\Exception\MemberAccessException',
+    LeanMapper\Exception\MemberAccessException::class,
     "Cannot write to read-only property 'name' in entity Author."
 );
 
@@ -67,6 +69,6 @@ Assert::exception(
     function () use ($author) {
         $author->setName('test');
     },
-    'LeanMapper\Exception\MemberAccessException',
+    LeanMapper\Exception\MemberAccessException::class,
     "Cannot write to read-only property 'name' in entity Author."
 );

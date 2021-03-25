@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Relationship;
 
 /**
@@ -26,39 +28,34 @@ class HasOne
     private $targetTable;
 
 
-
-    /**
-     * @param string|null $columnReferencingTargetTable
-     * @param string|null $targetTable
-     */
-    public function __construct($columnReferencingTargetTable, $targetTable)
+    public function __construct(?string $columnReferencingTargetTable, ?string $targetTable)
     {
         $this->columnReferencingTargetTable = $columnReferencingTargetTable;
         $this->targetTable = $targetTable;
     }
 
 
-
     /**
      * Gets name of column referencing target table
-     *
-     * @return string|null
      */
-    public function getColumnReferencingTargetTable()
+    public function getColumnReferencingTargetTable(): ?string
     {
         return $this->columnReferencingTargetTable;
     }
 
 
-
     /**
      * Gets name of target table
-     *
-     * @return string|null
      */
-    public function getTargetTable()
+    public function getTargetTable(): ?string
     {
         return $this->targetTable;
+    }
+
+
+    public function hasTargetTable(): bool
+    {
+        return $this->targetTable !== null;
     }
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Entity;
 use LeanMapper\Result;
 use Tester\Assert;
@@ -27,7 +29,7 @@ Assert::exception(
     function () use ($author) {
         isset($author->name);
     },
-    'LeanMapper\Exception\Exception',
+    LeanMapper\Exception\Exception::class,
     null,
     Result::ERROR_MISSING_COLUMN
 );

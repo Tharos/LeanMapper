@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Row;
 use Tester\Assert;
 
@@ -10,15 +12,18 @@ require_once __DIR__ . '/../bootstrap.php';
 class Mapper extends LeanMapper\DefaultMapper
 {
 
-    protected $defaultEntityNamespace = null;
+    public function __construct()
+    {
+        $this->defaultEntityNamespace = null;
+    }
 
 
 
-    public function getEntityClass($table, Row $row = null)
+    public function getEntityClass(string $table, Row $row = null): string
     {
         if ($table === 'author' and $row !== null) {
             if ($row->web !== null) {
-                return 'AuthorWithWeb';
+                return AuthorWithWeb::class;
             }
         }
         return parent::getEntityClass($table, $row);
@@ -82,15 +87,15 @@ $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 
 foreach ($authorRepository->findAll() as $author) {
     if ($author->id === 3 or $author->id === 6) {
-        Assert::type('AuthorWithWeb', $author);
+        Assert::type(AuthorWithWeb::class, $author);
         Assert::true(is_string($author->web));
     } else {
-        Assert::type('Author', $author);
+        Assert::type(Author::class, $author);
         Assert::throws(
             function () use ($author) {
                 $author->web;
             },
-            'LeanMapper\Exception\MemberAccessException',
+            LeanMapper\Exception\MemberAccessException::class,
             "Cannot access undefined property 'web' in entity Author."
         );
     }
@@ -99,15 +104,15 @@ foreach ($authorRepository->findAll() as $author) {
 foreach ($bookRepository->findAll() as $book) {
     $author = $book->author;
     if ($author->id === 3 or $author->id === 6) {
-        Assert::type('AuthorWithWeb', $author);
+        Assert::type(AuthorWithWeb::class, $author);
         Assert::true(is_string($author->web));
     } else {
-        Assert::type('Author', $author);
+        Assert::type(Author::class, $author);
         Assert::throws(
             function () use ($author) {
                 $author->web;
             },
-            'LeanMapper\Exception\MemberAccessException',
+            LeanMapper\Exception\MemberAccessException::class,
             "Cannot access undefined property 'web' in entity Author."
         );
     }

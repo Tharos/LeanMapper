@@ -9,9 +9,12 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
+use LeanMapper\Helpers;
 
 /**
  * Set of property access methods (given in useMethods flag)
@@ -28,51 +31,35 @@ class PropertyMethods
     private $setter;
 
 
-
-    /**
-     * @param  string
-     * @param  string|null
-     */
-    public function __construct($getter, $setter)
+    public function __construct(string $getter, ?string $setter)
     {
         $this->getter = $getter;
         $this->setter = $setter;
     }
 
 
-
     /**
      * Gets getter method
-     *
-     * @return string|null
      */
-    public function getGetter()
+    public function getGetter(): string
     {
         return $this->getter;
     }
 
 
-
     /**
      * Gets setter method
-     *
-     * @return string|null
      */
-    public function getSetter()
+    public function getSetter(): ?string
     {
         return $this->setter;
     }
 
 
-
     /**
-     * @param string $propertyName
-     * @param bool $isWritable
-     * @param string $definition
-     * @return static
      * @throws InvalidAnnotationException
      */
-    public static function createFromDefinition($propertyName, $isWritable, $definition)
+    public static function createFromDefinition(string $propertyName, bool $isWritable, string $definition): self
     {
         $ucName = ucfirst($propertyName);
         $getter = 'get' . $ucName;
@@ -81,7 +68,7 @@ class PropertyMethods
             $setter = 'set' . $ucName;
         }
         $counter = 0;
-        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $method) {
+        foreach (Helpers::split('#\s*\|\s*#', trim($definition)) as $method) {
             $counter++;
             if ($counter > 2) {
                 throw new InvalidAnnotationException('Property methods cannot have more than two parts.');

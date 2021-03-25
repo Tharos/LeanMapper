@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Connection;
 use LeanMapper\Entity;
 use LeanMapper\Fluent;

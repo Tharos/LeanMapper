@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
@@ -33,7 +35,7 @@ class Foo extends BaseEntity
 
 class Mapper extends LeanMapper\DefaultMapper
 {
-    public function getColumn($entityClass, $field)
+    public function getColumn(string $entityClass, string $field): string
     {
         return 'test_' . $field;
     }

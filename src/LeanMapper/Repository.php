@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use Dibi\Row as DibiRow;
@@ -50,12 +52,6 @@ abstract class Repository
     private $tableAnnotationChecked = false;
 
 
-
-    /**
-     * @param Connection $connection
-     * @param IMapper $mapper
-     * @param IEntityFactory $entityFactory
-     */
     public function __construct(Connection $connection, IMapper $mapper, IEntityFactory $entityFactory)
     {
         $this->connection = $connection;
@@ -66,24 +62,20 @@ abstract class Repository
     }
 
 
-
     /**
-     * @param string $name
-     * @return array|null
+     * @return array<callable>|null
      */
-    public function &__get($name)
+    public function &__get(string $name)
     {
         if (preg_match('#^on[A-Z]#', $name)) {
             return $this->events->getCallbacksReference(lcfirst(substr($name, 2)));
         }
+
+        throw new Exception\MemberAccessException("Undefined property '$name' in repository " . get_called_class() . '.');
     }
 
 
-
-    /**
-     * @return Fluent
-     */
-    protected function createFluent(/*$filterArg1, $filterArg2, ...*/)
+    protected function createFluent(/*$filterArg1, $filterArg2, ...*/): Fluent
     {
         $table = $this->getTable();
         $statement = $this->connection->select('%n.*', $table)->from($table);
@@ -109,20 +101,17 @@ abstract class Repository
     }
 
 
-
     /**
      * Allows initialize repository's events
      */
-    protected function initEvents()
+    protected function initEvents(): void
     {
     }
-
 
 
     /**
      * Stores values of entity's modified properties into database (inserts new row when entity is in detached state)
      *
-     * @param Entity $entity
      * @return mixed
      */
     public function persist(Entity $entity)
@@ -151,7 +140,6 @@ abstract class Repository
     }
 
 
-
     /**
      * Removes given entity (or entity with given id) from database
      *
@@ -177,11 +165,9 @@ abstract class Repository
     }
 
 
-
     /**
      * Performs database insert (can be customized)
      *
-     * @param Entity $entity
      * @return mixed
      */
     protected function insertIntoDatabase(Entity $entity)
@@ -197,11 +183,9 @@ abstract class Repository
     }
 
 
-
     /**
      * Performs database update (can be customized)
      *
-     * @param Entity $entity
      * @return mixed
      */
     protected function updateInDatabase(Entity $entity)
@@ -216,7 +200,6 @@ abstract class Repository
             $this->getIdValue($entity)
         );
     }
-
 
 
     /**
@@ -240,13 +223,10 @@ abstract class Repository
     }
 
 
-
     /**
      * Persists changes in M:N relationships
-     *
-     * @param Entity $entity
      */
-    protected function persistHasManyChanges(Entity $entity)
+    protected function persistHasManyChanges(Entity $entity): void
     {
         $primaryKey = $this->mapper->getPrimaryKey($this->getTable());
         $idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
@@ -310,16 +290,12 @@ abstract class Repository
     }
 
 
-
     /**
      * Creates new Entity instance from given \Dibi\Row instance
      *
-     * @param \Dibi\Row $dibiRow
-     * @param string|null $entityClass
-     * @param string|null $table
-     * @return mixed
+     * @param DibiRow<string, mixed> $dibiRow
      */
-    protected function createEntity(DibiRow $dibiRow, $entityClass = null, $table = null)
+    protected function createEntity(DibiRow $dibiRow, ?string $entityClass = null, ?string $table = null): Entity
     {
         if ($table === null) {
             $table = $this->getTable();
@@ -337,16 +313,13 @@ abstract class Repository
     }
 
 
-
     /**
      * Creates new set of Entity's instances from given array of \Dibi\Row instances
      *
      * @param \Dibi\Row[] $rows
-     * @param string|null $entityClass
-     * @param string|null $table
-     * @return array
+     * @return Entity[]
      */
-    protected function createEntities(array $rows, $entityClass = null, $table = null)
+    protected function createEntities(array $rows, ?string $entityClass = null, ?string $table = null)
     {
         if ($table === null) {
             $table = $this->getTable();
@@ -376,14 +349,12 @@ abstract class Repository
     }
 
 
-
     /**
      * Gets name of (main) database table related to entity that repository can handle
      *
-     * @return string
      * @throws InvalidStateException
      */
-    protected function getTable()
+    protected function getTable(): string
     {
         if ($this->table === null) {
             if (!$this->tableAnnotationChecked) {
@@ -399,14 +370,12 @@ abstract class Repository
     }
 
 
-
     /**
      * Checks whether give entity is instance of required type
      *
-     * @param Entity $entity
      * @throws InvalidArgumentException
      */
-    protected function checkEntityType(Entity $entity)
+    protected function checkEntityType(Entity $entity): void
     {
         $entityClass = $this->mapper->getEntityClass($this->getTable());
         if (!($entity instanceof $entityClass)) {
@@ -421,22 +390,17 @@ abstract class Repository
     ////////////////////
     ////////////////////
 
-    /**
-     * @return string
-     */
-    private function getDocComment()
+    private function getDocComment(): string
     {
         if ($this->docComment === null) {
             $reflection = new ReflectionClass(get_called_class());
-            $this->docComment = $reflection->getDocComment();
+            $this->docComment = (string) $reflection->getDocComment();
         }
         return $this->docComment;
     }
 
 
-
     /**
-     * @param Entity $entity
      * @return mixed
      */
     private function getIdValue(Entity $entity)

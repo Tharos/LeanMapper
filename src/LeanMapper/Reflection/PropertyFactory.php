@@ -9,10 +9,13 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
 use LeanMapper\Exception\UtilityClassException;
+use LeanMapper\Helpers;
 use LeanMapper\IMapper;
 use LeanMapper\Relationship;
 use LeanMapper\Result;
@@ -32,19 +35,12 @@ class PropertyFactory
     }
 
 
-
     /**
      * Creates new Property instance from given annotation
      *
-     * @param string $annotationType
-     * @param string $annotation
-     * @param EntityReflection $entityReflection
-     * @param IMapper|null $mapper
-     * @param callable|null $factory
-     * @return Property
      * @throws InvalidAnnotationException
      */
-    public static function createFromAnnotation($annotationType, $annotation, EntityReflection $entityReflection, IMapper $mapper = null, callable $factory = null)
+    public static function createFromAnnotation(string $annotationType, string $annotation, EntityReflection $entityReflection, ?IMapper $mapper = null, ?callable $factory = null): Property
     {
         $aliases = $entityReflection->getAliases();
 
@@ -118,7 +114,7 @@ class PropertyFactory
             }
 
             foreach ($flagMatches as $match) {
-                $flag = $match[1];
+                $flag = (string) $match[1];
                 $flagArgument = (isset($match[3]) and $match[3] !== '') ? $match[3] : null;
 
                 switch ($flag) {
@@ -300,24 +296,19 @@ class PropertyFactory
     ////////////////////
 
     /**
-     * @param string $sourceClass
-     * @param string $propertyName
-     * @param PropertyType $propertyType
-     * @param string $relationshipType
-     * @param string|null $definition
-     * @param IMapper|null $mapper
      * @return mixed
      * @throws InvalidAnnotationException
      */
     private static function createRelationship(
-        $sourceClass,
-        $propertyName,
+        string $sourceClass,
+        string $propertyName,
         PropertyType $propertyType,
-        $relationshipType,
-        $definition = null,
-        IMapper $mapper = null
+        string $relationshipType,
+        ?string $definition = null,
+        ?IMapper $mapper = null
     ) {
         $flags = null;
+        $strategy = null;
         if ($relationshipType !== 'hasOne') {
             $strategy = Result::STRATEGY_IN; // default strategy
             if ($definition !== null) {
@@ -389,12 +380,10 @@ class PropertyFactory
     }
 
 
-
     /**
-     * @param  string $definition
-     * @return array  (definition, flags)
+     * @return array{string, array<string, true>}  (definition, flags)
      */
-    private static function parseRelationshipFlags($definition)
+    private static function parseRelationshipFlags(string $definition): array
     {
         $flags = [];
 
@@ -413,49 +402,24 @@ class PropertyFactory
     }
 
 
-
-    /**
-     * @param PropertyType $propertyType
-     * @return string
-     */
-    private static function getSurrogateRelationshipColumn(PropertyType $propertyType)
+    private static function getSurrogateRelationshipColumn(PropertyType $propertyType): string
     {
-        return strtolower(self::trimNamespace($propertyType->getType())) . '{hasOne:' . self::generateRandomString(10) . '}';
+        return strtolower(Helpers::trimNamespace($propertyType->getType())) . '{hasOne:' . self::generateRandomString(10) . '}';
     }
 
 
-
-    /**
-     * @param string $class
-     * @return string
-     */
-    private static function trimNamespace($class)
-    {
-        $class = explode('\\', $class);
-        return end($class);
-    }
-
-
-
-    /**
-     * @param int $length
-     * @return string
-     */
-    private static function generateRandomString($length)
+    private static function generateRandomString(int $length): string
     {
         return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length);
     }
 
 
-
     /**
      * @param mixed $value
-     * @param PropertyType $propertyType
-     * @param bool $isNullable
      * @return mixed
      * @throws InvalidAnnotationException
      */
-    private static function fixDefaultValue($value, PropertyType $propertyType, $isNullable)
+    private static function fixDefaultValue($value, PropertyType $propertyType, bool $isNullable)
     {
         if ($isNullable and strtolower($value) === 'null') {
             return null;

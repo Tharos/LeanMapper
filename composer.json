@@ -11,6 +11,10 @@
 		{
 			"name": "Miroslav Paulík",
 			"role": "Maintainer"
+		},
+		{
+			"name": "Jan Pecha",
+			"role": "Maintainer"
 		}
 	],
 	"autoload": {
@@ -18,15 +22,28 @@
 			"LeanMapper": "src/"
 		}
 	},
+	"autoload-dev": {
+		"classmap": ["tests/phpstan/DibiFluentDynamicReturnTypeExtension.php"]
+	},
 	"require": {
-		"php": ">= 5.4",
-		"dibi/dibi": "~3.0"
+		"php": ">= 7.2",
+		"dibi/dibi": "~4.0"
 	},
 	"require-dev": {
-		"nette/bootstrap": "~2.2",
-		"nette/di": "~2.2",
-		"nette/robot-loader": "~2.2",
-		"tracy/tracy": "~2.2",
-		"nette/tester": "~1.0"
+		"nette/bootstrap": "^2.4 || ^3.0",
+		"nette/caching": "^2.4 || ^3.0",
+		"nette/di": "^2.4 || ^3.0",
+		"nette/robot-loader": "^2.4 || ^3.0",
+		"tracy/tracy": "^2.4 || ^3.0",
+		"nette/tester": "^2.3",
+		"phpstan/phpstan": "^0.12"
+	},
+	"scripts": {
+		"phpstan": "phpstan analyse --configuration tests/phpstan.neon"
+	},
+	"extra": {
+		"branch-alias": {
+			"dev-develop": "4.0-dev"
+		}
 	}
 }

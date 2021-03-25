@@ -30,6 +30,7 @@ class Website
  * @property int $id
  * @property string $name
  * @property Website|NULL $web
+ * @property Book[] $books m:belongsToMany
  */
 class Author extends Entity
 {
@@ -80,9 +81,9 @@ class BookRepository extends \LeanMapper\Repository
     }
 }
 
-class CustomMapper extends TestMapper
+class CustomMapper extends \LeanMapper\DefaultMapper
 {
-    public function convertToRowData($table, array $values)
+    public function convertToRowData(string $table, array $values): array
     {
         if ($table === 'book') {
             $values['website'] = $values['website'] !== null ? new Website($values['website']) : null;
@@ -94,7 +95,7 @@ class CustomMapper extends TestMapper
     }
 
 
-    public function convertFromRowData($table, array $data)
+    public function convertFromRowData(string $table, array $data): array
     {
         if ($table === 'book' && array_key_exists('website', $data)) {
             $data['website'] = $data['website'] instanceof Website ? $data['website']->getUrl() : $data['website'];
@@ -148,4 +149,30 @@ $bookRepository->persist($book);
 //// attached entity with Website
 $book = $bookRepository->find(3);
 Assert::same('http://martinfowler.com/books/refactoring.html', $book->website->getUrl());
+Assert::same('http://martinfowler.com', $book->author->web->getUrl());
+
+////////////////////
+
+$author = $authorRepository->find(3);
+$data = [];
+
+foreach ($author->books as $book) {
+    $data[] = [
+        'id' => $book->id,
+        'website' => $book->website !== null ? $book->website->getUrl() : null,
+    ];
+}
+
+Assert::same($data, [
+    [
+        'id' => 3,
+        'website' => 'http://martinfowler.com/books/refactoring.html',
+    ],
+    [
+        'id' => 5,
+        'website' => 'http://martinfowler.com/books/refactoring.html',
+    ],
+]);
+
+$book = $bookRepository->find(5);
 Assert::same('http://martinfowler.com', $book->author->web->getUrl());

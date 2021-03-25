@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 /**
@@ -20,14 +22,12 @@ class FilteringResultDecorator
     /** @var FilteringResult */
     private $filteringResult;
 
-    /** @var array */
+    /** @var array<mixed> */
     private $baseArgs;
 
 
-
     /**
-     * @param FilteringResult $filteringResult
-     * @param array $baseArgs
+     * @param  array<mixed> $baseArgs
      */
     public function __construct(FilteringResult $filteringResult, array $baseArgs)
     {
@@ -36,23 +36,17 @@ class FilteringResultDecorator
     }
 
 
-
-    /**
-     * @return Result
-     */
-    public function getResult()
+    public function getResult(): Result
     {
         return $this->filteringResult->getResult();
     }
 
 
-
     /**
-     * @param array $relatedKeys
-     * @param array $args
-     * @return bool
+     * @param  array<int|string> $relatedKeys
+     * @param  array<mixed> $args
      */
-    public function isValidFor(array $relatedKeys, array $args)
+    public function isValidFor(array $relatedKeys, array $args): bool
     {
         if (!$this->filteringResult->hasValidationFunction()) {
             return true;

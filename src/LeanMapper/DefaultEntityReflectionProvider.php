@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use LeanMapper\Reflection\AnnotationsParser;
@@ -20,21 +22,20 @@ use ReflectionMethod;
 class DefaultEntityReflectionProvider implements IEntityReflectionProvider
 {
 
-    /** @var array */
+    /** @var array<string> */
     protected $internalGetters = ['getData', 'getRowData', 'getModifiedRowData', 'getCurrentReflection', 'getReflection', 'getHasManyRowDifferences', 'getEntityClass'];
-
 
 
     /**
      * @return Property[]
      */
-    public function getProperties(EntityReflection $entityClass, IMapper $mapper = null)
+    public function getProperties(EntityReflection $entityClass, ?IMapper $mapper = null): array
     {
         $properties = [];
         $annotationTypes = ['property', 'property-read'];
         foreach ($this->getFamilyLine($entityClass) as $member) {
             foreach ($annotationTypes as $annotationType) {
-                foreach (AnnotationsParser::parseMultiLineAnnotationValues($annotationType, $member->getDocComment()) as $definition) {
+                foreach (AnnotationsParser::parseMultiLineAnnotationValues($annotationType, (string) $member->getDocComment()) as $definition) {
                     $properties[] = PropertyFactory::createFromAnnotation($annotationType, $definition, $member, $mapper);
                 }
             }
@@ -43,11 +44,10 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     }
 
 
-
     /**
      * @return ReflectionMethod[]
      */
-    public function getGetters(EntityReflection $entityClass)
+    public function getGetters(EntityReflection $entityClass): array
     {
         $getters = [];
         foreach ($entityClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -60,11 +60,10 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     }
 
 
-
     /**
      * @return ReflectionMethod[]
      */
-    public function getSetters(EntityReflection $entityClass)
+    public function getSetters(EntityReflection $entityClass): array
     {
         $setters = [];
         foreach ($entityClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -77,11 +76,10 @@ class DefaultEntityReflectionProvider implements IEntityReflectionProvider
     }
 
 
-
     /**
      * @return EntityReflection[]
      */
-    protected function getFamilyLine(EntityReflection $member)
+    protected function getFamilyLine(EntityReflection $member): array
     {
         $line = [$member];
         while ($member = $member->getParentClass()) {

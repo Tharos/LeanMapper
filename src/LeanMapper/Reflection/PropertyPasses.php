@@ -9,9 +9,12 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
+use LeanMapper\Helpers;
 
 /**
  * Set of property passes (given in passThru flag)
@@ -28,53 +31,40 @@ class PropertyPasses
     private $setterPass;
 
 
-
-    /**
-     * @param  string|null
-     * @param  string|null
-     */
-    public function __construct($getterPass, $setterPass)
+    public function __construct(?string $getterPass, ?string $setterPass)
     {
         $this->getterPass = $getterPass;
         $this->setterPass = $setterPass;
     }
 
 
-
     /**
      * Gets getter pass
-     *
-     * @return string|null
      */
-    public function getGetterPass()
+    public function getGetterPass(): ?string
     {
         return $this->getterPass;
     }
 
 
-
     /**
      * Gets setter pass
-     *
-     * @return string|null
      */
-    public function getSetterPass()
+    public function getSetterPass(): ?string
     {
         return $this->setterPass;
     }
 
 
     /**
-     * @param string $definition
-     * @return static
      * @throws InvalidAnnotationException
      */
-    public static function createFromDefinition($definition)
+    public static function createFromDefinition(string $definition): self
     {
         $counter = 0;
         $getterPass = null;
         $setterPass = null;
-        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $pass) {
+        foreach (Helpers::split('#\s*\|\s*#', trim($definition)) as $pass) {
             $counter++;
             if ($counter > 2) {
                 throw new InvalidAnnotationException('Property passes cannot have more than two parts.');

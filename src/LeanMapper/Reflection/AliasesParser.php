@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\UtilityClassException;
@@ -30,7 +32,6 @@ class AliasesParser
     const STATE_JUST_FINISHED = 4;
 
 
-
     /**
      * @throws UtilityClassException
      */
@@ -40,7 +41,6 @@ class AliasesParser
     }
 
 
-
     /**
      * Creates Aliases instance relevant to given class source code
      *
@@ -48,7 +48,7 @@ class AliasesParser
      * @param string $namespace
      * @return Aliases
      */
-    public static function parseSource($source, $namespace = '')
+    public static function parseSource(string $source, string $namespace = ''): Aliases
     {
         $matches = [];
         preg_match_all('#use[^;()]+?;#im', $source, $matches);
@@ -68,6 +68,10 @@ class AliasesParser
                 if (is_array($token)) {
                     if ($token[0] === T_STRING) {
                         $builder->appendToCurrent($token[1]);
+                    } elseif (PHP_VERSION_ID >= 80000 && $token[0] === T_NAME_QUALIFIED) {
+                        $builder->appendToCurrent($token[1]);
+                        $builder->setLast(substr($token[1], strrpos($token[1], '\\') + 1));
+                        return AliasesParser::STATE_GATHERING;
                     } elseif ($token[0] === T_AS) {
                         return AliasesParser::STATE_IN_AS_PART;
                     }
@@ -91,7 +95,7 @@ class AliasesParser
                 }
                 return AliasesParser::STATE_IN_AS_PART;
             },
-            self::STATE_JUST_FINISHED => function ($token) use ($builder) {
+            self::STATE_JUST_FINISHED => function ($token) {
                 if ($token === ';') {
                     return AliasesParser::STATE_WAITING_FOR_USE;
                 }

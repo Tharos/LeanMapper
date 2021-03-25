@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Entity;
 use LeanMapper\Reflection\EntityReflection;
 use LeanMapper\Reflection\PropertyFactory;
@@ -23,7 +25,7 @@ Assert::exception(
     function () use ($entityReflection) {
         PropertyFactory::createFromAnnotation('property', 'int $number m:default(10) m:default(20)', $entityReflection);
     },
-    'LeanMapper\Exception\InvalidAnnotationException',
+    LeanMapper\Exception\InvalidAnnotationException::class,
     "Multiple default value settings found in property definition: @property int \$number m:default(10) m:default(20) in entity EmptyEntity."
 );
 
@@ -31,6 +33,6 @@ Assert::exception(
     function () use ($entityReflection) {
         PropertyFactory::createFromAnnotation('property', 'int $number = 20 m:default(10)', $entityReflection);
     },
-    'LeanMapper\Exception\InvalidAnnotationException',
+    LeanMapper\Exception\InvalidAnnotationException::class,
     "Multiple default value settings found in property definition: @property int \$number = 20 m:default(10) in entity EmptyEntity."
 );

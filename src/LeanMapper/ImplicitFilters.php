@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use Closure;
@@ -22,17 +24,16 @@ use LeanMapper\Exception\InvalidArgumentException;
 class ImplicitFilters
 {
 
-    /** @var array */
+    /** @var array<string|Closure> */
     private $filters;
 
-    /** @var array */
+    /** @var array<string, array<mixed>> */
     private $targetedArgs;
 
 
-
     /**
-     * @param array|string|Closure $filters
-     * @param array $targetedArgs
+     * @param array<string|Closure>|string|Closure $filters
+     * @param array<string, array<mixed>> $targetedArgs
      * @throws InvalidArgumentException
      */
     public function __construct($filters, array $targetedArgs = [])
@@ -50,21 +51,19 @@ class ImplicitFilters
     }
 
 
-
     /**
-     * @return array
+     * @return array<string|Closure>
      */
-    public function getFilters()
+    public function getFilters(): array
     {
         return $this->filters;
     }
 
 
-
     /**
-     * @return array
+     * @return array<string, array<mixed>>
      */
-    public function getTargetedArgs()
+    public function getTargetedArgs(): array
     {
         return $this->targetedArgs;
     }

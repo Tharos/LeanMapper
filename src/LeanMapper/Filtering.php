@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use Closure;
@@ -23,10 +25,10 @@ use LeanMapper\Reflection\Property;
 class Filtering
 {
 
-    /** @var array */
+    /** @var array<string|Closure> */
     private $filters;
 
-    /** @var array */
+    /** @var array<mixed> */
     private $args;
 
     /** @var Entity|null */
@@ -35,20 +37,17 @@ class Filtering
     /** @var Property|null */
     private $property;
 
-    /** @var array */
+    /** @var array<string, array<mixed>> */
     private $targetedArgs;
 
 
-
     /**
-     * @param array|string|Closure $filters
-     * @param array|null $args
-     * @param Entity|null $entity
-     * @param Property|null $property
-     * @param array $targetedArgs
+     * @param array<string|Closure>|string|Closure $filters
+     * @param array<mixed>|null $args
+     * @param array<string, array<mixed>> $targetedArgs
      * @throws InvalidArgumentException
      */
-    public function __construct($filters, array $args = null, Entity $entity = null, Property $property = null, array $targetedArgs = [])
+    public function __construct($filters, ?array $args = null, ?Entity $entity = null, ?Property $property = null, array $targetedArgs = [])
     {
         if (!is_array($filters)) {
             if (!is_string($filters) and !($filters instanceof Closure)) {
@@ -66,51 +65,40 @@ class Filtering
     }
 
 
-
     /**
-     * @return array
+     * @return array<string|Closure>
      */
-    public function getFilters()
+    public function getFilters(): array
     {
         return $this->filters;
     }
 
 
-
     /**
-     * @return array
+     * @return array<mixed>
      */
-    public function getArgs()
+    public function getArgs(): array
     {
         return $this->args;
     }
 
 
-
-    /**
-     * @return Entity|null
-     */
-    public function getEntity()
+    public function getEntity(): ?Entity
     {
         return $this->entity;
     }
 
 
-
-    /**
-     * @return Property|null
-     */
-    public function getProperty()
+    public function getProperty(): ?Property
     {
         return $this->property;
     }
 
 
-
     /**
-     * @return array
+     * @return array<string, array<mixed>>
      */
-    public function getTargetedArgs()
+    public function getTargetedArgs(): array
     {
         return $this->targetedArgs;
     }

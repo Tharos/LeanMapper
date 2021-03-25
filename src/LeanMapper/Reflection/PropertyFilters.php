@@ -9,9 +9,12 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper\Reflection;
 
 use LeanMapper\Exception\InvalidAnnotationException;
+use LeanMapper\Helpers;
 
 /**
  * Set of property filters
@@ -21,14 +24,17 @@ use LeanMapper\Exception\InvalidAnnotationException;
 class PropertyFilters
 {
 
-    /** @var array */
+    /** @var array<array<string>> */
     private $filters = [];
 
-    /** @var array */
+    /** @var array<array<string, array<mixed>>> */
     private $targetedArgs = [];
 
 
-
+    /**
+     * @param array<array<string>> $filters
+     * @param array<array<string, array<mixed>>> $targetedArgs
+     */
     public function __construct(array $filters, array $targetedArgs)
     {
         $this->filters = $filters;
@@ -36,14 +42,12 @@ class PropertyFilters
     }
 
 
-
     /**
      * Gets array of entity's filters (array of filter names)
      *
-     * @param int $index
-     * @return array
+     * @return array<string>
      */
-    public function getFilters($index = 0)
+    public function getFilters(int $index = 0): array
     {
         if (!isset($this->filters[$index])) {
             return [];
@@ -52,14 +56,12 @@ class PropertyFilters
     }
 
 
-
     /**
      * Gets filters arguments hard-coded in annotation
      *
-     * @param int $index
-     * @return array
+     * @return array<string, array<mixed>>
      */
-    public function getFiltersTargetedArgs($index = 0)
+    public function getFiltersTargetedArgs(int $index = 0): array
     {
         if (!isset($this->targetedArgs[$index])) {
             return [];
@@ -68,23 +70,20 @@ class PropertyFilters
     }
 
 
-
     /**
-     * @param string $definition
-     * @return static
      * @throws InvalidAnnotationException
      */
-    public static function createFromDefinition($definition)
+    public static function createFromDefinition(string $definition): self
     {
         $propertyFilters = [];
         $propertyTargetedArgs = [];
-        foreach (preg_split('#\s*\|\s*#', trim($definition)) as $set) {
+        foreach (Helpers::split('#\s*\|\s*#', trim($definition)) as $set) {
             if ($set === '') {
                 $propertyFilters[] = $propertyTargetedArgs[] = [];
                 continue;
             }
             $filters = $targetedArgs = [];
-            foreach (preg_split('#\s*,\s*#', $set) as $filter) {
+            foreach (Helpers::split('#\s*,\s*#', $set) as $filter) {
                 $matches = [];
                 preg_match('~^([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(?:#(.*))?$~', $filter, $matches);
                 if (empty($matches)) {

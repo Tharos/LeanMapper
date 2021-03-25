@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use LeanMapper\Exception\InvalidArgumentException;
@@ -17,6 +19,10 @@ use LeanMapper\Exception\InvalidArgumentException;
  * \Dibi\Connection with filter support
  *
  * @author Vojtěch Kohout
+ * @method Fluent select(...$args)
+ * @method Fluent update($table, iterable $args)
+ * @method Fluent insert(string $table, iterable $args)
+ * @method Fluent delete(string $table)
  */
 class Connection extends \Dibi\Connection
 {
@@ -27,20 +33,17 @@ class Connection extends \Dibi\Connection
 
     const WIRE_ENTITY_AND_PROPERTY = 3;
 
-    /** @var array */
+    /** @var array<string, array{callable, string}> */
     private $filters;
-
 
 
     /**
      * Registers new filter
      *
-     * @param string $name
-     * @param mixed $callback
      * @param string|int|null $wiringSchema
      * @throws InvalidArgumentException
      */
-    public function registerFilter($name, $callback, $wiringSchema = null)
+    public function registerFilter(string $name, callable $callback, $wiringSchema = null): void
     {
         if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$#', $name)) {
             throw new InvalidArgumentException(
@@ -57,12 +60,7 @@ class Connection extends \Dibi\Connection
     }
 
 
-
-    /**
-     * @param string $name
-     * @return bool
-     */
-    public function hasFilter($name)
+    public function hasFilter(string $name): bool
     {
         try {
             $this->checkFilterExistence($name);
@@ -73,33 +71,24 @@ class Connection extends \Dibi\Connection
     }
 
 
-
     /**
      * Gets callable filter's callback
-     *
-     * @param string $name
-     * @return callable
      */
-    public function getFilterCallback($name)
+    public function getFilterCallback(string $name): callable
     {
         $this->checkFilterExistence($name);
         return $this->filters[$name][0];
     }
 
 
-
     /**
      * Gets wiring schema
-     *
-     * @param string $filterName
-     * @return string
      */
-    public function getWiringSchema($filterName)
+    public function getWiringSchema(string $filterName): string
     {
         $this->checkFilterExistence($filterName);
         return $this->filters[$filterName][1];
     }
-
 
 
     /**
@@ -107,7 +96,7 @@ class Connection extends \Dibi\Connection
      *
      * @return Fluent
      */
-    public function command()
+    public function command(): \Dibi\Fluent
     {
         return new Fluent($this);
     }
@@ -116,10 +105,9 @@ class Connection extends \Dibi\Connection
     ////////////////////
 
     /**
-     * @param string $name
      * @throws InvalidArgumentException
      */
-    private function checkFilterExistence($name)
+    private function checkFilterExistence(string $name): void
     {
         if (!isset($this->filters[$name])) {
             throw new InvalidArgumentException("Filter with name '$name' was not found.");
@@ -127,13 +115,11 @@ class Connection extends \Dibi\Connection
     }
 
 
-
     /**
      * @param string|int|null $wiringSchema
-     * @return string
      * @throws InvalidArgumentException
      */
-    private function translateWiringSchema($wiringSchema)
+    private function translateWiringSchema($wiringSchema): string
     {
         if ($wiringSchema === null) {
             return '';

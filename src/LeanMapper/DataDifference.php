@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use LeanMapper\Exception\InvalidArgumentException;
@@ -21,17 +23,16 @@ use LeanMapper\Exception\InvalidArgumentException;
 class DataDifference
 {
 
-    /** @var array */
+    /** @var array<array<string, mixed>> */
     private $added;
 
-    /** @var array */
+    /** @var array<array<string, mixed>> */
     private $removed;
 
 
-
     /**
-     * @param array $added
-     * @param array $removed
+     * @param array<array<string, mixed>> $added
+     * @param array<array<string, mixed>> $removed
      */
     public function __construct(array $added, array $removed)
     {
@@ -40,27 +41,23 @@ class DataDifference
     }
 
 
-
     /**
      * Performs quick lookup whether current instance may have any differences
-     *
-     * @return bool
      */
-    public function mayHaveAny()
+    public function mayHaveAny(): bool
     {
         return !empty($this->added) or !empty($this->removed);
     }
-
 
 
     /**
      * Gets differences by given pivot
      *
      * @param mixed $pivot
-     * @return array
+     * @return array<mixed, int>
      * @throws InvalidArgumentException
      */
-    public function getByPivot($pivot)
+    public function getByPivot($pivot): array
     {
         $result = [];
         foreach ($this->added as $entry) {

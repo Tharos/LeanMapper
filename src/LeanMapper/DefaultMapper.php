@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 use LeanMapper\Exception\InvalidStateException;
@@ -18,92 +20,65 @@ use LeanMapper\Exception\InvalidStateException;
  *
  * @author Vojtěch Kohout
  */
-class DefaultMapper implements IRowMapper
+class DefaultMapper implements IMapper
 {
 
-    /** @var string */
-    protected $defaultEntityNamespace = 'Model\Entity';
+    /** @var string|null */
+    protected $defaultEntityNamespace;
 
     /** @var string */
     protected $relationshipTableGlue = '_';
 
 
+    public function __construct(?string $defaultEntityNamespace = 'Model\Entity')
+    {
+        $this->defaultEntityNamespace = $defaultEntityNamespace;
+    }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getPrimaryKey($table)
+
+    public function getPrimaryKey(string $table): string
     {
         return 'id';
     }
 
 
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getTable($entityClass)
+    public function getTable(string $entityClass): string
     {
-        return strtolower($this->trimNamespace($entityClass));
+        return strtolower(Helpers::trimNamespace($entityClass));
     }
 
 
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getEntityClass($table, Row $row = null)
+    public function getEntityClass(string $table, ?Row $row = null): string
     {
         return ($this->defaultEntityNamespace !== null ? $this->defaultEntityNamespace . '\\' : '') . ucfirst($table);
     }
 
 
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getColumn($entityClass, $field)
+    public function getColumn(string $entityClass, string $field): string
     {
         return $field;
     }
 
 
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getEntityField($table, $column)
+    public function getEntityField(string $table, string $column): string
     {
         return $column;
     }
 
 
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getRelationshipTable($sourceTable, $targetTable)
+    public function getRelationshipTable(string $sourceTable, string $targetTable): string
     {
         return $sourceTable . $this->relationshipTableGlue . $targetTable;
     }
 
 
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getRelationshipColumn($sourceTable, $targetTable/*, $relationshipName = null*/)
+    public function getRelationshipColumn(string $sourceTable, string $targetTable, ?string $relationshipName = null): string
     {
-        $relationshipName = (func_num_args() === 3) ? func_get_arg(2) : null;
-        return (isset($relationshipName) ? $relationshipName : $targetTable) . '_' . $this->getPrimaryKey($targetTable);
+        return ($relationshipName !== null ? $relationshipName : $targetTable) . '_' . $this->getPrimaryKey($targetTable);
     }
 
 
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getTableByRepositoryClass($repositoryClass)
+    public function getTableByRepositoryClass(string $repositoryClass): string
     {
         $matches = [];
         if (preg_match('#([a-z0-9]+)repository$#i', $repositoryClass, $matches)) {
@@ -113,39 +88,27 @@ class DefaultMapper implements IRowMapper
     }
 
 
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getImplicitFilters($entityClass, Caller $caller = null)
+    public function getImplicitFilters(string $entityClass, ?Caller $caller = null)
     {
         return [];
     }
 
 
-    public function convertToRowData($table, array $values)
+    public function convertToRowData(string $table, array $values): array
     {
         return $values;
     }
 
 
-    public function convertFromRowData($table, array $data)
+    public function convertFromRowData(string $table, array $data): array
     {
         return $data;
     }
 
 
-
-    /**
-     * Trims namespace part from fully qualified class name
-     *
-     * @param string $class
-     * @return string
-     */
-    protected function trimNamespace($class)
+    protected function trimNamespace(string $class): string
     {
-        $class = explode('\\', $class);
-        return end($class);
+        return Helpers::trimNamespace($class);
     }
 
 }

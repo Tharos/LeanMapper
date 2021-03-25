@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LeanMapper\Entity;
 use Tester\Assert;
 
@@ -46,14 +48,12 @@ Assert::exception(
     function () use ($book) {
         $book->assign(false);
     },
-    'LeanMapper\Exception\InvalidArgumentException',
-    'Argument $values in Book::assign must contain either array or instance of Traversable, boolean given.'
+    TypeError::class
 );
 
 Assert::exception(
     function () use ($book) {
         $book->assign('hello');
     },
-    'LeanMapper\Exception\InvalidArgumentException',
-    'Argument $values in Book::assign must contain either array or instance of Traversable, string given.'
+    TypeError::class
 );

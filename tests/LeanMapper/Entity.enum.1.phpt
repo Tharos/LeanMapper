@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PdoMock as DbLayer;
 use Tester\Assert;
 
@@ -64,7 +66,7 @@ Assert::exception(
     function () use ($extraAuthor) {
         $extraAuthor->stateParent = ExtraAuthor::STATE_ACTIVE;
     },
-    'LeanMapper\Exception\InvalidValueException',
+    LeanMapper\Exception\InvalidValueException::class,
     "Given value is not from possible values enumeration in property 'stateParent' in entity ExtraAuthor."
 );
 
@@ -72,7 +74,7 @@ Assert::exception(
     function () use ($extraAuthor) {
         $extraAuthor->stateStatic = ExtraAuthor::STATE_ACTIVE;
     },
-    'LeanMapper\Exception\InvalidValueException',
+    LeanMapper\Exception\InvalidValueException::class,
     "Given value is not from possible values enumeration in property 'stateStatic' in entity ExtraAuthor."
 );
 

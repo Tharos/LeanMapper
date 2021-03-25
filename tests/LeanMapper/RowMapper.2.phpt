@@ -87,9 +87,9 @@ class BookRepository extends \LeanMapper\Repository
     }
 }
 
-class CustomMapper extends TestMapper
+class CustomMapper extends \LeanMapper\DefaultMapper
 {
-    public function convertToRowData($table, array $values)
+    public function convertToRowData(string $table, array $values): array
     {
         if ($table === 'book') {
             $values['info'] = new BookInfo($values['name'], $values['description']);
@@ -100,7 +100,7 @@ class CustomMapper extends TestMapper
     }
 
 
-    public function convertFromRowData($table, array $data)
+    public function convertFromRowData(string $table, array $data): array
     {
         if ($table === 'book' && array_key_exists('info', $data)) {
             $data['name'] = $data['info']->getName();

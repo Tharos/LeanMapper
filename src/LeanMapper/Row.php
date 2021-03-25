@@ -9,6 +9,8 @@
  * license.md that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace LeanMapper;
 
 /**
@@ -22,17 +24,15 @@ class Row
     /** @var Result */
     private $result;
 
-    /** @var int */
+    /** @var int|string */
     private $id;
 
-    /** @var array */
+    /** @var array<string, self|null> */
     private $referencedRows = [];
 
 
-
     /**
-     * @param Result $result
-     * @param int $id
+     * @param  int|string $id
      */
     public function __construct(Result $result, $id)
     {
@@ -41,27 +41,23 @@ class Row
     }
 
 
-
     /**
      * Gets value of given column
      *
-     * @param string $name
      * @return mixed
      */
-    public function __get($name)
+    public function __get(string $name)
     {
         return $this->result->getDataEntry($this->id, $name);
     }
 
 
-
     /**
      * Sets value of given column
      *
-     * @param string $name
      * @param mixed $value
      */
-    public function __set($name, $value)
+    public function __set(string $name, $value): void
     {
         if (array_key_exists($name, $this->referencedRows)) {
             if ($value === null) {
@@ -74,137 +70,101 @@ class Row
     }
 
 
-
     /**
      * Tells whether Row has given column and is not null
-     *
-     * @param string $name
-     * @return bool
      */
-    public function __isset($name)
+    public function __isset(string $name): bool
     {
         return $this->hasColumn($name) and $this->$name !== null;
     }
 
 
-
     /**
      * Tells whether Row has given column
-     *
-     * @param string $name
-     * @return bool
      */
-    public function hasColumn($name)
+    public function hasColumn(string $name): bool
     {
         return $this->result->hasDataEntry($this->id, $name);
     }
 
 
-
     /**
      * Unsets given column
-     *
-     * @param string $name
      */
-    public function __unset($name)
+    public function __unset(string $name): void
     {
         $this->result->unsetDataEntry($this->id, $name);
     }
 
 
-
-    /**
-     * @param Connection $connection
-     */
-    public function setConnection(Connection $connection)
+    public function setConnection(Connection $connection): void
     {
         $this->result->setConnection($connection);
     }
 
 
-
-    /**
-     * @return bool
-     */
-    public function hasConnection()
+    public function hasConnection(): bool
     {
         return $this->result->hasConnection();
     }
 
 
-
-    /**
-     * @param IMapper $mapper
-     */
-    public function setMapper(IMapper $mapper)
+    public function setMapper(IMapper $mapper): void
     {
         $this->result->setMapper($mapper);
     }
 
 
-
-    /**
-     * @return IMapper|null
-     */
-    public function getMapper()
+    public function getMapper(): ?IMapper
     {
         return $this->result->getMapper();
     }
 
 
-
     /**
      * Returns values of columns
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getData()
+    public function getData(): array
     {
         return $this->result->getData($this->id);
     }
 
 
-
     /**
      * Returns values of columns that were modified
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getModifiedData()
+    public function getModifiedData(): array
     {
         return $this->result->getModifiedData($this->id);
     }
 
 
-
     /**
      * Tells whether Row is in modified state
-     *
-     * @return bool
      */
-    public function isModified()
+    public function isModified(): bool
     {
         return $this->result->isModified($this->id);
     }
 
 
-
     /**
      * Tells whether Row is in detached state
-     *
-     * @return bool
      */
-    public function isDetached()
+    public function isDetached(): bool
     {
         return $this->result->isDetached();
     }
 
 
-
     /**
      * Detaches Row (it means mark it as non-persisted)
      */
-    public function detach()
+    public function detach(): void
     {
         $data = $this->result->getData($this->id);
         $this->result = Result::createDetachedInstance();
@@ -215,40 +175,31 @@ class Row
     }
 
 
-
     /**
      * Marks Row as attached
      *
-     * @param int $id
-     * @param string $table
+     * @param  int|string $id
      */
-    public function attach($id, $table)
+    public function attach($id, string $table): void
     {
         $this->result->attach($id, $table);
         $this->id = $id;
     }
 
 
-
     /**
      * Marks Row as non-modified (isModified returns false right after this method call)
      */
-    public function markAsUpdated()
+    public function markAsUpdated(): void
     {
         $this->result->markAsUpdated($this->id);
     }
 
 
-
     /**
      * Gets referenced Row instance
-     *
-     * @param string $table
-     * @param string|null $viaColumn
-     * @param Filtering|null $filtering
-     * @return Row|null
      */
-    public function referenced($table, $viaColumn = null, Filtering $filtering = null)
+    public function referenced(string $table, ?string $viaColumn = null, ?Filtering $filtering = null): ?Row
     {
         if (array_key_exists($viaColumn, $this->referencedRows)) {
             return $this->referencedRows[$viaColumn];
@@ -257,124 +208,76 @@ class Row
     }
 
 
-
     /**
      * Gets array of Row instances referencing current Row
      *
-     * @param string $table
-     * @param string|null $viaColumn
-     * @param Filtering|null $filtering
-     * @param string|null $strategy
      * @return Row[]
      */
-    public function referencing($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
+    public function referencing(string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = null): array
     {
         return $this->result->getReferencingRows($this->id, $table, $viaColumn, $filtering, $strategy);
     }
 
 
-
-    /**
-     * @param Row $row
-     * @param string $viaColumn
-     */
-    public function setReferencedRow(self $row = null, $viaColumn)
+    public function setReferencedRow(?self $row = null, string $viaColumn): void
     {
         $this->referencedRows[$viaColumn] = $row;
     }
 
 
-
     /**
      * Adds new data entry to referencing Result
      *
-     * @param array $values
-     * @param string $table
-     * @param string|null $viaColumn
-     * @param Filtering|null $filtering
-     * @param string|null $strategy
+     * @param array<string, mixed> $values
      */
-    public function addToReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
+    public function addToReferencing(array $values, string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = null): void
     {
         $this->result->addToReferencing($values, $table, $viaColumn, $filtering, $strategy);
     }
 
 
-
     /**
      * Remove given data entry from referencing Result
      *
-     * @param array $values
-     * @param string $table
-     * @param string|null $viaColumn
-     * @param Filtering|null $filtering
-     * @param string|null $strategy
+     * @param array<string, mixed> $values
      */
-    public function removeFromReferencing(array $values, $table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
+    public function removeFromReferencing(array $values, string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = null): void
     {
         $this->result->removeFromReferencing($values, $table, $viaColumn, $filtering, $strategy);
     }
 
 
-
-    /**
-     * @param string $table
-     * @param string|null $viaColumn
-     * @param Filtering|null $filtering
-     * @param string|null $strategy
-     * @return DataDifference
-     */
-    public function createReferencingDataDifference($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
+    public function createReferencingDataDifference(string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = null): DataDifference
     {
         return $this->result->createReferencingDataDifference($table, $viaColumn, $filtering, $strategy);
     }
 
 
-
     /**
      * Cleans in-memory cache with referenced rows
-     *
-     * @param string|null $table
-     * @param string|null $viaColumn
      */
-    public function cleanReferencedRowsCache($table = null, $viaColumn = null)
+    public function cleanReferencedRowsCache(?string $table = null, ?string $viaColumn = null): void
     {
         $this->result->cleanReferencedResultsCache($table, $viaColumn);
     }
 
 
-
     /**
      * Cleans in-memory cache with referencing rows
-     *
-     * @param string|null $table
-     * @param string|null $viaColumn
      */
-    public function cleanReferencingRowsCache($table = null, $viaColumn = null)
+    public function cleanReferencingRowsCache(?string $table = null, ?string $viaColumn = null): void
     {
         $this->result->cleanReferencingResultsCache($table, $viaColumn);
     }
 
 
-
-    /**
-     * @param string $table
-     * @param string|null $viaColumn
-     * @param Filtering|null $filtering
-     * @param string|null $strategy
-     */
-    public function cleanReferencingAddedAndRemovedMeta($table, $viaColumn = null, Filtering $filtering = null, $strategy = null)
+    public function cleanReferencingAddedAndRemovedMeta(string $table, ?string $viaColumn = null, ?Filtering $filtering = null, ?string $strategy = null): void
     {
         $this->result->cleanReferencingAddedAndRemovedMeta($table, $viaColumn, $filtering, $strategy);
     }
 
 
-
-    /**
-     * @param string $proxyClass
-     * @return ResultProxy
-     */
-    public function getResultProxy($proxyClass = 'LeanMapper\ResultProxy')
+    public function getResultProxy(string $proxyClass = ResultProxy::class): ResultProxy
     {
         return $this->result->getProxy($proxyClass);
     }
