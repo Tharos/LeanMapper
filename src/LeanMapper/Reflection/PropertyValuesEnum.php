@@ -87,8 +87,13 @@ class PropertyValuesEnum
         } elseif ($class === 'parent') {
             $constants = $reflection->getParentClass()->getConstants();
         } else {
-            $aliases = $reflection->getAliases();
-            $className = $aliases->translate($class);
+            if (substr($class, 0, 1) === '\\') {
+                $className = substr($class, 1);
+
+            } else {
+                $aliases = $reflection->getAliases();
+                $className = $aliases->translate($class);
+            }
 
             if (!class_exists($className) && !interface_exists($className)) {
                 throw new InvalidStateException("Class or interface $className not found.");
