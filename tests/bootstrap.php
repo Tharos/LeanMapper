@@ -36,3 +36,9 @@ $connection = new Connection([
 $mapper = new DefaultMapper(null);
 
 $entityFactory = new DefaultEntityFactory;
+
+
+function test(string $title, Closure $function): void
+{
+    $function();
+}

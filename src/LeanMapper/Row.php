@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace LeanMapper;
 
+use LeanMapper\Exception\InvalidStateException;
+
 /**
  * Pointer to specific position within Result instance
  *
@@ -222,6 +224,22 @@ class Row
     public function setReferencedRow(?self $row = null, string $viaColumn): void
     {
         $this->referencedRows[$viaColumn] = $row;
+    }
+
+
+    public function hasReferencedRow(string $viaColumn): bool
+    {
+        return array_key_exists($viaColumn, $this->referencedRows);
+    }
+
+
+    public function getReferencedRow(string $viaColumn): ?Row
+    {
+        if (array_key_exists($viaColumn, $this->referencedRows)) {
+            return $this->referencedRows[$viaColumn];
+        }
+
+        throw new InvalidStateException("Missing referenced row for column '$viaColumn'.");
     }
 
 
