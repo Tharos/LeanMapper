@@ -858,6 +858,12 @@ abstract class Entity
     private function getHasOneValue(Property $property, Relationship\HasOne $relationship, ?Filtering $filtering = null): ?Entity
     {
         if (!$relationship->hasTargetTable()) {
+            $viaColumn = $relationship->getColumnReferencingTargetTable();
+
+            if ($this->row->hasReferencedRow($viaColumn) && $this->row->getReferencedRow($viaColumn) === null && $property->isNullable()) {
+                return null;
+            }
+
             throw new InvalidStateException('Cannot get referenced Entity for detached Entity.');
         }
         $targetTable = $relationship->getTargetTable();

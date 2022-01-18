@@ -21,6 +21,7 @@ class Author extends Entity
  * @property int $id
  * @property string $name
  * @property Author $author m:hasOne
+ * @property Author|null $reviewer m:hasOne
  */
 class Book extends Entity
 {
@@ -58,3 +59,24 @@ $authorRepository->persist($author);
 $book = new Book;
 $book->author = $author;
 Assert::same('Fowler', $book->author->name);
+
+////////////////////
+
+test('Assign NULL to detached', function () {
+    $book = new Book;
+    $book->reviewer = null;
+
+    Assert::null($book->reviewer);
+});
+
+
+test('Assign attached & NULL to detached', function () use ($authorRepository) {
+    $author = $authorRepository->find(1);
+
+    $book = new Book;
+    $book->author = $author;
+    $book->reviewer = null;
+
+    Assert::same('Andrew Hunt', $book->author->name);
+    Assert::null($book->reviewer);
+});
