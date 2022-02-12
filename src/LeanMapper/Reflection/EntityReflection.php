@@ -114,6 +114,7 @@ class EntityReflection extends \ReflectionClass
     /**
      * Gets parent entity's reflection
      */
+    #[\ReturnTypeWillChange]
     public function getParentClass(): ?self
     {
         return ($reflection = parent::getParentClass()) ? new self($reflection->getName(), $this->mapper, $this->entityReflectionProvider) : null;
@@ -125,6 +126,7 @@ class EntityReflection extends \ReflectionClass
      *
      * @return string|false
      */
+    #[\ReturnTypeWillChange]
     public function getDocComment()
     {
         if ($this->docComment === null) {

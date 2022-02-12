@@ -55,6 +55,7 @@ class ResultProxy implements \Iterator
     /**
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->result->current();
@@ -70,6 +71,7 @@ class ResultProxy implements \Iterator
     /**
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return $this->result->key();

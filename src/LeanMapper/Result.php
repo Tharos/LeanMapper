@@ -616,6 +616,7 @@ class Result implements \Iterator
     /**
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         $key = current($this->keys);
@@ -632,6 +633,7 @@ class Result implements \Iterator
     /**
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return current($this->keys);
