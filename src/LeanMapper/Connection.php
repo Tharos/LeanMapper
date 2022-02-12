@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace LeanMapper;
 
+use Dibi\Row as DibiRow;
 use LeanMapper\Exception\InvalidArgumentException;
 
 /**
@@ -94,7 +95,7 @@ class Connection extends \Dibi\Connection
     /**
      * Creates new instance of Fluent
      *
-     * @return Fluent
+     * @return Fluent<int, DibiRow>
      */
     public function command(): \Dibi\Fluent
     {

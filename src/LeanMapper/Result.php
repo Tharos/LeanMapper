@@ -901,6 +901,7 @@ class Result implements \Iterator
 
     /**
      * @param  array<int|string>|null $relatedKeys
+     * @return Fluent<int, DibiRow>
      */
     private function createTableSelection(string $table, ?array $relatedKeys = null): Fluent
     {
@@ -926,6 +927,7 @@ class Result implements \Iterator
 
 
     /**
+     * @param  Fluent<int, DibiRow> $statement
      * @throws InvalidArgumentException
      */
     private function applyFiltering(Fluent $statement, Filtering $filtering): ?FilteringResultDecorator

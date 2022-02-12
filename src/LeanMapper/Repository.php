@@ -75,6 +75,9 @@ abstract class Repository
     }
 
 
+    /**
+     * @return Fluent<int, DibiRow>
+     */
     protected function createFluent(/*$filterArg1, $filterArg2, ...*/): Fluent
     {
         $table = $this->getTable();

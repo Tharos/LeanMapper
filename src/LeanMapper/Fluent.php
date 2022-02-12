@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace LeanMapper;
 
 use Closure;
+use Dibi\Row as DibiRow;
 use LeanMapper\Exception\InvalidArgumentException;
 
 /**
@@ -76,6 +77,7 @@ class Fluent extends \Dibi\Fluent
 
     /**
      * @param array<mixed> $args
+     * @return Fluent<int, DibiRow>
      */
     public function createSelect(?array $args = null): self
     {
@@ -106,6 +108,7 @@ class Fluent extends \Dibi\Fluent
 
     /**
      * @param array<int|string>|null $keys
+     * @return Fluent<int, DibiRow>
      * @throws InvalidArgumentException
      */
     public function setRelatedKeys(?array $keys): self
