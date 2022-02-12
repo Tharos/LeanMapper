@@ -761,7 +761,7 @@ abstract class Entity
      * @param Property|string $property micro-optimalization
      * @throws InvalidMethodCallException
      */
-    protected function assignEntityToProperty(?Entity $entity = null, $property):void
+    protected function assignEntityToProperty(?Entity $entity, $property):void
     {
         if ($entity !== null) {
             $this->useMapper($entity->mapper);

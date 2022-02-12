@@ -221,7 +221,7 @@ class Row
     }
 
 
-    public function setReferencedRow(?self $row = null, string $viaColumn): void
+    public function setReferencedRow(?self $row, string $viaColumn): void
     {
         $this->referencedRows[$viaColumn] = $row;
     }
