@@ -616,6 +616,7 @@ class Result implements \Iterator
     /**
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         $key = current($this->keys);
@@ -632,6 +633,7 @@ class Result implements \Iterator
     /**
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return current($this->keys);
@@ -901,6 +903,7 @@ class Result implements \Iterator
 
     /**
      * @param  array<int|string>|null $relatedKeys
+     * @return Fluent<int, DibiRow>
      */
     private function createTableSelection(string $table, ?array $relatedKeys = null): Fluent
     {
@@ -926,6 +929,7 @@ class Result implements \Iterator
 
 
     /**
+     * @param  Fluent<int, DibiRow> $statement
      * @throws InvalidArgumentException
      */
     private function applyFiltering(Fluent $statement, Filtering $filtering): ?FilteringResultDecorator
