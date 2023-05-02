@@ -36,7 +36,7 @@
 		"nette/robot-loader": "^2.4 || ^3.0",
 		"tracy/tracy": "^2.4 || ^3.0",
 		"nette/tester": "^2.3",
-		"phpstan/phpstan": "^0.12"
+		"phpstan/phpstan": "^1.10"
 	},
 	"scripts": {
 		"phpstan": "phpstan analyse --configuration tests/phpstan.neon"

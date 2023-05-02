@@ -192,7 +192,7 @@ abstract class Entity
     public function __isset(string $name): bool
     {
         try {
-            return $this->$name !== null;
+            return $this->__get($name) !== null;
         } catch (MemberAccessException $e) {
             return false;
         } catch (LeanMapperException $e) {
@@ -505,7 +505,7 @@ abstract class Entity
         if ($property->isBasicType()) {
             $column = $property->getColumn();
             try {
-                $value = $this->row->$column;
+                $value = $this->row->__get($column);
             } catch (LeanMapperException $e) {
                 if (!$property->isNullable()) {
                     throw new InvalidStateException(
@@ -588,7 +588,7 @@ abstract class Entity
         } // property doesn't contain basic type and doesn't contain relationship
         $column = $property->getColumn();
         try {
-            $value = $this->row->$column;
+            $value = $this->row->__get($column);
         } catch (LeanMapperException $e) {
             throw new LeanMapperException(
                 "Cannot get value of property '{$property->getName()}' in entity " . get_called_class(

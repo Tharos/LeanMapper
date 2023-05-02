@@ -582,7 +582,9 @@ class Result implements \Iterator
     public function getProxy(string $proxyClass): ResultProxy
     {
         if ($this->proxy === null) {
-            $this->proxy = new $proxyClass($this);
+            $proxy = new $proxyClass($this);
+            assert($proxy instanceof ResultProxy);
+            $this->proxy = $proxy;
         }
         if (!is_a($this->proxy, $proxyClass)) {
             throw new InvalidArgumentException('Inconsistent proxy class requested.');
