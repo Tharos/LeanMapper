@@ -79,7 +79,7 @@ class PropertyFactory
             );
         }
         $isNullable = ($matches[1] !== '' or $matches[4] !== '');
-        $name = substr($matches[5], 1);
+        $name = (string) substr($matches[5], 1);
 
         $hasDefaultValue = false;
         $defaultValue = null;
