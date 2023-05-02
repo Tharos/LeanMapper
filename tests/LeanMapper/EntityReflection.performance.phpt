@@ -77,8 +77,6 @@ class Exponential extends Hell
 
 $reflectionProvider = new CustomReflectionProvider;
 $reflectionProvider->propertyParsing = 0;
-$reflectionProvider->getterParsing = 0;
-$reflectionProvider->setterParsing = 0;
 BaseEntity::setReflectionProvider($reflectionProvider);
 
 $foo = new Foo();
