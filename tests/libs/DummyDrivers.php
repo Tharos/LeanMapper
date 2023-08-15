@@ -64,7 +64,7 @@ class ResultDummyDriver implements \Dibi\ResultDriver
     }
 
 
-    public function getResultResource()
+    public function getResultResource(): mixed
     {
     }
 

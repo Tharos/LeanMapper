@@ -23,7 +23,9 @@ class DefaultEntityFactory implements IEntityFactory
 
     public function createEntity(string $entityClass, $arg = null): Entity
     {
-        return new $entityClass($arg);
+        $entity = new $entityClass($arg);
+        assert($entity instanceof Entity);
+        return $entity;
     }
 
 

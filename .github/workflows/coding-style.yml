@@ -1,16 +1,24 @@
 name: Coding Style
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - develop
+    tags:
+      - v*
+
+  pull_request:
 
 jobs:
     code-checker:
         name: Code Standard Checker
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
             - uses: shivammathur/setup-php@v2
               with:
-                  php-version: 7.2
+                  php-version: 8.2
                   coverage: none
 
             - run: composer create-project nette/code-checker temp/code-checker ^3.2 --no-progress
