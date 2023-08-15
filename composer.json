@@ -39,7 +39,9 @@
 		"phpstan/phpstan": "^1.10"
 	},
 	"scripts": {
-		"phpstan": "phpstan analyse --configuration tests/phpstan.neon"
+		"coverage": "tester -C -d zend_extension=xdebug --coverage tests/coverage.html --coverage-src src tests",
+		"phpstan": "phpstan analyse --configuration tests/phpstan.neon",
+		"tests": "tester -C -p php8.3 tests"
 	},
 	"extra": {
 		"branch-alias": {
