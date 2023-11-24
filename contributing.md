@@ -42,7 +42,13 @@ You need to install [Nette Tester](https://tester.nette.org/). The easiest way i
 Now you should be able to run tests. On unix-like systems run following command in your terminal:
 
 ```
-vendor/bin/tester -p php -c tests/php-unix.ini
+vendor/bin/tester -C tests
+```
+
+or use Composer script:
+
+```
+composer tests
 ```
 
 **Note:** the tests require these PHP extensions:
