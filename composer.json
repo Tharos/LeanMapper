@@ -40,7 +40,7 @@
 	},
 	"scripts": {
 		"coverage": "tester -C -d zend_extension=xdebug --coverage tests/coverage.html --coverage-src src tests",
-		"phpstan": "phpstan analyse --configuration tests/phpstan.neon",
+		"phpstan": "phpstan analyse --configuration phpstan.neon",
 		"tests": "tester -C tests"
 	},
 	"extra": {
