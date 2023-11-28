@@ -26,7 +26,7 @@
 		"classmap": ["tests/phpstan/DibiFluentDynamicReturnTypeExtension.php"]
 	},
 	"require": {
-		"php": ">= 7.2",
+		"php": "7.2 - 8.3",
 		"dibi/dibi": "^4.0 || ^5.0"
 	},
 	"require-dev": {
@@ -40,8 +40,8 @@
 	},
 	"scripts": {
 		"coverage": "tester -C -d zend_extension=xdebug --coverage tests/coverage.html --coverage-src src tests",
-		"phpstan": "phpstan analyse --configuration tests/phpstan.neon",
-		"tests": "tester -C -p php8.3 tests"
+		"phpstan": "phpstan analyse --configuration phpstan.neon",
+		"tests": "tester -C tests"
 	},
 	"extra": {
 		"branch-alias": {
