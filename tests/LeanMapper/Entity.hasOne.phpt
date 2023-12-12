@@ -45,6 +45,10 @@ class BookRepository extends \LeanMapper\Repository
 
 ////////////////////
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 
 Assert::exception(

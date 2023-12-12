@@ -147,6 +147,7 @@ $connection->onEvent[] = function ($event) use (&$queries) {
 };
 
 $mapper = new Mapper;
+$entityFactory = Tests::createEntityFactory();
 
 $authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);;
 $authorContractRepository = new AuthorContractRepository($connection, $mapper, $entityFactory);;

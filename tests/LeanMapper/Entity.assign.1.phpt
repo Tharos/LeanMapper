@@ -57,7 +57,9 @@ class Book extends BaseEntity
 
 //////////
 
+$connection = Tests::createConnection();
 $mapper = new Mapper;
+$entityFactory = Tests::createEntityFactory();
 
 $author = new Author;
 $author->name = 'John Doe';

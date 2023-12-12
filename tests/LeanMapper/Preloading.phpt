@@ -8,6 +8,10 @@ use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $i = 1;
 $connection->onEvent[] = function ($event) use (&$queries, &$i) {
     $queries[] = $event->sql;

@@ -7,6 +7,9 @@ use Dibi\DateTime;
 
 require_once __DIR__ . '/../bootstrap.php';
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+
 //////////
 
 /**

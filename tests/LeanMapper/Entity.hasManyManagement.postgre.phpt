@@ -13,6 +13,8 @@ $driver = new PostgreDummyDriver;
 $connection = new Connection([
     'driver' => $driver,
 ]);
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
 
 ////////////////////
 

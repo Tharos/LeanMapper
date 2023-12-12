@@ -69,6 +69,10 @@ function fetchBooksId(array $books)
 
 ////////////////////
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $tagRepository = new TagRepository($connection, $mapper, $entityFactory);
 
 $tag = $tagRepository->find(2);

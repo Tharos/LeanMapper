@@ -42,6 +42,10 @@ class CustomRepository extends Repository
 
 }
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $repository = new CustomRepository($connection, $mapper, $entityFactory, $log);
 
 $repository->onBeforePersist[] = function ($author) use ($log) {

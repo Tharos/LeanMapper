@@ -46,5 +46,7 @@ $driver = new PostgreDummyDriver;
 $driver->setResultData('INSERT INTO "foo" ("attrs") VALUES (\'{"foo":"bar"}\')', []);
 $driver->setResultData('SELECT LASTVAL()', [[1]]);
 $connection = new LeanMapper\Connection(['driver' => $driver]);
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
 $repository = new FooRepository($connection, $mapper, $entityFactory);
 $repository->persist($foo);

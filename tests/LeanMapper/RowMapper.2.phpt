@@ -113,7 +113,9 @@ class CustomMapper extends \LeanMapper\DefaultMapper
 
 ////////////////////
 
+$connection = Tests::createConnection();
 $mapper = new CustomMapper(null);
+$entityFactory = Tests::createEntityFactory();
 $authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
 $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 

@@ -68,6 +68,8 @@ class Foo extends BaseEntity
 }
 
 
+$mapper = Tests::createMapper();
+
 $reflectionProvider = new BrokenReflectionProvider;
 BaseEntity::setReflectionProvider($reflectionProvider);
 
