@@ -70,13 +70,7 @@ abstract class Entity
 
     protected static function getReflectionProvider(): IEntityReflectionProvider
     {
-        static $reflectionProvider = null;
-
-        if ($reflectionProvider === null) {
-            $reflectionProvider = new DefaultEntityReflectionProvider;
-        }
-
-        return $reflectionProvider;
+        return DefaultEntityReflectionProvider::getInstance();
     }
 
 
