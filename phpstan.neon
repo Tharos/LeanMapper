@@ -3,6 +3,13 @@ parameters:
 
     paths:
         - src
+        - tests
+
+    fileExtensions:
+        - php
+
+    excludePaths:
+        - tests/tmp
 
     treatPhpDocTypesAsCertain: false
 
