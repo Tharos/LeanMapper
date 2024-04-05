@@ -32,7 +32,7 @@ class Tests
     public static function getTempDirectory(): string
     {
         $tempDir = __DIR__ . '/tmp/' . getmypid();
-        @mkdir($tempDir, 0777);
+        @mkdir($tempDir, 0777, true);
         Tester\Helpers::purge($tempDir);
         return $tempDir;
     }
