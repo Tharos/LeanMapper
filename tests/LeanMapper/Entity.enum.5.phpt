@@ -88,7 +88,7 @@ namespace {
             $project->state = 'reopened';
         },
         LeanMapper\Exception\InvalidValueException::class,
-        "Given value is not from possible values enumeration in property 'state' in entity MyNS2\Project."
+        "Given value is not from possible values enumeration in property 'state' in entity MyNS2\\Project."
     );
 
     //////////
@@ -111,6 +111,6 @@ namespace {
             $project->when = 'onceUponATime';
         },
         LeanMapper\Exception\InvalidValueException::class,
-        "Given value is not from possible values enumeration in property 'when' in entity MyNS2\Project."
+        "Given value is not from possible values enumeration in property 'when' in entity MyNS2\\Project."
     );
 }
