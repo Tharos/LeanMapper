@@ -320,7 +320,7 @@ abstract class Repository
      * Creates new set of Entity's instances from given array of \Dibi\Row instances
      *
      * @param \Dibi\Row[] $rows
-     * @return Entity[]
+     * @return iterable<Entity>
      */
     protected function createEntities(array $rows, ?string $entityClass = null, ?string $table = null)
     {

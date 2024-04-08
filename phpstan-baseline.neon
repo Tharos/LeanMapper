@@ -51,16 +51,6 @@ parameters:
 			path: src/LeanMapper/Entity.php
 
 		-
-			message: "#^Method LeanMapper\\\\Entity\\:\\:getBelongsToManyValue\\(\\) should return array\\<LeanMapper\\\\Entity\\> but returns mixed\\.$#"
-			count: 1
-			path: src/LeanMapper/Entity.php
-
-		-
-			message: "#^Method LeanMapper\\\\Entity\\:\\:getHasManyValue\\(\\) should return array\\<LeanMapper\\\\Entity\\> but returns mixed\\.$#"
-			count: 1
-			path: src/LeanMapper/Entity.php
-
-		-
 			message: "#^Parameter \\#1 \\$entityFactory of method LeanMapper\\\\Entity\\:\\:setEntityFactory\\(\\) expects LeanMapper\\\\IEntityFactory, LeanMapper\\\\IEntityFactory\\|null given\\.$#"
 			count: 1
 			path: src/LeanMapper/Entity.php
@@ -239,11 +229,6 @@ parameters:
 			message: "#^Cannot call method getConstants\\(\\) on LeanMapper\\\\Reflection\\\\EntityReflection\\|null\\.$#"
 			count: 1
 			path: src/LeanMapper/Reflection/PropertyValuesEnum.php
-
-		-
-			message: "#^Method LeanMapper\\\\Repository\\:\\:createEntities\\(\\) should return array\\<LeanMapper\\\\Entity\\> but returns mixed\\.$#"
-			count: 1
-			path: src/LeanMapper/Repository.php
 
 		-
 			message: "#^Parameter \\#1 \\$id of method LeanMapper\\\\Entity\\:\\:attach\\(\\) expects int\\|string, mixed given\\.$#"

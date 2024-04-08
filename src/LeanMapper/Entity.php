@@ -880,7 +880,7 @@ abstract class Entity
 
 
     /**
-     * @return Entity[]
+     * @return iterable<Entity>
      * @throws InvalidValueException
      */
     private function getHasManyValue(
@@ -951,7 +951,7 @@ abstract class Entity
 
 
     /**
-     * @return Entity[]
+     * @return iterable<Entity>
      */
     private function getBelongsToManyValue(Property $property, Relationship\BelongsToMany $relationship, ?Filtering $filtering = null)
     {
