@@ -15,6 +15,10 @@ if (@!include __DIR__ . '/../vendor/autoload.php') {
 Tester\Environment::setup();
 date_default_timezone_set('Europe/Prague');
 
+if (PHP_VERSION_ID >= 80300) { // hotfix for https://github.com/dg/dibi/issues/452
+    error_reporting(~E_DEPRECATED);
+}
+
 
 function test(string $title, Closure $function): void
 {
