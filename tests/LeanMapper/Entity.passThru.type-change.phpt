@@ -10,11 +10,20 @@ require_once __DIR__ . '/../bootstrap.php';
 
 /**
  * @property int $id
- * @property string $name m:passThru(|serialize)
+ * @property string $name
  * @property \DateTime $pubdate m:passThru(convertDate|)
  */
 class Book extends LeanMapper\Entity
 {
+    /**
+     * @param string[] $value
+     */
+    public function setName($value)
+    {
+        $this->set('name', $this->serialize($value));
+    }
+
+
     public function serialize($name)
     {
         return strtolower(implode($name));
