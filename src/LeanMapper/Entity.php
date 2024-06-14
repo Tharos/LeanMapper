@@ -523,7 +523,13 @@ abstract class Entity
                 return $value;
             }
 
-            settype($value, $property->getType());
+            try {
+                Helpers::convertType($value, $property->getType());
+
+            } catch (InvalidValueException $e) {
+                throw new InvalidValueException("Property '$name' in entity " . get_called_class() . " is expected to contain an {$property->getType()}, " . Helpers::getType($value) . " given.", 0, $e);
+            }
+
             if ($property->containsEnumeration() and !$property->isValueFromEnum($value)) {
                 throw new InvalidValueException(
                     "Given value is not from possible values enumeration in property '{$property->getName()}' in entity " . get_called_class() . '.'

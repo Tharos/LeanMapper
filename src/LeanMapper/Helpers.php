@@ -55,6 +55,39 @@ class Helpers
 
     /**
      * @param  mixed $value
+     * @return mixed
+     */
+    public static function convertType($value, string $requiredType)
+    {
+        if ($value === null) {
+            throw new Exception\InvalidValueException('Value null is not supported.');
+        }
+
+        if ($requiredType === 'bool' || $requiredType === 'boolean') {
+            return (bool) $value;
+
+        } elseif (($requiredType === 'int' || $requiredType === 'integer') && is_scalar($value)) {
+            return (int) $value;
+
+        } elseif ($requiredType === 'float' && is_scalar($value)) {
+            return (float) $value;
+
+        } elseif ($requiredType === 'string' && (is_scalar($value) || (is_object($value) && method_exists($value, '__toString')))) {
+            return (string) $value;
+
+        } elseif ($requiredType === 'array') {
+            return (array) $value;
+
+        } elseif (is_object($value) && ($value instanceof $requiredType)) {
+            return $value;
+        }
+
+        throw new Exception\InvalidValueException("Given value cannot be converted to {$requiredType}.");
+    }
+
+
+    /**
+     * @param  mixed $value
      */
     public static function getType($value): string
     {
