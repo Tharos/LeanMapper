@@ -150,6 +150,47 @@ test('string', function () {
 });
 
 
+test('non-empty-string', function () {
+    // bool => string
+    Assert::false(Helpers::isType(true, 'non-empty-string'));
+    Assert::same('1', Helpers::convertType(true, 'non-empty-string'));
+    Assert::exception(function () {
+        Assert::same('', Helpers::convertType(false, 'non-empty-string'));
+    }, InvalidValueException::class, 'Given value cannot be converted to non-empty-string.');
+
+    // int => string
+    Assert::false(Helpers::isType(0, 'non-empty-string'));
+    Assert::same('1', Helpers::convertType(1, 'non-empty-string'));
+    Assert::same('0', Helpers::convertType(0, 'non-empty-string'));
+
+    // float => string
+    Assert::false(Helpers::isType(1.0, 'non-empty-string'));
+    Assert::same('1', Helpers::convertType(1.0, 'non-empty-string'));
+    Assert::same('2.1', Helpers::convertType(2.1, 'non-empty-string'));
+
+    // string => string
+    Assert::true(Helpers::isType('0', 'non-empty-string'));
+    Assert::true(Helpers::isType('Hello', 'non-empty-string'));
+    Assert::false(Helpers::isType('', 'non-empty-string'));
+    Assert::same('Hello', Helpers::convertType('Hello', 'non-empty-string'));
+    Assert::exception(function () {
+        Helpers::convertType('', 'non-empty-string');
+    }, InvalidValueException::class, 'Given value cannot be converted to non-empty-string.');
+
+    // array => string
+    Assert::false(Helpers::isType([], 'non-empty-string'));
+    Assert::exception(function () {
+        Helpers::convertType([], 'non-empty-string');
+    }, InvalidValueException::class, 'Given value cannot be converted to non-empty-string.');
+
+    // object => string
+    Assert::false(Helpers::isType(new \DateTimeImmutable, 'non-empty-string'));
+    Assert::exception(function () {
+        Helpers::convertType(new \DateTimeImmutable, 'non-empty-string');
+    }, InvalidValueException::class, 'Given value cannot be converted to non-empty-string.');
+});
+
+
 test('array', function () {
     // bool => array
     Assert::false(Helpers::isType(true, 'array'));

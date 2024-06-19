@@ -45,6 +45,9 @@ class Helpers
         } elseif ($expectedType === 'string') {
             return is_string($value);
 
+        } elseif ($expectedType === 'non-empty-string') {
+            return is_string($value) && $value !== '';
+
         } elseif ($expectedType === 'array') {
             return is_array($value);
         }
@@ -74,6 +77,13 @@ class Helpers
 
         } elseif ($requiredType === 'string' && (is_scalar($value) || (is_object($value) && method_exists($value, '__toString')))) {
             return (string) $value;
+
+        } elseif ($requiredType === 'non-empty-string' && (is_scalar($value) || (is_object($value) && method_exists($value, '__toString')))) {
+            $value = (string) $value;
+
+            if ($value !== '') {
+                return $value;
+            }
 
         } elseif ($requiredType === 'array') {
             return (array) $value;
