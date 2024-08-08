@@ -524,7 +524,7 @@ abstract class Entity
             }
 
             try {
-                Helpers::convertType($value, $property->getType());
+                $value = Helpers::convertType($value, $property->getType());
 
             } catch (InvalidValueException $e) {
                 throw new InvalidValueException("Property '$name' in entity " . get_called_class() . " is expected to contain an {$property->getType()}, " . Helpers::getType($value) . " given.", 0, $e);
