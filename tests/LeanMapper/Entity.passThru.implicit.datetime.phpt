@@ -43,6 +43,10 @@ class Book extends LeanMapper\Entity
 
 //////////
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $booksResult = LeanMapper\Result::createInstance([
     [
         'id' => '1',

@@ -89,6 +89,8 @@ class Book extends LeanMapper\Entity
 
 //////////
 
+$mapper = Tests::createMapper();
+
 $propertyFilters = new PropertyFilters([['myfilter']], []);
 CustomReflectionProvider::$customFilters = $propertyFilters;
 

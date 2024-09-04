@@ -7,6 +7,8 @@ use Nette\Utils\Random;
 
 require_once __DIR__ . '/../bootstrap.php';
 
+define('TEMP_DIR', Tests::getTempDirectory());
+
 $configurator = new Configurator;
 $configurator->setTempDirectory(TEMP_DIR);
 $configurator->addParameters(['container' => ['class' => 'SystemContainer_' . Random::generate()]]);

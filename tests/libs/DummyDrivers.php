@@ -11,10 +11,16 @@ require_once __DIR__ . '/../bootstrap.php';
 
 class ResultDummyDriver implements \Dibi\ResultDriver
 {
+    /** @var array<mixed> */
     private $data;
+
+    /** @var int */
     private $position;
 
 
+    /**
+     * @param array<mixed> $data
+     */
     public function __construct(array $data)
     {
         $this->data = $data;
@@ -31,9 +37,13 @@ class ResultDummyDriver implements \Dibi\ResultDriver
     public function seek(int $row): bool
     {
         $this->position = $row;
+        return true;
     }
 
 
+    /**
+     * @return array<mixed>
+     */
     public function fetch(bool $assoc): ?array
     {
         $raw = array_slice($this->data, $this->position, 1, true);
@@ -58,6 +68,9 @@ class ResultDummyDriver implements \Dibi\ResultDriver
     }
 
 
+    /**
+     * @return array<array<string, mixed>>
+     */
     public function getResultColumns(): array
     {
         return [];
@@ -66,6 +79,7 @@ class ResultDummyDriver implements \Dibi\ResultDriver
 
     public function getResultResource(): mixed
     {
+        return null;
     }
 
 
@@ -84,7 +98,7 @@ class ResultDummyDriver implements \Dibi\ResultDriver
 
 class PostgreDummyDriver extends \Dibi\Drivers\PostgreDriver
 {
-    /** @var array */
+    /** @var array<mixed> */
     private $resultData = [];
 
 
@@ -93,14 +107,20 @@ class PostgreDummyDriver extends \Dibi\Drivers\PostgreDriver
     }
 
 
-    public function setResultData($sql, array $resultData)
+    /**
+     * @param array<mixed> $resultData
+     */
+    public function setResultData(string $sql, array $resultData): void
     {
         $sql = trim($sql);
         $this->resultData[$sql] = $resultData;
     }
 
 
-    public function connect(array & $config)
+    /**
+     * @param  array<mixed> $config
+     */
+    public function connect(array & $config): void
     {
     }
 

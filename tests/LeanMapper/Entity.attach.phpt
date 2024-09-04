@@ -20,6 +20,10 @@ class Book extends LeanMapper\Entity
 
 //////////
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $book = new Book;
 $book->name = 'My Book';
 $book->makeAlive($entityFactory, $connection, $mapper);

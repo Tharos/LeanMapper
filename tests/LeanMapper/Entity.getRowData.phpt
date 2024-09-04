@@ -33,6 +33,11 @@ class AuthorRepository extends LeanMapper\Repository
 
 }
 
+
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 //////////
 
 $author = new Author;

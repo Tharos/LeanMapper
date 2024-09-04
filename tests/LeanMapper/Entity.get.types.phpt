@@ -10,30 +10,12 @@ require_once __DIR__ . '/../bootstrap.php';
 
 /**
  * @property int $id
- * @property string $name
- * @property \DateTime $pubdate m:passThru(convertDate|)
+ * @property non-empty-string $name
+ * @property string|null $description
+ * @property bool $available
  */
 class Book extends LeanMapper\Entity
 {
-    /**
-     * @param string[] $value
-     */
-    public function setName($value)
-    {
-        $this->set('name', $this->serialize($value));
-    }
-
-
-    public function serialize($name)
-    {
-        return strtolower(implode($name));
-    }
-
-
-    protected function convertDate($date)
-    {
-        return is_string($date) ? new DateTime($date) : $date;
-    }
 }
 
 
@@ -41,7 +23,7 @@ class BookRepository extends \LeanMapper\Repository
 {
     /**
      * @param $id
-     * @return Book
+     * @return Author
      * @throws Exception
      */
     public function find($id)
@@ -63,9 +45,6 @@ $entityFactory = Tests::createEntityFactory();
 $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 $book = $bookRepository->find(1);
 
-// set
-$book->name = ['John Doe'];
-Assert::same('john doe', $book->name);
-
-// get
-Assert::same('1999-10-30', $book->pubdate->format('Y-m-d'));
+Assert::same('The Pragmatic Programmer', $book->name);
+Assert::null($book->description);
+Assert::true($book->available);

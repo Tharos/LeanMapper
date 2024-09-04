@@ -47,8 +47,8 @@ class PropertyFactory
         $matches = [];
         $matched = preg_match(
             '~
-            ^(null\|)?
-            ((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+)
+            ^(\?|null\|)?
+            ((?:\\\\?[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff-]*)+)
             (\[\])?
             (\|null)?\s+
             (\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)

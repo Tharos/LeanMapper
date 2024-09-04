@@ -41,11 +41,12 @@
 	"scripts": {
 		"coverage": "tester -C -d zend_extension=xdebug --coverage tests/coverage.html --coverage-src src tests",
 		"phpstan": "phpstan analyse --configuration phpstan.neon",
+		"phpstan-baseline": "phpstan analyse --configuration phpstan.neon --generate-baseline",
 		"tests": "tester -C tests"
 	},
 	"extra": {
 		"branch-alias": {
-			"dev-develop": "4.0-dev"
+			"dev-develop": "4.1-dev"
 		}
 	}
 }

@@ -63,6 +63,9 @@ class AuthorRepository extends LeanMapper\Repository
 
 //////////
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+
 $authorRepository = new AuthorRepository($connection, $mapper, new CustomEntityFactory);
 
 $author = $authorRepository->find(1);

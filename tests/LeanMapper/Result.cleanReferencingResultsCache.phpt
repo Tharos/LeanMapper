@@ -62,6 +62,10 @@ function implodeTags(array $tags)
 
 ////////////////////
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 
 $book = $bookRepository->find(1);

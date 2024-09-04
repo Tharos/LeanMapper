@@ -53,6 +53,10 @@ class BookRepository extends \LeanMapper\Repository
 
 ////////////////////
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 $book = $bookRepository->find(3);
 Assert::same(4, $book->reviewer->id);

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace LeanMapper;
 
+use LeanMapper\Exception\InvalidArgumentException;
+
 /**
  * Default IEntityFactory implementation
  *
@@ -23,7 +25,17 @@ class DefaultEntityFactory implements IEntityFactory
 
     public function createEntity(string $entityClass, $arg = null): Entity
     {
-        $entity = new $entityClass($arg);
+        if (!class_exists($entityClass)) {
+            throw new InvalidArgumentException("Entity class $entityClass doesn't exists.");
+        }
+
+        if (method_exists($entityClass, 'initialize')) {
+            $entity = call_user_func([$entityClass, 'initialize'], $arg);
+
+        } else {
+            $entity = new $entityClass($arg);
+        }
+
         assert($entity instanceof Entity);
         return $entity;
     }

@@ -32,6 +32,10 @@ class AuthorRepository extends Repository
 
 //////////
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
 
 $authors = $authorRepository->findAll();

@@ -1,0 +1,301 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Parameter \\#1 \\.\\.\\.\\$paths of method Nette\\\\Loaders\\\\RobotLoader\\:\\:addDirectory\\(\\) expects string, mixed given\\.$#"
+			count: 1
+			path: src/LeanMapper/Bridges/Nette/DI/LeanMapperExtension.php
+
+		-
+			message: "#^Part \\$pivot \\(mixed\\) of encapsed string cannot be cast to string\\.$#"
+			count: 2
+			path: src/LeanMapper/DataDifference.php
+
+		-
+			message: "#^Cannot call method createCollection\\(\\) on LeanMapper\\\\IEntityFactory\\|null\\.$#"
+			count: 2
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Cannot call method createEntity\\(\\) on LeanMapper\\\\IEntityFactory\\|null\\.$#"
+			count: 3
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Cannot call method getEntityClass\\(\\) on LeanMapper\\\\IMapper\\|null\\.$#"
+			count: 3
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Cannot call method getImplicitFilters\\(\\) on LeanMapper\\\\IMapper\\|null\\.$#"
+			count: 1
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Cannot call method getName\\(\\) on LeanMapper\\\\Reflection\\\\Property\\|null\\.$#"
+			count: 3
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Cannot call method getPrimaryKey\\(\\) on LeanMapper\\\\IMapper\\|null\\.$#"
+			count: 3
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Cannot call method getRelationship\\(\\) on LeanMapper\\\\Reflection\\\\Property\\|null\\.$#"
+			count: 2
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Cannot call method getTable\\(\\) on LeanMapper\\\\IMapper\\|null\\.$#"
+			count: 2
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Parameter \\#1 \\$entityFactory of method LeanMapper\\\\Entity\\:\\:setEntityFactory\\(\\) expects LeanMapper\\\\IEntityFactory, LeanMapper\\\\IEntityFactory\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Parameter \\#1 \\$mapper of method LeanMapper\\\\Entity\\:\\:useMapper\\(\\) expects LeanMapper\\\\IMapper, LeanMapper\\\\IMapper\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Parameter \\#1 \\$name of method LeanMapper\\\\Row\\:\\:__get\\(\\) expects string, string\\|null given\\.$#"
+			count: 2
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Parameter \\#1 \\$table of method LeanMapper\\\\Row\\:\\:cleanReferencingAddedAndRemovedMeta\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Parameter \\#1 \\$table of method LeanMapper\\\\Row\\:\\:createReferencingDataDifference\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Parameter \\#1 \\$table of method LeanMapper\\\\Row\\:\\:referenced\\(\\) expects string, string\\|null given\\.$#"
+			count: 2
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Parameter \\#1 \\$table of method LeanMapper\\\\Row\\:\\:referencing\\(\\) expects string, string\\|null given\\.$#"
+			count: 3
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Parameter \\#1 \\$viaColumn of method LeanMapper\\\\Row\\:\\:getReferencedRow\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Parameter \\#1 \\$viaColumn of method LeanMapper\\\\Row\\:\\:hasReferencedRow\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Parameter \\#2 \\$viaColumn of method LeanMapper\\\\Row\\:\\:setReferencedRow\\(\\) expects string, string\\|null given\\.$#"
+			count: 2
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Property LeanMapper\\\\Entity\\:\\:\\$row \\(LeanMapper\\\\Row\\) does not accept LeanMapper\\\\Row\\|null\\.$#"
+			count: 1
+			path: src/LeanMapper/Entity.php
+
+		-
+			message: "#^Property LeanMapper\\\\FilteringResult\\:\\:\\$validationFunction \\(Closure\\) does not accept Closure\\|null\\.$#"
+			count: 1
+			path: src/LeanMapper/FilteringResult.php
+
+		-
+			message: "#^Method LeanMapper\\\\FilteringResultDecorator\\:\\:isValidFor\\(\\) should return bool but returns mixed\\.$#"
+			count: 1
+			path: src/LeanMapper/FilteringResultDecorator.php
+
+		-
+			message: "#^Method LeanMapper\\\\Fluent\\:\\:applyFilter\\(\\) should return LeanMapper\\\\FilteringResult\\|null but returns mixed\\.$#"
+			count: 1
+			path: src/LeanMapper/Fluent.php
+
+		-
+			message: "#^Method LeanMapper\\\\Fluent\\:\\:createSelect\\(\\) should return iterable\\<int, Dibi\\\\Row\\>&LeanMapper\\\\Fluent but returns mixed\\.$#"
+			count: 1
+			path: src/LeanMapper/Fluent.php
+
+		-
+			message: "#^Method LeanMapper\\\\Reflection\\\\EntityReflection\\:\\:getGetters\\(\\) should return array\\<ReflectionMethod\\> but returns array\\<string, ReflectionMethod\\>\\|null\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/EntityReflection.php
+
+		-
+			message: "#^Parameter \\#1 (\\$objectOrClass|\\$argument) of method ReflectionClass\\<LeanMapper\\\\Entity\\>\\:\\:__construct\\(\\) expects class\\-string\\<LeanMapper\\\\Entity\\>\\|LeanMapper\\\\Entity, mixed given\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/EntityReflection.php
+
+		-
+			message: "#^Cannot call method getValues\\(\\) on LeanMapper\\\\Reflection\\\\PropertyValuesEnum\\|null\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/Property.php
+
+		-
+			message: "#^Cannot call method isValueFromEnum\\(\\) on LeanMapper\\\\Reflection\\\\PropertyValuesEnum\\|null\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/Property.php
+
+		-
+			message: "#^Method LeanMapper\\\\Reflection\\\\Property\\:\\:getCustomFlagValue\\(\\) should return string but returns mixed\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/Property.php
+
+		-
+			message: "#^Parameter \\#1 \\$definition of static method LeanMapper\\\\Reflection\\\\PropertyFilters\\:\\:createFromDefinition\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#1 \\$definition of static method LeanMapper\\\\Reflection\\\\PropertyPasses\\:\\:createFromDefinition\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#1 \\$sourceTable of method LeanMapper\\\\IMapper\\:\\:getRelationshipColumn\\(\\) expects string, string\\|null given\\.$#"
+			count: 3
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#1 \\$sourceTable of method LeanMapper\\\\IMapper\\:\\:getRelationshipTable\\(\\) expects string, string\\|null given\\.$#"
+			count: 4
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#1 (\\$string|\\$str) of function strtolower expects string, mixed given\\.$#"
+			count: 3
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#1 (\\$value|\\$var) of function intval expects array\\|bool\\|float\\|int\\|resource\\|string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#10 \\$relationship of class LeanMapper\\\\Reflection\\\\Property constructor expects LeanMapper\\\\Relationship\\\\BelongsToMany\\|LeanMapper\\\\Relationship\\\\BelongsToOne\\|LeanMapper\\\\Relationship\\\\HasMany\\|LeanMapper\\\\Relationship\\\\HasOne\\|null, mixed given\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#2 \\$subject of function preg_match expects string, mixed given\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#2 \\$targetTable of method LeanMapper\\\\IMapper\\:\\:getRelationshipColumn\\(\\) expects string, string\\|null given\\.$#"
+			count: 5
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#2 \\$targetTable of method LeanMapper\\\\IMapper\\:\\:getRelationshipTable\\(\\) expects string, string\\|null given\\.$#"
+			count: 4
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#3 \\$definition of static method LeanMapper\\\\Reflection\\\\PropertyMethods\\:\\:createFromDefinition\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#3 \\$strategy of class LeanMapper\\\\Relationship\\\\BelongsToMany constructor expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#3 \\$strategy of class LeanMapper\\\\Relationship\\\\BelongsToOne constructor expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Parameter \\#5 \\$strategy of class LeanMapper\\\\Relationship\\\\HasMany constructor expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Part \\$value \\(mixed\\) of encapsed string cannot be cast to string\\.$#"
+			count: 4
+			path: src/LeanMapper/Reflection/PropertyFactory.php
+
+		-
+			message: "#^Cannot call method getConstants\\(\\) on LeanMapper\\\\Reflection\\\\EntityReflection\\|null\\.$#"
+			count: 1
+			path: src/LeanMapper/Reflection/PropertyValuesEnum.php
+
+		-
+			message: "#^Parameter \\#1 \\$id of method LeanMapper\\\\Entity\\:\\:attach\\(\\) expects int\\|string, mixed given\\.$#"
+			count: 1
+			path: src/LeanMapper/Repository.php
+
+		-
+			message: "#^Cannot access offset string on mixed\\.$#"
+			count: 1
+			path: src/LeanMapper/Result.php
+
+		-
+			message: "#^Cannot call method getArgs\\(\\) on LeanMapper\\\\Filtering\\|null\\.$#"
+			count: 2
+			path: src/LeanMapper/Result.php
+
+		-
+			message: "#^Parameter \\#1 \\$array of function reset expects array\\|object, array\\<int\\|string\\>\\|null given\\.$#"
+			count: 3
+			path: src/LeanMapper/Result.php
+
+		-
+			message: "#^Parameter \\#1 \\$id of method LeanMapper\\\\Result\\:\\:getRow\\(\\) expects int\\|string\\|null, mixed given\\.$#"
+			count: 1
+			path: src/LeanMapper/Result.php
+
+		-
+			message: "#^Parameter \\#1 \\$ids of method LeanMapper\\\\Result\\:\\:buildUnionStrategySql\\(\\) expects array\\<int\\|string\\>, array\\<int\\|string\\>\\|null given\\.$#"
+			count: 2
+			path: src/LeanMapper/Result.php
+
+		-
+			message: "#^Parameter \\#1 (\\$value|\\$var) of function count expects array\\|Countable, array\\<int\\|string\\>\\|null given\\.$#"
+			count: 2
+			path: src/LeanMapper/Result.php
+
+		-
+			message: "#^Parameter \\#2 (\\.\\.\\.\\$arrays|\\$arr2) of function array_diff_assoc expects array, mixed given\\.$#"
+			count: 1
+			path: src/LeanMapper/Result.php
+
+		-
+			message: "#^Part \\$id \\(mixed\\) of encapsed string cannot be cast to string\\.$#"
+			count: 1
+			path: src/LeanMapper/Result.php
+
+		-
+			message: "#^Property LeanMapper\\\\Result\\:\\:\\$connection \\(LeanMapper\\\\Connection\\) does not accept LeanMapper\\\\Connection\\|null\\.$#"
+			count: 1
+			path: src/LeanMapper/Result.php
+
+		-
+			message: "#^Property LeanMapper\\\\Result\\:\\:\\$mapper \\(LeanMapper\\\\IMapper\\) does not accept LeanMapper\\\\IMapper\\|null\\.$#"
+			count: 1
+			path: src/LeanMapper/Result.php
+
+		-
+			message: "#^Property LeanMapper\\\\Result\\:\\:\\$table \\(string\\) does not accept string\\|null\\.$#"
+			count: 1
+			path: src/LeanMapper/Result.php
+
+		-
+			message: "#^Parameter \\#1 \\$key of function array_key_exists expects int\\|string, string\\|null given\\.$#"
+			count: 1
+			path: src/LeanMapper/Row.php
+
+		-
+			message: "#^Parameter \\#1 \\$data of class ResultDummyDriver constructor expects array, mixed given\\.$#"
+			count: 1
+			path: tests/libs/DummyDrivers.php

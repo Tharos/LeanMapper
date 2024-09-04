@@ -78,6 +78,10 @@ class LibraryRepository extends Repository
 
 //////////
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $repository = new LibraryRepository($connection, $mapper, $entityFactory);
 
 $authors = $repository->findAuthors();

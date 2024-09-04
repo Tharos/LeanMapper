@@ -22,6 +22,10 @@ isset($author->name);
 
 //////////
 
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $author->makeAlive($entityFactory, $connection, $mapper);
 $author->attach(1);
 

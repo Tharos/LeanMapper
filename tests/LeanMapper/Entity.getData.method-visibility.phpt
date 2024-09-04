@@ -45,6 +45,11 @@ class AuthorRepository extends \LeanMapper\Repository
 
 }
 
+
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
 
 //////////

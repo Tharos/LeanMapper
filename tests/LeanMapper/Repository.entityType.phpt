@@ -29,6 +29,11 @@ class Author extends Entity
 {
 }
 
+
+$connection = Tests::createConnection();
+$mapper = Tests::createMapper();
+$entityFactory = Tests::createEntityFactory();
+
 $authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
 $bookRepository = new BookRepository($connection, $mapper, $entityFactory);
 

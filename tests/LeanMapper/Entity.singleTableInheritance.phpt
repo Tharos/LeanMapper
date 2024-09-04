@@ -80,7 +80,9 @@ class BookRepository extends BaseRepository
 
 //////////
 
+$connection = Tests::createConnection();
 $mapper = new Mapper;
+$entityFactory = Tests::createEntityFactory();
 
 $authorRepository = new AuthorRepository($connection, $mapper, $entityFactory);
 $bookRepository = new BookRepository($connection, $mapper, $entityFactory);

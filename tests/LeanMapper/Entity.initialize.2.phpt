@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LeanMapper\Entity;
+use LeanMapper\Initialize;
 use Tester\Assert;
 
 require_once __DIR__ . '/../bootstrap.php';
@@ -17,6 +18,19 @@ require_once __DIR__ . '/../bootstrap.php';
  */
 class Author extends Entity
 {
+    use Initialize;
+
+
+    public function __construct(
+        string $name,
+        ?string $web
+    )
+    {
+        parent::__construct();
+
+        $this->name = $name;
+        $this->web = $web;
+    }
 }
 
 /**
@@ -27,6 +41,21 @@ class Author extends Entity
  */
 class Book extends Entity
 {
+    use Initialize;
+
+
+    public function __construct(
+        string $name,
+        string $pubdate,
+        ?Author $author
+    )
+    {
+        parent::__construct();
+
+        $this->name = $name;
+        $this->pubdate = $pubdate;
+        $this->author = $author;
+    }
 }
 
 class BookRepository extends \LeanMapper\Repository

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LeanMapper\Entity;
+use LeanMapper\Initialize;
 use LeanMapper\Result;
 use LeanMapper\Row;
 use Tester\Assert;
@@ -22,11 +23,24 @@ $entityFactory = Tests::createEntityFactory();
  */
 class Book extends Entity
 {
+    use Initialize;
+
+
+    public function __construct(
+        string $name,
+        string $pubdate
+    )
+    {
+        parent::__construct();
+
+        $this->name = $name;
+        $this->pubdate = $pubdate;
+    }
 }
 
 //////////
 
-$book = new Book;
+$book = Book::initialize([]);
 
 Assert::type(Book::class, $book);
 
@@ -38,7 +52,7 @@ $data = [
     'pubdate' => '2013-06-13',
 ];
 
-$book = new Book($data);
+$book = Book::initialize($data);
 
 Assert::type(Book::class, $book);
 Assert::equal($data, $book->getData());
@@ -47,7 +61,7 @@ Assert::equal($data, $book->getData());
 
 $dibiRow = new \Dibi\Row($data);
 $row = new Row(Result::createInstance($dibiRow, 'book', $connection, $mapper), 1);
-$book = new Book($row);
+$book = Book::initialize($row);
 
 Assert::type(Book::class, $book);
 Assert::equal($data, $book->getData());
@@ -56,14 +70,14 @@ Assert::equal($data, $book->getData());
 
 $dibiRow = new \Dibi\Row($data);
 $row = Result::createInstance($dibiRow, 'book', $connection, $mapper)->getRow(1);
-$book = new Book($row);
+$book = Book::initialize($row);
 
 Assert::type(Book::class, $book);
 Assert::equal($data, $book->getData());
 
 //////////
 
-$book = new Book(new ArrayObject($data));
+$book = Book::initialize(new ArrayObject($data));
 
 Assert::type(Book::class, $book);
 Assert::equal($data, $book->getData());
@@ -72,7 +86,7 @@ Assert::equal($data, $book->getData());
 
 Assert::exception(
     function () {
-        new Book(false);
+        Book::initialize(false);
     },
     LeanMapper\Exception\InvalidArgumentException::class,
     'Argument $arg in Book::__construct must contain either null, array, instance of LeanMapper\Row or instance of Traversable, boolean given.'
@@ -80,7 +94,7 @@ Assert::exception(
 
 Assert::exception(
     function () {
-        new Book('hello');
+        Book::initialize('hello');
     },
     LeanMapper\Exception\InvalidArgumentException::class,
     'Argument $arg in Book::__construct must contain either null, array, instance of LeanMapper\Row or instance of Traversable, string given.'
@@ -94,8 +108,27 @@ $row->detach();
 
 Assert::exception(
     function () use ($row) {
-        new Book($row);
+        Book::initialize($row);
     },
     LeanMapper\Exception\InvalidArgumentException::class,
     'It is not allowed to create entity Book from detached instance of LeanMapper\Row.'
 );
+
+//////////
+
+$data = [
+    'id' => 1,
+    'name' => 'PHP guide',
+    'pubdate' => '2013-06-13',
+];
+
+$book = new Book(
+    $data['name'],
+    $data['pubdate']
+);
+
+Assert::type(Book::class, $book);
+Assert::equal([
+    'name' => $data['name'],
+    'pubdate' => $data['pubdate'],
+], $book->getRowData());
