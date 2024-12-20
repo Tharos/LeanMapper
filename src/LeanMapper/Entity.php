@@ -735,8 +735,8 @@ abstract class Entity
      */
     protected function getValueByPropertyWithRelationship(
         $property,
-        Filtering $targetTableFiltering = null,
-        Filtering $relationshipTableFiltering = null
+        ?Filtering $targetTableFiltering = null,
+        ?Filtering $relationshipTableFiltering = null
     ) {
         if (is_string($property)) {
             $property = $this->getCurrentReflection()->getEntityProperty($property);
