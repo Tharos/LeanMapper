@@ -23,7 +23,7 @@ interface IEntityReflectionProvider
     /**
      * @return Property[]
      */
-    function getProperties(EntityReflection $entityClass, IMapper $mapper = null): array;
+    function getProperties(EntityReflection $entityClass, ?IMapper $mapper = null): array;
 
 
     /**
