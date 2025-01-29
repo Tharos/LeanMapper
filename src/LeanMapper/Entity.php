@@ -900,6 +900,7 @@ abstract class Entity
             throw new InvalidStateException('Cannot get related Entities for detached Entity.');
         }
         $targetTable = $relationship->getTargetTable();
+        $primaryKey = $this->mapper->getPrimaryKey($targetTable);
         $columnReferencingTargetTable = $relationship->getColumnReferencingTargetTable();
         $rows = $this->row->referencing(
             $relationship->getRelationshipTable(),
@@ -915,7 +916,7 @@ abstract class Entity
                 $entity = $this->entityFactory->createEntity($entityClass, $valueRow);
                 $this->checkConsistency($property, $entityClass, $entity);
                 $entity->makeAlive($this->entityFactory);
-                $value[] = $entity;
+                $value[$entity->get($primaryKey)] = $entity;
             }
         }
         return $this->entityFactory->createCollection($value);
@@ -966,6 +967,7 @@ abstract class Entity
             throw new InvalidStateException('Cannot get related Entities for detached Entity.');
         }
         $targetTable = $relationship->getTargetTable();
+        $primaryKey = $this->mapper->getPrimaryKey($targetTable);
         $rows = $this->row->referencing($targetTable, $relationship->getColumnReferencingSourceTable(), $filtering, $relationship->getStrategy());
         $value = [];
         foreach ($rows as $row) {
@@ -973,7 +975,7 @@ abstract class Entity
             $entity = $this->entityFactory->createEntity($entityClass, $row);
             $this->checkConsistency($property, $entityClass, $entity);
             $entity->makeAlive($this->entityFactory);
-            $value[] = $entity;
+            $value[$entity->get($primaryKey)] = $entity;
         }
         return $this->entityFactory->createCollection($value);
     }
