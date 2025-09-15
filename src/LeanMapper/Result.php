@@ -813,7 +813,7 @@ class Result implements \Iterator
                 if (count($ids) === 0) {
                     $data = [];
                 } else {
-                    $data = $this->connection->query(
+                    $data = $this->connection->nativeQuery(
                         $this->buildUnionStrategySql($ids, $table, $viaColumn)
                     )->setRowClass(null)->fetchAll();
                 }
@@ -844,7 +844,7 @@ class Result implements \Iterator
 
                 if (!isset($this->referencing[$key])) {
                     $sql = $this->buildUnionStrategySql($ids, $table, $viaColumn, $filtering);
-                    $data = $this->connection->query($sql)->setRowClass(null)->fetchAll();
+                    $data = $this->connection->nativeQuery($sql)->setRowClass(null)->fetchAll();
                     $result = self::createInstance(Helpers::convertDbRows($table, $data, $this->mapper), $table, $this->connection, $this->mapper);
                     $this->referencing[$key] = $result;
                 }
