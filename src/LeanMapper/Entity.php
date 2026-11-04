@@ -395,15 +395,22 @@ abstract class Entity
     {
         $this->row->markAsUpdated();
         foreach ($this->getCurrentReflection()->getEntityProperties() as $property) {
-            if ($property->hasRelationship() and ($property->getRelationship() instanceof Relationship\HasMany)) {
-                $relationship = $property->getRelationship();
-                $this->row->cleanReferencingAddedAndRemovedMeta(
-                    $relationship->getRelationshipTable(),
-                    $relationship->getColumnReferencingSourceTable(),
-                    null,
-                    $relationship->getStrategy()
-                );
-            }
+			if ($property->hasRelationship()) {
+				$relationship = $property->getRelationship();
+		        if ($relationship instanceof Relationship\HasMany) {
+		            $this->row->cleanReferencingAddedAndRemovedMeta(
+		                $relationship->getRelationshipTable(),
+		                $relationship->getColumnReferencingSourceTable(),
+		                null,
+		                $relationship->getStrategy()
+		            );
+		        } elseif ($relationship instanceof Relationship\HasOne) {
+					$this->row->cleanReferencedRowsCache(
+						$relationship->getTargetTable(),
+						$relationship->getColumnReferencingTargetTable()
+					);
+				}
+			}
         }
     }
 
