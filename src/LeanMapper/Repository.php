@@ -214,9 +214,7 @@ abstract class Repository
     protected function deleteFromDatabase($arg)
     {
         $primaryKey = $this->mapper->getPrimaryKey($this->getTable());
-        $idField = $this->mapper->getEntityField($this->getTable(), $primaryKey);
-
-        $id = ($arg instanceof Entity) ? $arg->$idField : $arg;
+        $id = ($arg instanceof Entity) ? $this->getIdValue($arg) : $arg;
         return $this->connection->query(
             'DELETE FROM %n WHERE %n = ?',
             $this->getTable(),
@@ -414,7 +412,7 @@ abstract class Repository
             $idField = $this->mapper->getEntityField($table, $primaryKey);
             $value = $entity->$idField;
             if (!($value instanceof Entity)) {
-                return $value;
+                return $entity->getRowData()[$primaryKey];
             }
             $entity = $value;
             $table = $this->mapper->getTable(get_class($entity));
